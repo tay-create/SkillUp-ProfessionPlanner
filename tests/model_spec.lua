@@ -1,6 +1,6 @@
 -- Run from the repository root: luajit tests/model_spec.lua
 local ns = {}
-assert(loadfile("Core/Model.lua"))("SkillUpForever", ns)
+assert(loadfile("Core/Model.lua"))("ProfessionPlanner", ns)
 local Model = ns.Model
 local checks = 0
 
@@ -80,7 +80,7 @@ equal(Model.Color({ 10, 10, 15, 20 }, 9), "red", "orange equals yellow: red")
 equal(Model.Color({ 10, 10, 15, 20 }, 10), "yellow", "orange equals yellow: yellow")
 near(Model.Chance({ 10, 10, 15, 20 }, 10), 1, "orange equals yellow chance")
 
-assert(loadfile("Data/Thresholds.lua"))("SkillUpForever", ns)
+assert(loadfile("Data/Thresholds.lua"))("ProfessionPlanner", ns)
 equal(type(ns.Thresholds), "table", "generated namespace table")
 equal(Model.Get(-1), nil, "unknown recipe")
 equal(Model.Get(2152), ns.Thresholds[2152], "lookup uses recipe spell ID")
@@ -521,8 +521,8 @@ do
 			return pcall(fn, ...)
 		end,
 	}
-	setfenv(assert(loadfile("Core/Changes.lua")), env)("SkillUpForever", runtime)
-	setfenv(assert(loadfile("Integrations/Prices.lua")), env)("SkillUpForever", runtime)
+	setfenv(assert(loadfile("Core/Changes.lua")), env)("ProfessionPlanner", runtime)
+	setfenv(assert(loadfile("Integrations/Prices.lua")), env)("ProfessionPlanner", runtime)
 	runtime.InitPrices()
 	equal(runtime.Reagents(10), runtime.RecipeData[10].reagents, "bundled reagent fallback")
 	equal(runtime.PriceSource(1), "vendor", "price source vendor")

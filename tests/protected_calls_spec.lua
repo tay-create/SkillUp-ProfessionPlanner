@@ -15,7 +15,7 @@ end
 -- generated Data or the translations.
 local function AddonFiles()
 	local files = {}
-	for line in Read("SkillUpForever.toc"):gmatch("[^\r\n]+") do
+	for line in Read("ProfessionPlanner.toc"):gmatch("[^\r\n]+") do
 		local path = line:gsub("\\", "/")
 		if path:match("^Core/.*%.lua$") or path:match("^UI/.*%.lua$") or path:match("^Integrations/.*%.lua$") then
 			files[#files + 1] = path

@@ -1,9 +1,13 @@
--- Machine translated (2026-10-16); corrections welcome: https://github.com/cjber/skillup-forever/issues/new?template=translation.yml
+-- Machine translated (2026-10-16); corrections welcome: https://github.com/tay-create/SkillUp-ProfessionPlanner/issues
 local _, ns = ...
 if GetLocale() ~= "koKR" then
 	return
 end
 local L = ns.L
+L["No vendor or trainer location found for this list. Check NPC locations in QuestieDB; auction and gathered items are separate."] =
+	"이 목록의 상인이나 전문 기술 상급자 위치를 찾지 못했습니다. QuestieDB에서 NPC 위치를 확인하세요. 경매 및 채집 재료는 별도로 처리됩니다."
+L["Shortest Path Forever cannot plan the full trip; setting a waypoint to the first trainer."] =
+	"Shortest Path Forever가 전체 경로를 계획하지 못해 첫 전문 기술 상급자에게 길찾기 지점을 설정합니다."
 
 L["%d %s"] = "%d %s"
 L["%d crafts to %d, %s"] = "%d회 제작, %d까지, %s"
@@ -27,10 +31,10 @@ L["%s, %s, to %d"] = "%s, %s, %d까지"
 L["%s, source unknown"] = "%s, 출처 알 수 없음"
 L["%s: %d moved, %d confirmed at a trainer, %d wrong."] = "%s: 이동 %d, 전문가에서 확인 %d, 틀림 %d."
 L["+%d more"] = "+%d개 더"
-L["/skillup skipped lists the recipes you skipped, with their IDs."] =
-	"/skillup skipped: 건너뛴 제조법을 ID와 함께 보여줍니다."
-L["/skillup unskip <recipe ID> shows one again, /skillup unskip all every one."] =
-	"/skillup unskip <recipe ID>는 하나를, /skillup unskip all은 모두 다시 보여줍니다."
+L["/pp skipped lists the recipes you skipped, with their IDs."] =
+	"/pp skipped: 건너뛴 제조법을 ID와 함께 보여줍니다."
+L["/pp unskip <recipe ID> shows one again, /pp unskip all every one."] =
+	"/pp unskip <recipe ID>는 하나를, /pp unskip all은 모두 다시 보여줍니다."
 L["A Reagents tab on a merchant's window that lists the reagents your tracked routes still need from that merchant and their total cost. Buy them from the merchant's own window."] =
 	"상인 창에 재료 탭을 추가해 추적 중인 경로가 이 상인에게서 아직 필요한 재료와 총 비용을 보여 줍니다. 구매는 상인 창에서 직접 하세요."
 L["A material your professions gather costs what selling it would bring instead of nothing: its auction price after the 5% cut, or its vendor sell price if that is more. Used for the route and the costs on recipe rows. Auction prices need Auctionator or TradeSkillMaster."] =
@@ -240,7 +244,7 @@ L["Skill-up chance"] = "숙련도 상승 확률"
 L["Skill-up chance and cost per skill-up at the right of each recipe."] =
 	"각 제조법 오른쪽에 숙련도 상승 확률과 숙련도 1당 비용을 표시합니다."
 L["Skill-up chance: %d%%"] = "숙련도 상승 확률: %d%%"
-L["SkillUp report"] = "SkillUp 보고서"
+L["Profession Planner report"] = "Profession Planner 보고서"
 L["Skipped (%d)"] = "건너뜀 (%d)"
 L["Skipped (%d):"] = "건너뜀 (%d):"
 L["Sold by"] = "판매처"
@@ -374,15 +378,13 @@ L["%s to %d"] = "%s, %d까지"
 L[" · "] = " · "
 L[", "] = ", "
 L[", price seen %d days ago"] = ", %d일 전 확인한 가격"
-L["/skillup export - show the trainer requirements this character has seen, to paste into a report"] =
-	"/skillup export - 이 캐릭터가 확인한 전문가 요구 조건을 표시합니다. 보고서에 붙여 넣을 수 있습니다."
-L["/skillup issue - report a bug or request a feature with a ready-made GitHub issue link"] =
-	"/skillup issue - GitHub 이슈 링크가 준비된 상태로 버그를 신고하거나 기능을 요청합니다."
-L["/skillup report - show a report to copy into a bug report"] =
-	"/skillup report - 버그 보고서에 복사할 보고서를 표시합니다."
+L["/pp export - show the trainer requirements this character has seen, to paste into a report"] =
+	"/pp export - 이 캐릭터가 확인한 전문가 요구 조건을 표시합니다. 보고서에 붙여 넣을 수 있습니다."
+L["/pp issue - report a bug or request a feature with a ready-made GitHub issue link"] =
+	"/pp issue - GitHub 이슈 링크가 준비된 상태로 버그를 신고하거나 기능을 요청합니다."
+L["/pp report - show a report to copy into a bug report"] =
+	"/pp report - 버그 보고서에 복사할 보고서를 표시합니다."
 L[": "] = ": "
-L["A buy trip needs Shortest Path Forever."] =
-	"구매 경로를 계획하려면 Shortest Path Forever가 필요합니다."
 L["Copy list"] = "목록 복사"
 L["Copy shopping list"] = "구매 목록 복사"
 L["Gather"] = "채집"
@@ -396,9 +398,7 @@ L["Plan this route again from today's prices and recipes."] =
 L["Shopping list"] = "구매 목록"
 L["Shortest Path Forever cannot plan the full trip; setting a waypoint to the first vendor."] =
 	"Shortest Path Forever가 전체 경로를 계획할 수 없습니다. 첫 상인으로 웨이포인트를 설정합니다."
-L["Shortest Path Forever is needed to plan this trip."] =
-	"이 경로를 계획하려면 Shortest Path Forever가 필요합니다."
-L["SkillUp Forever shopping list"] = "SkillUp Forever 구매 목록"
+L["Profession Planner shopping list"] = "Profession Planner 구매 목록"
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it."] =
 	"텍스트가 선택되었습니다. Ctrl+C(Mac은 Cmd+C)로 복사하십시오."
 L["Total for priced items: "] = "가격이 있는 아이템 합계: "
@@ -460,12 +460,12 @@ L["%s drops in %s"] = "%s: %s에서 드롭됩니다" -- mt
 L["Made by %s %d"] = "%s %d 제작" -- mt
 L["Made by %s"] = "%s 제작" -- mt
 L["%s at %d"] = "%s, %d" -- mt
-L["A tab at the bottom of the Professions window listing the buff consumables this profession makes, by the skill they unlock at and what each one is for. It opens from the SkillUp side tab, beside the route and crafted gear tabs."] =
-	"전문 기술 창 하단의 탭으로, 이 전문 기술이 만드는 강화 효과 소모품을 해금 숙련도와 용도별로 보여줍니다. SkillUp 측면 탭에서 경로 및 제작 장비 탭 옆에 열립니다." -- mt
-L["A tab at the bottom of the Professions window listing the newest crafted item this character can equip in each slot. It opens from the SkillUp side tab, beside the route and buffs tabs."] =
-	"전문 기술 창 하단의 탭으로, 이 캐릭터가 각 슬롯에 착용할 수 있는 가장 최신 제작 아이템을 보여줍니다. SkillUp 측면 탭에서 경로 및 강화 효과 탭 옆에 열립니다." -- mt
-L["A tab at the bottom of the Professions window with a route to your target skill and its reagents. It opens from the SkillUp side tab, beside the crafted gear and buffs tabs. Tracked professions stay in the objective tracker either way."] =
-	"전문 기술 창 하단의 탭으로, 목표 숙련도와 재료까지의 경로를 보여줍니다. SkillUp 측면 탭에서 제작 장비 및 강화 효과 탭 옆에 열립니다. 추적 중인 전문 기술은 어느 쪽이든 목표 추적기에 남습니다." -- mt
+L["A tab at the bottom of the Professions window listing the buff consumables this profession makes, by the skill they unlock at and what each one is for. It opens from the Profession Planner side tab, beside the route and crafted gear tabs."] =
+	"전문 기술 창 하단의 탭으로, 이 전문 기술이 만드는 강화 효과 소모품을 해금 숙련도와 용도별로 보여줍니다. Profession Planner 측면 탭에서 경로 및 제작 장비 탭 옆에 열립니다." -- mt
+L["A tab at the bottom of the Professions window listing the newest crafted item this character can equip in each slot. It opens from the Profession Planner side tab, beside the route and buffs tabs."] =
+	"전문 기술 창 하단의 탭으로, 이 캐릭터가 각 슬롯에 착용할 수 있는 가장 최신 제작 아이템을 보여줍니다. Profession Planner 측면 탭에서 경로 및 강화 효과 탭 옆에 열립니다." -- mt
+L["A tab at the bottom of the Professions window with a route to your target skill and its reagents. It opens from the Profession Planner side tab, beside the crafted gear and buffs tabs. Tracked professions stay in the objective tracker either way."] =
+	"전문 기술 창 하단의 탭으로, 목표 숙련도와 재료까지의 경로를 보여줍니다. Profession Planner 측면 탭에서 제작 장비 및 강화 효과 탭 옆에 열립니다. 추적 중인 전문 기술은 어느 쪽이든 목표 추적기에 남습니다." -- mt
 L["Above your level"] = "내 레벨보다 높음" -- mt
 L["Buffs"] = "강화 효과" -- mt
 L["Known"] = "알려짐" -- mt
@@ -474,7 +474,7 @@ L["Learn now"] = "지금 배우기" -- mt
 L["No buff items for your level yet."] = "아직 내 레벨에 맞는 강화 효과 아이템이 없습니다." -- mt
 L["Only for level %d"] = "레벨 %d 전용" -- mt
 L["Show the buffs tab"] = "강화 효과 탭 표시" -- mt
-L["SkillUp"] = "SkillUp" -- mt
+L["Profession Planner"] = "Profession Planner" -- mt
 L["This profession makes no buff items."] = "이 전문 기술은 강화 효과 아이템을 만들지 않습니다." -- mt
 L["spell %d"] = "주문 %d" -- mt
 L["Buffs by %s skill"] = "%s 강화 효과" -- mt
@@ -500,7 +500,7 @@ L["On (the default), a reagent you could gather, fish or loot from creatures is 
 	"켜짐(기본값): 채집, 낚시 또는 생물에게서 얻을 수 있는 재료를 상인이나 경매장에서 삽니다. 꺼짐: 직접 얻는 비용은 판매 가격만큼 듭니다."
 L["Shift + wheel, or drag, scrolls the timeline sideways."] =
 	"Shift + 마우스 휠 또는 드래그로 시간선을 옆으로 스크롤합니다."
-L["SkillUp's list"] = "SkillUp 목록"
+L["Profession Planner's list"] = "Profession Planner 목록"
 L["Timeline"] = "시간선"
 L["Turning Buy reagents on writes an Auctionator list with every auction reagent still missing."] =
 	"재료 구매를 켜면 아직 부족한 모든 경매장 재료가 Auctionator 목록에 기록됩니다."
@@ -512,8 +512,8 @@ L["%s: %s are out of date. Update them to fix this."] =
 	"%s: %s 버전이 오래되었습니다. 문제를 해결하려면 업데이트하세요." -- mt
 L["%s could not start. Reinstall %s to fix this."] =
 	"%s을(를) 시작할 수 없습니다. 문제를 해결하려면 %s을(를) 다시 설치하세요." -- mt
-L["SkillUp no longer fills Auctionator with shopping lists."] =
-	"SkillUp이 더 이상 Auctionator를 구매 목록으로 채우지 않습니다." -- mt
+L["Profession Planner no longer fills Auctionator with shopping lists."] =
+	"Profession Planner이 더 이상 Auctionator를 구매 목록으로 채우지 않습니다." -- mt
 L["Region sale average"] = "지역 평균 판매가"
 L["Region sale average if higher"] = "더 높으면 지역 평균 판매가"
 L["Region sale averages need TradeSkillMaster and its desktop app. They estimate value from reported regional sales and purchases, with the vendor price as a floor. They do not guarantee a sale."] =

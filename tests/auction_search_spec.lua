@@ -104,8 +104,8 @@ c.player.name = "Tester"
 local how = ns.SearchReagents(HEAVY, 4)
 equal(how, "auctionator", "Auctionator does the search")
 equal(c.shoppingLists["SkillUp: crafting"], personalList, "the old crafting list remains untouched")
-equal(c.shoppingLists["SkillUp: Tester-Realm: crafting"][1], "Linen Clothx3", "the list asks for what is missing")
-equal(#c.shoppingLists["SkillUp: Tester-Realm: crafting"], 1, "and nothing you have")
+equal(c.shoppingLists["Profession Planner: Tester-Realm: crafting"][1], "Linen Clothx3", "the list asks for what is missing")
+equal(#c.shoppingLists["Profession Planner: Tester-Realm: crafting"], 1, "and nothing you have")
 equal(c.auctionSearches[1] and c.auctionSearches[1][1], "Linen Clothx3", "and is searched with its quantities")
 c.bags[LINEN] = 8
 equal((ns.SearchReagents(HEAVY, 4)), "elsewhere", "with only the vendor's salt short, nothing is searched")

@@ -70,7 +70,7 @@ for _, complete in ipairs({ false, true }) do
 	}
 	if complete then
 		ns.Stats = {}
-		assert(loadfile("Data/Recipes.lua"))("SkillUpForever", ns)
+		assert(loadfile("Data/Recipes.lua"))("ProfessionPlanner", ns)
 		ns.TrainerFees, ns.TrainerRanks, ns.Catalogue = {}, {}, {}
 		ns.InitCatalogue = function() end
 		ns.PlanRoute, ns.Changed, ns.WhenEvent = Init, Init, function() end
@@ -80,7 +80,7 @@ for _, complete in ipairs({ false, true }) do
 	local env = Env(messages, callbacks)
 	-- A save from before auction prices moved to Auctionator, and one with vendors and a price store from
 	-- before builds were recorded.
-	env.SkillUpForeverDB = {
+	env.ProfessionPlannerDB = {
 		scanAuctions = true,
 		tracked = { [1] = true },
 		auctions = {},
@@ -98,9 +98,9 @@ for _, complete in ipairs({ false, true }) do
 			[8] = { name = "Stamped", build = "70204", items = {} },
 		},
 	}
-	assert(loadfile("Locales/enUS.lua"))("SkillUpForever", ns)
-	setfenv(assert(loadfile("Core/Core.lua")), env)("SkillUpForever", ns)
-	callbacks.SkillUpForever()
+	assert(loadfile("Locales/enUS.lua"))("ProfessionPlanner", ns)
+	setfenv(assert(loadfile("Core/Core.lua")), env)("ProfessionPlanner", ns)
+	callbacks.ProfessionPlanner()
 	if complete then
 		equal(#messages, 0, "complete install needs no warning")
 		equal(initialized, 5, "complete install initializes")
@@ -164,24 +164,24 @@ do
 		ReportLines = function() end,
 		Stats = {},
 	}
-	assert(loadfile("Data/Recipes.lua"))("SkillUpForever", ns)
+	assert(loadfile("Data/Recipes.lua"))("ProfessionPlanner", ns)
 	local env = Env(messages, callbacks)
 	env.C_AddOns = {
 		GetAddOnMetadata = function(name, field)
-			assert(name == "SkillUpForever")
+			assert(name == "ProfessionPlanner")
 			if field == "Version" then
 				return version
 			end
 			return TOC[field]
 		end,
 	}
-	assert(loadfile("Locales/enUS.lua"))("SkillUpForever", ns)
-	setfenv(assert(loadfile("Core/Core.lua")), env)("SkillUpForever", ns)
+	assert(loadfile("Locales/enUS.lua"))("ProfessionPlanner", ns)
+	setfenv(assert(loadfile("Core/Core.lua")), env)("ProfessionPlanner", ns)
 	ns.AnnounceUpdate()
 	equal(#messages, 0, "nothing before the saved variables load")
 	-- Forever often loads no saved variables at all (forever-bugs#34).
-	env.SkillUpForeverDB = nil
-	callbacks.SkillUpForever()
+	env.ProfessionPlannerDB = nil
+	callbacks.ProfessionPlanner()
 	ns.AnnounceUpdate()
 	equal(#messages, 0, "a first install is silent")
 	equal(ns.db.lastVersion, "0.6.0", "a first install remembers its version")
@@ -216,58 +216,73 @@ do
 	ns.AnnounceUpdate()
 	equal(#messages, 1, "a dev checkout is silent")
 	equal(ns.db.lastVersion, next, "a dev checkout's version isn't remembered")
+	-- When migrating a player's old saved file, copy its settings without changing the legacy table.
+	local legacy = { vendor = { [42] = 150 }, lastSkillUpPage = { ["Tester-Realm"] = "route" } }
+	env.ProfessionPlannerDB = nil
+	env.SkillUpForeverDB = legacy
+	callbacks.ProfessionPlanner()
+	equal(ns.db.vendor[42], 150, "legacy vendor prices are imported")
+	equal(ns.db.lastSkillUpPage["Tester-Realm"], "route", "legacy character preferences are imported")
+	equal(ns.db == legacy, false, "legacy settings are copied")
+	equal(ns.db.lastSkillUpPage == legacy.lastSkillUpPage, false, "nested legacy settings are copied")
+	ns.db.vendor[42] = 999
+	equal(legacy.vendor[42], 150, "changing the new DB does not touch the legacy DB")
+	env.ProfessionPlannerDB = { vendor = { [42] = 200 } }
+	callbacks.ProfessionPlanner()
+	equal(ns.db.vendor[42], 200, "existing Profession Planner settings take precedence")
+	env.SkillUpForeverDB = nil
 	-- Suggest companion addons became Suggest my other Forever addons: off stays off, once; on by default.
 	equal(ns.db.suggestFamily, true, "the family hints are on for a first install")
-	env.SkillUpForeverDB = { companionHints = false }
-	callbacks.SkillUpForever()
+	env.ProfessionPlannerDB = { companionHints = false }
+	callbacks.ProfessionPlanner()
 	equal(ns.db.suggestFamily, false, "companion hints turned off turn the family hints off")
 	equal(ns.db.companionHints, nil, "and the old setting goes")
 	ns.db.suggestFamily = true
-	callbacks.SkillUpForever()
+	callbacks.ProfessionPlanner()
 	equal(ns.db.suggestFamily, true, "turned back on, it stays on: the migration ran once")
-	env.SkillUpForeverDB = { companionHints = true }
-	callbacks.SkillUpForever()
+	env.ProfessionPlannerDB = { companionHints = true }
+	callbacks.ProfessionPlanner()
 	equal(ns.db.suggestFamily, true, "companion hints left on keep the family hints on")
-	env.SkillUpForeverDB = { companionHints = false, suggestFamily = true }
-	callbacks.SkillUpForever()
+	env.ProfessionPlannerDB = { companionHints = false, suggestFamily = true }
+	callbacks.ProfessionPlanner()
 	equal(ns.db.suggestFamily, true, "a family setting already saved wins")
 	-- A saved choice the menu doesn't offer goes back to its default; a valid one stays.
-	env.SkillUpForeverDB =
+	env.ProfessionPlannerDB =
 		{ craftValue = "auctoin", sortMode = "coost", reagentTooltip = "typo", recipeTooltip = "nowhere" }
-	callbacks.SkillUpForever()
+	callbacks.ProfessionPlanner()
 	equal(ns.db.craftValue, "vendor", "an unknown craft value resets")
 	equal(ns.db.sortMode, "blizzard", "an unknown sort resets")
 	equal(ns.db.reagentTooltip, "route", "an unknown reagent tooltip mode resets")
 	equal(ns.db.recipeTooltip, "window", "an unknown recipe tooltip position resets to beside the window")
-	env.SkillUpForeverDB = { craftValue = "auction", sortMode = "cost", reagentTooltip = "full", recipeTooltip = "row" }
-	callbacks.SkillUpForever()
+	env.ProfessionPlannerDB = { craftValue = "auction", sortMode = "cost", reagentTooltip = "full", recipeTooltip = "row" }
+	callbacks.ProfessionPlanner()
 	equal(ns.db.craftValue, "auction", "a valid craft value stays")
 	equal(ns.db.sortMode, "cost", "a valid sort stays")
 	equal(ns.db.reagentTooltip, "full", "a valid reagent tooltip mode stays")
 	equal(ns.db.recipeTooltip, "row", "a valid recipe tooltip position stays")
 	equal(ns.CRAFT_VALUE_OPTIONS[3][1], "auction", "the auction choice keeps its index")
-	env.SkillUpForeverDB = { craftValue = "sale" }
-	callbacks.SkillUpForever()
+	env.ProfessionPlannerDB = { craftValue = "sale" }
+	callbacks.ProfessionPlanner()
 	equal(ns.db.craftValue, "sale", "the regional sale choice survives reload")
 	equal(ns.CRAFT_VALUE_OPTIONS[4][1], "sale", "the regional sale choice is appended")
-	env.SkillUpForeverDB = { sortMode = "newest" }
-	callbacks.SkillUpForever()
+	env.ProfessionPlannerDB = { sortMode = "newest" }
+	callbacks.ProfessionPlanner()
 	equal(ns.db.sortMode, "newest", "the newest-recipe sort stays")
 	-- A trainer requirement saved as 0 (an unknown one, before) is dropped; a recorded one stays.
-	env.SkillUpForeverDB = { trainer = { [185] = { [1] = { 40, 0 }, [2] = { 50, 30 }, [3] = { 60 } } } }
-	callbacks.SkillUpForever()
+	env.ProfessionPlannerDB = { trainer = { [185] = { [1] = { 40, 0 }, [2] = { 50, 30 }, [3] = { 60 } } } }
+	callbacks.ProfessionPlanner()
 	equal(ns.db.trainer[185][1], nil, "a requirement saved as 0 is dropped")
 	equal(ns.db.trainer[185][3], nil, "and one saved without any")
 	equal(ns.db.trainer[185][2][2], 30, "a recorded requirement stays")
 	-- Issue #124: the requirement a trainer showed is kept only as a skill; a profession saved as no table goes.
-	env.SkillUpForeverDB = {
+	env.ProfessionPlannerDB = {
 		trainer = {
 			[185] = { [1] = { 40, 30, 25 }, [2] = { 50, 30, "x" }, [3] = { 60, 30, 0 }, ["4"] = { 60, 30, 30 } },
 			[186] = 5,
 			["164"] = {},
 		},
 	}
-	callbacks.SkillUpForever()
+	callbacks.ProfessionPlanner()
 	equal(ns.db.trainer[185][1][3], 25, "a shown requirement stays")
 	equal(ns.db.trainer[185][2][3], nil, "one that is no number is forgotten")
 	equal(ns.db.trainer[185][3][3], nil, "and one of 0")
@@ -321,7 +336,7 @@ do
 	local newestVersion, newestHeadline = Headline(Read("CHANGELOG.md"))
 	equal(newestVersion ~= nil, true, "CHANGELOG.md has a release with a bold lead")
 	equal(whatsNewVersion, newestVersion, "the update line is the newest release with a bold lead")
-	equal(whatsNew, newestHeadline, "the update line is that release's headline")
+	equal(whatsNew, (newestHeadline:gsub("^SkillUp", "Profession Planner")), "the update line uses our own name")
 
 	-- A core sync's maintenance entry sits on top with no bold lead: the release below it still has the headline.
 	local maintenance = table.concat({

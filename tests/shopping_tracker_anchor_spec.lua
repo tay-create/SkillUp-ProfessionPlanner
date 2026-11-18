@@ -23,7 +23,7 @@ local c = Client.load({
 	},
 })
 local ns = c.ns
-local module = c.G.SkillUpForeverObjectiveTracker
+local module = c.G.ProfessionPlannerObjectiveTracker
 
 -- ForeverCore's TrackerSection.Create built it from the game's module template, mixed SkillUp's rows in and set the
 -- header. The section then waits for the world, exactly as core's own quest section does.
@@ -110,7 +110,7 @@ c.allowErrors = false
 -- A section that never joins the column warns once, in the addon's own words: core calls onUnattached after a few
 -- seconds, which is the one warning this file still owns.
 local missing = Client.load()
-local section = missing.G.SkillUpForeverObjectiveTracker
+local section = missing.G.ProfessionPlannerObjectiveTracker
 missing.EnterWorld()
 missing.Advance(0)
 -- The link to the column is core's, so the spec drops it before core's few seconds are up.

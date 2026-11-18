@@ -1,12 +1,12 @@
 -- The stub game client the specs share: `local Client = dofile("tests/client.lua")`, from the repository root.
--- Client.load loads ForeverCore first, as the client does, then the files SkillUpForever.toc lists, in its order,
+-- Client.load loads ForeverCore first, as the client does, then the files ProfessionPlanner.toc lists, in its order,
 -- against stubs of the client API the addons call, and returns a handle. A spec sets what the client holds
 -- (professions, bags, a merchant, Auctionator's prices, the clock), fires the game's events, and asserts on what the
 -- addon produces. Nothing on `ns` is faked.
 local Client = {}
 local ForeverCore = dofile("tests/forever_core.lua")
 
-local ADDON = "SkillUpForever"
+local ADDON = "ProfessionPlanner"
 
 -- The addon's TOC fields, as C_AddOns.GetAddOnMetadata reports them: a spec reads the same declared values the
 -- client gives the addon at load.
@@ -163,7 +163,7 @@ function Client.AtlasLoot(db)
 	}
 end
 
--- options: data (ns tables that replace the bundled Data/*.lua ones of the same name), saved (SkillUpForeverDB),
+-- options: data (ns tables that replace the bundled Data/*.lua ones of the same name), saved (ProfessionPlannerDB),
 -- auctionator (false for a client without it), trackerManager (false for a client without Blizzard's tracker
 -- manager), boot (false to stop before the addon's ADDON_LOADED; c.Boot() then runs it), questie and atlasLoot
 -- (what a synthetic QuestieDB and AtlasLoot hold, as Client.QuestieDB and Client.AtlasLoot take it; a client
@@ -188,6 +188,8 @@ local OPTIONAL_GLOBALS = {
 	-- Core/SafeCall.lua: BugGrabber, when that error display is installed, so its captures join the journal.
 	BugGrabber = true,
 	-- SavedVariables: the addon's own table, nil before the client loads it or when its file is missing.
+	ProfessionPlannerDB = true,
+	-- Optional legacy settings imported when a previous save is available.
 	SkillUpForeverDB = true,
 	-- Questie: its addon table and database, present only when Questie is installed and enabled.
 	Questie = true,
@@ -1695,7 +1697,7 @@ function Client.load(options)
 		end
 	end
 
-	G.SkillUpForeverDB = options.saved
+	G.ProfessionPlannerDB = options.saved
 	local data = options.data
 	for line in io.lines(ADDON .. ".toc") do
 		local file = line:match("^([%w_\\]+%.lua)%s*$")

@@ -554,7 +554,7 @@ local ns = {
 		return nil
 	end,
 	AuctionListName = function(profession)
-		return "SkillUp: " .. profession
+		return "Profession Planner: " .. profession
 	end,
 	ShowRecipe = noop,
 	TrackerAttached = function()
@@ -807,7 +807,7 @@ for _, file in ipairs({
 	"UI/Route.lua",
 	"UI/Gear.lua",
 }) do
-	setfenv(assert(loadfile(file)), env)("SkillUpForever", ns)
+	setfenv(assert(loadfile(file)), env)("ProfessionPlanner", ns)
 end
 
 ns.RouteReagents = function()
@@ -880,21 +880,21 @@ local page = pageFrame
 ns.db.showGearTab = true
 ns.AttachGear()
 
--- One SkillUp side tab, whatever its pages, and it is the one core registered.
+-- One SkillUp tab remains registered with core, while the header button replaces its visible side tab.
 equal(#tabs, 1, "the pages share core's one side tab")
 equal(tab, coreTab, "the side tab is the one core registered")
-equal(tab.tooltipText, "SkillUp", "it says SkillUp")
+equal(tab.tooltipText, "Profession Planner", "it says SkillUp")
 equal(coreEntry.spec.minWidth, nil, "no recipe list here means no width of its own")
--- The tab stays while any page is on, and goes with the last one.
+-- The side tab stays hidden while the header button is in use, whatever pages are enabled.
 ns.db.showRouteTab = false
 ns.Changed("settings")
-equal(tab.shown, true, "the tab stays while the gear page is on")
+equal(tab.shown, false, "the side tab stays hidden while the gear page is on")
 ns.db.showGearTab = false
 ns.Changed("settings")
 equal(tab.shown, false, "the tab is hidden when every page is off")
 ns.db.showRouteTab = true
 ns.Changed("settings")
-equal(tab.shown, true, "and comes back with one page on")
+equal(tab.shown, false, "the side tab stays hidden when one page is on")
 
 tab.scripts.OnMouseUp(nil, "LeftButton", true)
 Flush()
@@ -929,6 +929,8 @@ local controls = {
 	page.Collect,
 	page.CollectLabel,
 	page.Money,
+	page.NextAction,
+	page.ProgressText,
 	page.Vendor,
 	page.Craft,
 	page.CraftCount,
@@ -942,6 +944,8 @@ local names = {
 	"the switch",
 	"the switch's label",
 	"the money line",
+	"the next action",
+	"the progress line",
 	"the vendor button",
 	"Craft",
 	"Craft's count",

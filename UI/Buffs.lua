@@ -540,7 +540,7 @@ local function CreateRows(inset)
 		return ROW_HEIGHT
 	end)
 	view:SetElementFactory(function(factory, _)
-		factory("SkillUpForeverBuffRowTemplate", InitializeRow)
+		factory("ProfessionPlannerBuffRowTemplate", InitializeRow)
 	end)
 	ScrollUtil.InitScrollBoxListWithScrollBar(scrollBox, scrollBar, view)
 	scrollBox:EnableMouseWheel(true)

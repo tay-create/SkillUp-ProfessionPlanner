@@ -1,7 +1,7 @@
 ---@meta
 
--- One /skillup command: its word and aliases, the arguments it accepts (nil accepts any), its handler and the line
--- /skillup help prints (nil for a command the help leaves out).
+-- One /pp command: its word and aliases, the arguments it accepts (nil accepts any), its handler and the line
+-- /pp help prints (nil for a command the help leaves out).
 ---@class SkillUpSlashCommand
 ---@field word string
 ---@field aliases? string[]
@@ -71,10 +71,10 @@
 ---@field TrainingFor fun(profession: SkillUpContext, recipeID: integer): number[]?
 ---@field TrainerChecks fun(): SkillUpTrainerCheck[]
 ---@field TrainerReport fun(): string[]
----@field TrainerExport fun(): string[] the requirements trainers showed, as a SEEN_REQUIREMENTS table literal (/skillup export)
----@field AuditLines fun(): string[]? /skillup audit's lines with a profession open, nil with none
----@field ReportLines fun(): string[] SkillUp's own lines in /skillup report (Core/Report.lua)
----@field SlashCommands SkillUpSlashCommand[] the /skillup commands, in dispatch and help order
+---@field TrainerExport fun(): string[] the requirements trainers showed, as a SEEN_REQUIREMENTS table literal (/pp export)
+---@field AuditLines fun(): string[]? /pp audit's lines with a profession open, nil with none
+---@field ReportLines fun(): string[] SkillUp's own lines in /pp report (Core/Report.lua)
+---@field SlashCommands SkillUpSlashCommand[] the /pp commands, in dispatch and help order
 ---@field RankName fun(cap: number): string?
 ---@field RecipeBands fun(profession: SkillUpContext, recipeID: integer): SkillUpBand[]
 ---@field LearnSource fun(profession: SkillUpContext, recipeID: integer): SkillUpLearnSource?
@@ -178,6 +178,7 @@
 ---@field SeeVendor fun(itemIDs: integer[]): boolean
 ---@field NearestNPC fun(npcIDs: integer[], byTravel?: boolean): integer?
 ---@field SetWaypoint fun(npcID: integer): boolean
+---@field FindFishing fun(itemID: integer): boolean
 ---@field SuggestionNPC fun(suggestion: SkillUpSuggestionNPC): integer?
 ---@field RecipeSuggestions fun(profession: SkillUpContext, base: number): SkillUpSuggestion[]
 ---@field ScrollPrice fun(source: SkillUpScrollSource): number?
@@ -231,6 +232,7 @@
 ---@field TrainerInferred table<integer, number> classic-db's required skill, where the bundled one was moved from it.
 ---@field ProfessionTrainers table<integer, number[][]>
 ---@field GatheredBy table<integer, integer>
+---@field FishingZones table<integer, integer[]> Fishing loot zones by reagent item ID, using UiMapIDs.
 ---@field LootedFrom table<integer, boolean> Reagents a creature drops, which any character can loot.
 ---@field LimitedStock table<integer, table<integer, number>> Per item, the vendors that limit its stock and by how much.
 ---@field NodeSkills table<string, number[]> { gathering skill line, required skill } per enUS herb or ore node name.
@@ -257,6 +259,7 @@
 ---@field sortMode 'blizzard'|'skill'|'newest'|'chance'|'cost'
 ---@field showTrainer boolean
 ---@field showRouteTab boolean
+---@field combineCookingFishing boolean
 ---@field showTracker boolean
 ---@field showGearTab boolean
 ---@field showBuffsTab boolean
@@ -309,7 +312,7 @@
 ---@field companionHints? boolean Legacy migration only: off turns suggestFamily off once.
 
 ---@type SkillUpDB
-SkillUpForeverDB = nil
+ProfessionPlannerDB = nil
 
 ---@class SkillUpReagent
 ---@field itemID integer
@@ -568,6 +571,7 @@ SkillUpForeverDB = nil
 ---@field bar? { have: number, need: number } A have/need bar under the name.
 ---@field barColor? ColorMixin
 ---@field sourceIcon? string The client atlas naming where the reagent comes from.
+---@field sourceTexture? string An item source shown with an icon texture.
 ---@field current? boolean The route's next step, drawn in gold.
 ---@field tooltip? fun(tooltip: GameTooltip)
 ---@field click? fun(row: SkillUpListRow) A left click.
@@ -910,7 +914,7 @@ SkillUpForeverDB = nil
 ---@field recipeID? integer
 ---@field ambiguous? boolean
 
--- A bundled trainer requirement a visit could prove wrong (/skillup trainers).
+-- A bundled trainer requirement a visit could prove wrong (/pp trainers).
 ---@class SkillUpTrainerCheck
 ---@field skillLine integer
 ---@field recipeID integer

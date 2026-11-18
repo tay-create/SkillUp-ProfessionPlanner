@@ -282,7 +282,11 @@ end
 ---@return number[]?
 function ns.TrainingFor(profession, recipeID)
 	local seen = ns.db.trainer[profession.skillLine]
-	return seen and seen[recipeID] or ns.TrainerFees[recipeID]
+	local training = seen and seen[recipeID] or ns.TrainerFees[recipeID]
+	if training and ns.RecipeTrainerAvailable and ns.RecipeTrainerAvailable(profession, recipeID) == false then
+		return nil
+	end
+	return training
 end
 
 -- { fee, required base skill }: a recipe's scroll sold by a vendor, whose price is the fee, nil for a
@@ -800,7 +804,7 @@ local plans = {}
 -- player is shopping for this one, so while every step of it can still be walked its recipes and their order are
 -- kept (#621). A key the player asked for (a new target, the collect switch, a level) is another route and is
 -- committed in its place.
----@type table<integer, { key: string, plan: SkillUpPlan, bags: integer }>
+---@type table<integer, { key: string, context: string, plan: SkillUpPlan, bags: integer }>
 local committed = {}
 
 ns.WhenStale("plans", function()
@@ -809,6 +813,10 @@ end)
 
 ns.WhenStale("replan", function()
 	committed = {}
+	local character = ns.CharacterKey and ns.CharacterKey()
+	if character and ns.db then
+		ns.db.committedRoutes[character] = nil
+	end
 end)
 
 -- A bag change never chooses a route's recipes, but it can take away what a step still needs. Bags move many
@@ -849,9 +857,11 @@ function ns.RouteFollowable(plan)
 		-- A training step the player already took is done, a recipe nobody still teaches can't be learned, and
 		-- one taught later than the route crafts it cannot be trained where the route puts it.
 		if
-			ns.IsLearned(training.recipeID)
-			or not (ns.TrainingFor(profession, training.recipeID) or VendorTraining(training.recipeID))
-			or ns.LearnSkill(profession, training.recipeID) > training.usedAt + modifier
+			not ns.IsLearned(training.recipeID)
+			and (
+				not (ns.TrainingFor(profession, training.recipeID) or VendorTraining(training.recipeID))
+				or ns.LearnSkill(profession, training.recipeID) > training.usedAt + modifier
+			)
 		then
 			return false
 		end
@@ -898,17 +908,84 @@ local function SameSteps(a, b)
 	return true
 end
 
+-- Persist only the decisions the player may already have bought materials for. All display data,
+-- prices, sub-crafts and ranks are rebuilt from the current client when the route is used again.
+local function SaveRoute(skillLine, context, plan)
+	local character = ns.CharacterKey and ns.CharacterKey()
+	if not character or not ns.db then
+		return
+	end
+	local routes = ns.db.committedRoutes[character] or {}
+	if #plan.crafts == 0 then
+		routes[skillLine] = nil
+	else
+		local saved = { context = context, reached = plan.reached, crafts = {}, training = {} }
+		for index, craft in ipairs(plan.crafts) do
+			saved.crafts[index] = { craft.recipeID, craft.from, craft.to, craft.crafts }
+		end
+		for index, training in ipairs(plan.training) do
+			saved.training[index] = { training.recipeID, training.usedAt }
+		end
+		routes[skillLine] = saved
+	end
+	ns.db.committedRoutes[character] = next(routes) and routes or nil
+end
+
+-- SavedVariables can outlive recipe data updates. Ignore an old or incomplete route rather than
+-- indexing a missing recipe, and let the current planner construct a new one instead.
+local function RestoreRoute(profession, context, target)
+	local skillLine = profession.skillLine
+	local character = ns.CharacterKey and ns.CharacterKey()
+	local saved = character and ns.db.committedRoutes[character]
+	saved = saved and saved[skillLine]
+	if type(saved) ~= "table" or saved.context ~= context or type(saved.crafts) ~= "table"
+		or #saved.crafts == 0 or #saved.crafts > 100 or type(saved.training) ~= "table"
+		or #saved.training > 100 or type(saved.reached) ~= "number" or saved.reached < 0 or saved.reached > target
+	then
+		return nil
+	end
+	local plan = { profession = profession, crafts = {}, training = {}, ranks = {}, reached = saved.reached }
+	for index, row in ipairs(saved.crafts) do
+		if type(row) ~= "table" then
+			return nil
+		end
+		local id, from, to, count = row[1], row[2], row[3], row[4]
+		if type(id) ~= "number" or not ns.RecipeData[id] or ns.RecipeData[id].skillLine ~= skillLine
+			or type(from) ~= "number" or type(to) ~= "number" or from < 0 or from >= to or to > target
+			or type(count) ~= "number" or count < 1 or count > 100000 or count % 1 ~= 0
+		then
+			return nil
+		end
+		plan.crafts[index] = { recipeID = id, from = from, to = to, crafts = count }
+	end
+	for index, row in ipairs(saved.training) do
+		if type(row) ~= "table" then
+			return nil
+		end
+		local id, at = row[1], row[2]
+		if type(id) ~= "number" or not ns.RecipeData[id] or ns.RecipeData[id].skillLine ~= skillLine
+			or type(at) ~= "number" or at < 0 or at > target
+		then
+			return nil
+		end
+		plan.training[index] = { recipeID = id, usedAt = at }
+	end
+	return plan
+end
+
 -- Keeps a profession's route, in place so a cached ask writes no table.
 ---@param skillLine integer
 ---@param key string
+---@param context string
 ---@param plan SkillUpPlan
-local function Commit(skillLine, key, plan)
+local function Commit(skillLine, key, context, plan)
 	local entry = committed[skillLine]
 	if entry then
-		entry.key, entry.plan, entry.bags = key, plan, bagEpoch
+		entry.key, entry.context, entry.plan, entry.bags = key, context, plan, bagEpoch
 	else
-		committed[skillLine] = { key = key, plan = plan, bags = bagEpoch }
+		committed[skillLine] = { key = key, context = context, plan = plan, bags = bagEpoch }
 	end
+	SaveRoute(skillLine, context, plan)
 end
 
 -- The route a player is following, planned again from today's inputs while keeping its own steps: the same
@@ -931,23 +1008,29 @@ local function Rebuild(profession, target, plan, fresh)
 		excluded = { unpriced = fresh.unpriced, recipes = fresh.unpricedRecipes },
 		stopReason = plan.stopReason,
 	}
-	for index, craft in ipairs(plan.crafts) do
-		local thresholds = ns.Model.Get(craft.recipeID)
-		---@cast thresholds number[]
-		local ups = ns.RecipeSkillUps and ns.RecipeSkillUps(craft.recipeID) or 1
-		route.segments[index] = {
-			recipeID = craft.recipeID,
-			fromSkill = craft.from + modifier,
-			toSkill = craft.to + modifier,
-			skillUps = ups,
-			crafts = ns.Model.CoveredCrafts(thresholds, craft.from + modifier, craft.to + modifier, ups),
-		}
+	for _, craft in ipairs(plan.crafts) do
+		local from = math.max(craft.from, profession.base)
+		if from < craft.to then
+			local thresholds = ns.Model.Get(craft.recipeID)
+			---@cast thresholds number[]
+			local ups = ns.RecipeSkillUps and ns.RecipeSkillUps(craft.recipeID) or 1
+			route.segments[#route.segments + 1] = {
+				recipeID = craft.recipeID,
+				fromSkill = from + modifier,
+				toSkill = craft.to + modifier,
+				skillUps = ups,
+				crafts = ns.Model.CoveredCrafts(thresholds, from + modifier, craft.to + modifier, ups),
+			}
+		end
 	end
-	for index, step in ipairs(plan.training) do
-		local training = ns.TrainingFor(profession, step.recipeID) or VendorTraining(step.recipeID)
-		---@cast training number[]
-		route.training[index] = { recipeID = step.recipeID, fee = training[1], atSkill = step.usedAt + modifier }
-		route.trainingCost = route.trainingCost + training[1]
+	for _, step in ipairs(plan.training) do
+		if not ns.IsLearned(step.recipeID) then
+			local training = ns.TrainingFor(profession, step.recipeID) or VendorTraining(step.recipeID)
+			---@cast training number[]
+			route.training[#route.training + 1] =
+				{ recipeID = step.recipeID, fee = training[1], atSkill = step.usedAt + modifier }
+			route.trainingCost = route.trainingCost + training[1]
+		end
 	end
 	return Finish(profession, target, route)
 end
@@ -962,8 +1045,9 @@ function ns.PlanRoute(profession)
 	-- so a plan made under the other mode is a different route (#190). The level is too: a plan made at another
 	-- level may prefer a buff that level could not use (#357).
 	local level = UnitLevel("player") or 0
-	local key =
-		table.concat({ profession.skill, profession.modifier, profession.max, target, ns.CollectMode(), level }, ":")
+	local context = table.concat({ (ns.CharacterKey and ns.CharacterKey()) or "", profession.modifier, profession.max, target,
+		ns.CollectMode(), level, (ns.PlayerSide and ns.PlayerSide()) or "" }, ":")
+	local key = profession.skill .. ":" .. context
 	local cache = plans[profession.skillLine]
 	if not cache then
 		cache = { plans = {}, order = {} }
@@ -971,8 +1055,19 @@ function ns.PlanRoute(profession)
 	end
 	-- The route being followed is checked against the bags here, once per bag change: a route a step can no
 	-- longer afford to craft is planned afresh, any other bag change keeps it (#621).
-	---@type { key: string, plan: SkillUpPlan, bags: integer }?
+	---@type { key: string, context: string, plan: SkillUpPlan, bags: integer }?
 	local kept = committed[profession.skillLine]
+	if kept and kept.context ~= context then
+		kept = nil
+		committed[profession.skillLine] = nil
+	end
+	if not kept then
+		local restored = RestoreRoute(profession, context, target)
+		if restored then
+			kept = { key = "saved", context = context, plan = restored, bags = bagEpoch }
+			committed[profession.skillLine] = kept
+		end
+	end
 	if kept and kept.bags ~= bagEpoch then
 		kept.bags = bagEpoch
 		if not Affordable(kept.plan) then
@@ -982,28 +1077,31 @@ function ns.PlanRoute(profession)
 		end
 	end
 	local cached = cache.plans[key]
-	if cached then
+	if cached and (not kept or kept.key == key) then
 		cached.profession = profession
 		local entry = committed[profession.skillLine]
 		if not entry or entry.plan ~= cached then
-			Commit(profession.skillLine, key, cached)
+			Commit(profession.skillLine, key, context, cached)
 		end
 		return cached
 	end
-	local snapshot = Snapshot(profession, target)
-	local plan = Finish(profession, target, ns.Model.PlanWithTraining(snapshot, Trainable(profession, snapshot)))
+	local plan = cached
+	if not plan then
+		local snapshot = Snapshot(profession, target)
+		plan = Finish(profession, target, ns.Model.PlanWithTraining(snapshot, Trainable(profession, snapshot)))
+	end
 	if
 		kept
-		and kept.key == key
+		and kept.context == context
 		and #kept.plan.crafts > 0
-		and not SameSteps(kept.plan, plan)
+		and (kept.key ~= key or not SameSteps(kept.plan, plan))
 		and ns.RouteFollowable(kept.plan)
 	then
 		-- The player is shopping for this route: today's prices, fees and recipe data are not a reason to swap
 		-- the recipes they came for, only a route that can no longer be walked is (#621).
 		plan = Rebuild(profession, target, kept.plan, plan)
 	end
-	Commit(profession.skillLine, key, plan)
+	Commit(profession.skillLine, key, context, plan)
 	cache.plans[key] = plan
 	cache.order[#cache.order + 1] = key
 	if #cache.order > PLAN_CACHE_SIZE then

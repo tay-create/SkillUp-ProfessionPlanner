@@ -116,7 +116,7 @@ c.LoadAddOn("Blizzard_Professions")
 local frame = G.ProfessionsFrame
 local tab = ns.Pages.SideTab()
 assert(tab, "SkillUp registered its side tab with core")
-equal(tab.tooltipText, "SkillUp", "core's tab is SkillUp's")
+equal(tab.tooltipText, "Profession Planner", "core's tab is SkillUp's")
 equal(tab.Icon.texture, ns.ICON, "and wears the addon's icon")
 equal(core.Selected(), nil, "registering the tab does not select it")
 
@@ -189,7 +189,7 @@ local other = core.Register("commissions-like", {
 	tooltip = "Another addon",
 	page = G.CreateFrame("Frame", nil, frame),
 })
-equal(tab.tooltipText, "SkillUp", "SkillUp keeps its own tab beside another addon's")
+equal(tab.tooltipText, "Profession Planner", "SkillUp keeps its own tab beside another addon's")
 other.mouseUp(other, "LeftButton", true)
 c.Advance(0)
 equal(core.Selected(), "commissions-like", "the other addon's tab takes the window")

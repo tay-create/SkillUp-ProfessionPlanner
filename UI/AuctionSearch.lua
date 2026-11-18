@@ -9,7 +9,7 @@ local L = ns.L
 -- At the auction house, the Professions window's selected recipe gets a bar: how many to craft, and a search for
 -- what its reagents still lack for that many (#142). It only searches; buying stays the player's.
 
-local CALLER = "SkillUp Forever"
+local CALLER = "Profession Planner"
 -- Where a reagent's price comes from, as the route's shopping list groups it: only the auction house's, the
 -- unpriced ones a gatherable stays with Buy reagents on, and the unpriced are searched there, as with the
 -- route's own Auctionator list.

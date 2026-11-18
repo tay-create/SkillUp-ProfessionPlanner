@@ -45,7 +45,7 @@ class CraftValueTests(unittest.TestCase):
 
 class LuaDecoderTests(unittest.TestCase):
     def setUp(self):
-        scope = {"subprocess": subprocess, "json": json, "tempfile": tempfile}
+        scope = {"subprocess": subprocess, "json": json, "tempfile": tempfile, "Path": Path}
         self.parse = port("parse_lua_tables", "LUA_TABLE_SERIALIZER", scope=scope)
 
     def test_luajit_preserves_utf8_and_decimal_escapes(self):

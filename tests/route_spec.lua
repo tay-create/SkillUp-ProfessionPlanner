@@ -256,7 +256,7 @@ page = {
 		return page.auctionAutoscan
 	end,
 	AuctionListName = function(profession)
-		return not page.identityMissing and ("SkillUp: Tester-Realm: " .. profession) or nil
+		return not page.identityMissing and ("Profession Planner: Tester-Realm: " .. profession) or nil
 	end,
 	IsTracked = function()
 		return page.tracked == true
@@ -434,7 +434,7 @@ for _, file in ipairs({
 	"UI/PageParts.lua",
 	"UI/Route.lua",
 }) do
-	setfenv(assert(loadfile(file)), pageEnv)("SkillUpForever", page)
+	setfenv(assert(loadfile(file)), pageEnv)("ProfessionPlanner", page)
 end
 -- The page's money line is Plan.lua's own subject in plan_spec; this spec draws it from a fixed split and
 -- checks that the header carries it and that the list no longer ends with a Total line.
@@ -985,7 +985,7 @@ Drain()
 equal(
 	table
 		.concat(lists[2].messages, " | ")
-		:find("Kept in the Auctionator list 'SkillUp: Tester-Realm: First Aid'.", 1, true) ~= nil,
+		:find("Kept in the Auctionator list 'Profession Planner: Tester-Realm: First Aid'.", 1, true) ~= nil,
 	true,
 	"the reagent list names the Auctionator list"
 )
@@ -1162,6 +1162,11 @@ equal(collect.checked, true, "the buy reagents switch shows the latest wanted st
 equal(collect.enabled, true, "and is still clickable")
 equal(vendorButton.shown, false, "the Nearest vendor button is hidden")
 equal(craftButton.shown, false, "and the Craft button too")
+equal(craftButton.attributes.type, nil, "with no profession the secure click type is cleared after combat")
+equal(craftButton.attributes.clickbutton, nil, "and its native button is cleared")
+equal(craftButton.attributes["shift-type1"], nil, "and Shift click is cleared")
+equal(craftButton.attributes["shift-clickbutton1"], nil, "and its Shift button is cleared")
+equal(craftButton.enabled, false, "and Craft is disabled")
 page.RouteProfessions = realRoutes
 page.tracked = nil
 page.SetCollectMode("gather")
@@ -1204,6 +1209,71 @@ equal(craftButton.attributes.type, "click", "the client showing the recipe arms 
 equal(craftButton.attributes.clickbutton, nativeCreate, "on its Create button")
 equal(craftButton.enabled, true, "and it is ready")
 equal(#nativeWrites, 0, "with no write into Blizzard's crafting frames")
+
+-- A fresh profession can ignore the first OpenRecipe before its schematic is ready. Without visiting the
+-- native recipe list, the PP tab retries the client's API and arms its secure Craft button when it succeeds.
+shownRecipeID = 9999
+openedRecipes = {}
+local firstOpen = pageEnv.C_TradeSkillUI.OpenRecipe
+local attemptsToOpen = 0
+pageEnv.C_TradeSkillUI.OpenRecipe = function(recipeID)
+	firstOpen(recipeID)
+	attemptsToOpen = attemptsToOpen + 1
+	if attemptsToOpen == 2 then
+		shownRecipeID = recipeID
+	end
+end
+routeTab:Click()
+equal(craftButton.enabled, false, "a delayed native selection waits before enabling Craft")
+Drain()
+equal(attemptsToOpen, 2, "PP retries opening the recipe when the first native request is ignored")
+equal(craftButton.enabled, true, "the retry enables PP Craft without a manual native recipe selection")
+equal(craftButton.attributes.clickbutton, nativeCreate, "the retry still uses the client's secure Create")
+equal(#nativeWrites, 0, "and touches no native selection or schematic fields")
+pageEnv.C_TradeSkillUI.OpenRecipe = firstOpen
+
+-- When all three native selection attempts are ignored, a later redraw can request the recipe again.
+shownRecipeID, craftableCount = 9999, 8
+openedRecipes = {}
+attemptsToOpen = 0
+pageEnv.C_TradeSkillUI.OpenRecipe = function(recipeID)
+	attemptsToOpen = attemptsToOpen + 1
+	openedRecipes[#openedRecipes + 1] = recipeID
+	if attemptsToOpen == 4 then
+		shownRecipeID = recipeID
+	end
+end
+routeTab:Click()
+Drain()
+Drain()
+equal(attemptsToOpen, 3, "a failed recipe request stops after three attempts")
+equal(craftButton.enabled, false, "Craft stays disabled while the native recipe is unavailable")
+routeTab:Click()
+equal(attemptsToOpen, 4, "a later redraw rearms the failed recipe request")
+equal(craftButton.enabled, true, "the rearmed request enables Craft when the client shows the recipe")
+equal(craftButton.attributes.clickbutton, nativeCreate, "the rearmed request still uses the native Create button")
+pageEnv.C_TradeSkillUI.OpenRecipe = firstOpen
+
+-- A route step changing while an old request is pending must cancel the old retry. The client must never
+-- reopen a recipe whose materials are no longer the next step.
+shownRecipeID = 9999
+openedRecipes = {}
+routeTab:Click()
+page.NextCraft = function()
+	return { recipeID = 3276, count = 1, planned = 1, to = 20, text = "Craft Spell 3276" }
+end
+routeTab:Click()
+Drain()
+equal(openedRecipes[1], 3275, "the first route step opened its requested recipe")
+equal(openedRecipes[2], 3276, "the changed route step opened its new recipe")
+for index = 3, #openedRecipes do
+	equal(openedRecipes[index], 3276, "old recipe retries cannot overwrite the current route step")
+end
+shownRecipeID = 3275
+page.NextCraft = function()
+	return { recipeID = 3275, count = 3, planned = 5, to = 20, text = "Craft 3 of 5× Spell 3275" }
+end
+routeTab:Click()
 
 -- A route with crafts and an unpriced reagent is marked incomplete, and the reagent it left out is
 -- still named in the reagent list.
@@ -1374,6 +1444,118 @@ equal(BandRow(3).name, "Journeyman", "named for that rank")
 equal(BandRow(4).kind, "line", "which is one compact line")
 equal(BandRow(5).current, false, "and later crafts are not the current step")
 
+-- Stage 2: a persistent next-action button uses the route's trainer, scroll vendor and recipe actions.
+local beforeActionPlan = page.PlanRoute
+local beforeTrainer, beforeScrollVendor = page.NearestTrainer, page.NearestScrollVendor
+local beforeRecipeNPC = page.RecipeNPC
+local beforeNearestRank = page.NearestForRank
+local beforeWaypoint, beforeRankText, beforeRankHeld = page.SetWaypoint, page.RankText, page.RankHeld
+local beforePrint, beforeHint = page.Print, page.Catalogue.Hint
+local nextStep, markedNPC, printed
+page.PlanRoute = function(profession)
+	return {
+		profession = profession,
+		target = 100,
+		crafts = {},
+		steps = { nextStep },
+		ranks = {},
+		cost = 0,
+		unpriced = 0,
+		unpricedRecipes = {},
+	}
+end
+page.NearestTrainer = function()
+	return 555
+end
+page.RecipeNPC = function(_, recipeID)
+	return recipeID == 3275 and 556 or nil
+end
+page.NearestScrollVendor = function()
+	return 777
+end
+page.NearestForRank = function()
+	return 888
+end
+page.SetWaypoint = function(npcID)
+	markedNPC = npcID
+end
+page.Print = function(message)
+	printed = message
+end
+page.RankText = function()
+	return "Train Journeyman"
+end
+page.RankHeld = function()
+	return false
+end
+local actionButton = page.routeSpec.page.NextAction
+nextStep = { training = { recipeID = 3275, cap = 75, fee = 100 } }
+routeTab:Click()
+equal(page.routeSpec.page.NextActionText.text, "Next: Train Spell 3275", "next step names the trainer recipe")
+equal(page.routeSpec.page.ProgressText.text, "Progress: 1/100 (1%)", "progress shows skill, target and percentage")
+local trainingRow
+for _, row in ipairs(lists[#lists - 1].rows) do
+	if row.text == "Train Spell 3275" then
+		trainingRow = row
+		break
+	end
+end
+equal(type(trainingRow and trainingRow.click), "function", "the recipe training row is clickable")
+if trainingRow and trainingRow.click then
+	trainingRow.click()
+end
+equal(markedNPC, 556, "clicking the recipe training row uses its named trainer")
+actionButton:Click()
+equal(markedNPC, 556, "clicking the next trainer step uses its named trainer")
+
+nextStep = { training = { recipeID = 3275, cap = 75, scroll = 6454, fee = 100 } }
+routeTab:Click()
+equal(page.routeSpec.page.NextActionText.text:find("Next: Buy ", 1, true) ~= nil, true, "scroll steps show a purchase")
+actionButton:Click()
+equal(markedNPC, 777, "clicking the next scroll step marks its vendor")
+
+nextStep = { rank = { cap = 150, name = "Journeyman", fee = 500 } }
+routeTab:Click()
+equal(page.routeSpec.page.NextActionText.text, "Next: Train Journeyman", "rank steps identify the next rank")
+actionButton:Click()
+equal(markedNPC, 888, "the rank instruction marks its trainer, book or quest destination")
+
+-- Missing QuestieDB or an unreachable destination must explain the failed click in chat.
+page.NearestTrainer, page.NearestScrollVendor, page.NearestForRank = function() end, function() end, function() end
+page.RecipeNPC = function() end
+page.Catalogue.Hint = function()
+	return "Install QuestieDB to see vendors, quests and trainers, with waypoints to them."
+end
+for _, step in ipairs({
+	{ training = { recipeID = 3275, cap = 75, fee = 100 } },
+	{ training = { recipeID = 3275, cap = 75, scroll = 6454, fee = 100 } },
+	{ rank = { cap = 150, name = "Journeyman", fee = 500 } },
+}) do
+	nextStep = step
+	printed = nil
+	routeTab:Click()
+	actionButton:Click()
+	equal(printed, page.Catalogue.Hint(true), "a missing NPC gives dependency guidance on clicking the next step")
+end
+page.Catalogue.Hint = function() end
+printed = nil
+actionButton:Click()
+equal(printed, "No suitable destination found. Check trainer and vendor locations.", "a missing destination explains itself even with databases ready")
+page.Catalogue.Hint = beforeHint
+
+nextStep = {}
+routeTab:Click()
+equal(page.routeSpec.page.NextActionText.text, "Next: No next step", "an empty route has no pending action")
+actionButton:Click()
+equal(markedNPC, 888, "an empty route does not repeat the previous waypoint")
+
+page.PlanRoute = beforeActionPlan
+page.NearestTrainer, page.NearestScrollVendor = beforeTrainer, beforeScrollVendor
+page.RecipeNPC = beforeRecipeNPC
+page.NearestForRank = beforeNearestRank
+page.SetWaypoint, page.RankText, page.RankHeld = beforeWaypoint, beforeRankText, beforeRankHeld
+page.Print = beforePrint
+
 -- The page names the latest auction source and flags old prices.
 page.Price = function()
 	return { copper = 10, source = "auctionator" }
@@ -1525,6 +1707,79 @@ end
 for _ = 1, 10 do
 	eventFrame:Event("SKILL_LINES_CHANGED")
 end
-equal(#timers, 2, "a burst of skill updates schedules one route pass and one tracker refresh, not one per event")
+equal(#timers, 3, "a burst of skill updates schedules one route pass, tracker refresh and native tab sync")
+
+-- Fish reagents in profession routes show a fishing hook and use the fishing lookup when clicked.
+local savedRoutes, savedPlan, savedReagents = page.RouteProfessions, page.PlanRoute, page.RouteReagents
+local savedFishingZones, savedFindFishing = page.FishingZones, page.FindFishing
+local savedGetItemInfo = pageEnv.C_Item.GetItemInfo
+pageEnv.C_Item.GetItemInfo = function()
+	return nil, nil
+end
+page.RouteProfessions = function()
+	return { [185] = { skillLine = 185, name = "Cooking", base = 1, skill = 1, max = 75 } }
+end
+page.PlanRoute = function(profession)
+	return {
+		profession = profession,
+		target = 75,
+		crafts = {},
+		steps = {},
+		ranks = {},
+		cost = 0,
+		unpriced = 0,
+		unpricedRecipes = {},
+		reached = 1,
+	}
+end
+page.RouteReagents = function()
+	return { { itemID = 1, need = 2, source = "gather" }, { itemID = 2, need = 4, source = "vendor" } }
+end
+page.FishingZones = { [1] = { 1429 } }
+local searchedFish
+page.FindFishing = function(itemID)
+	searchedFish = itemID
+end
+routeTab:Click()
+local fishRow, ordinaryRow = lists[2].rows[#lists[2].rows - 1], lists[2].rows[#lists[2].rows]
+equal(fishRow.sourceTexture, "Interface\\Icons\\Trade_Fishing", "a Cooking fish reagent shows the fishing hook")
+equal(ordinaryRow.sourceTexture, nil, "a non-fish reagent has no fishing hook")
+fishRow.click()
+equal(searchedFish, 1, "clicking the fish reagent searches for that fish")
+page.db.combineCookingFishing = false
+searchedFish = nil
+routeTab:Click()
+fishRow = lists[2].rows[#lists[2].rows - 1]
+equal(fishRow.sourceTexture, nil, "disabling Cooking and Fishing hides the hook")
+fishRow.click()
+equal(searchedFish, nil, "disabling Cooking and Fishing skips fishing lookup")
+page.db.combineCookingFishing = nil
+routeTab:Click()
+fishRow = lists[2].rows[#lists[2].rows - 1]
+equal(fishRow.sourceTexture, "Interface\\Icons\\Trade_Fishing", "re-enabling Cooking and Fishing restores the hook")
+
+page.RouteProfessions = function()
+	return { [164] = { skillLine = 164, name = "Tailoring", base = 1, skill = 1, max = 75 } }
+end
+searchedFish = nil
+routeTab:Click()
+fishRow = lists[2].rows[#lists[2].rows - 1]
+equal(fishRow.sourceTexture, "Interface\\Icons\\Trade_Fishing", "a fish reagent in another profession route shows the fishing hook")
+fishRow.click()
+equal(searchedFish, 1, "clicking a fish reagent in another profession route searches for that fish")
+page.db.combineCookingFishing = false
+searchedFish = nil
+routeTab:Click()
+fishRow = lists[2].rows[#lists[2].rows - 1]
+equal(fishRow.sourceTexture, nil, "disabling Cooking and Fishing hides the hook in other profession routes")
+fishRow.click()
+equal(searchedFish, nil, "disabling Cooking and Fishing skips fishing lookup in other profession routes")
+page.db.combineCookingFishing = nil
+routeTab:Click()
+fishRow = lists[2].rows[#lists[2].rows - 1]
+equal(fishRow.sourceTexture, "Interface\\Icons\\Trade_Fishing", "re-enabling Cooking and Fishing restores the hook in other profession routes")
+page.RouteProfessions, page.PlanRoute, page.RouteReagents = savedRoutes, savedPlan, savedReagents
+page.FishingZones, page.FindFishing = savedFishingZones, savedFindFishing
+pageEnv.C_Item.GetItemInfo = savedGetItemInfo
 
 Client.report("route_spec")

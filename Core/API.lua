@@ -6,7 +6,7 @@ if ns.broken then
 end
 local L = ns.L
 
--- SkillUpForever.API, version 1: each profession's next steps, recipes and reagents,
+-- ProfessionPlanner.API, version 1: each profession's next steps, recipes and reagents,
 -- read from the same levelling plan the route tab shows, for other addons to draw.
 -- Built once and kept until Core/Changes.lua says it is stale.
 -- API.ShoppingList's records carry `target`: the base skill that profession's plan buys to,
@@ -20,7 +20,7 @@ local APIKit = ForeverCore.APIKit
 -- once per burst, never in the call that made it (docs/api.md). Both names move together: one change signal drops
 -- every answer, so the list and the shopping list are read again together.
 local revision = 0
-local hub = APIKit.Hub("SkillUpForever", {
+local hub = APIKit.Hub("ProfessionPlanner", {
 	professions = function()
 		return revision
 	end,
@@ -629,7 +629,7 @@ function ns.ShoppingText(skillLineID)
 		professions[#professions + 1] = list.profession
 	end
 	local lines = {
-		L["SkillUp Forever shopping list"],
+		L["Profession Planner shopping list"],
 		#professions > 0 and table.concat(professions, ", ") or L["No tracked profession"],
 	}
 	local total = 0
@@ -713,6 +713,7 @@ function ns.ShoppingTrip(skillLineID)
 		return false
 	end
 	local stops = {}
+	local firstVendor, firstTrainer
 	local ids = {}
 	for id in pairs(byVendor) do
 		ids[#ids + 1] = id
@@ -742,6 +743,7 @@ function ns.ShoppingTrip(skillLineID)
 	for _, id in ipairs(ids) do
 		local where = ns.NPCLocation(id)
 		if where.map and where.x and where.y then
+			firstVendor = firstVendor or id
 			local names = {}
 			for _, itemID in ipairs(vendorItems[id]) do
 				names[#names + 1] = C_Item.GetItemNameByID(itemID) or string.format(L["item %d"], itemID)
@@ -764,22 +766,27 @@ function ns.ShoppingTrip(skillLineID)
 	for _, id in ipairs(trainerIDs) do
 		local where = ns.NPCLocation(id)
 		if where.map and where.x and where.y then
+			firstTrainer = firstTrainer or id
 			stops[#stops + 1] = { map = where.map, x = where.x, y = where.y, title = where.name, kind = "trainer" }
 		end
 	end
 	while #stops > 64 do
 		table.remove(stops)
 	end
-	if api and type(api.NavigateRoute) == "function" and #stops > 0 and api.NavigateRoute("SkillUpForever", stops) then
+	if #stops == 0 then
+		ns.Print(L["No vendor or trainer location found for this list. Check NPC locations in QuestieDB; auction and gathered items are separate."])
+		return false
+	end
+	if api and type(api.NavigateRoute) == "function" and api.NavigateRoute("ProfessionPlanner", stops) then
 		return true
 	end
-	local first = ids[1]
-	if first then
+	local first = firstVendor or firstTrainer
+	if firstVendor then
 		ns.Print(L["Shortest Path Forever cannot plan the full trip; setting a waypoint to the first vendor."])
-		ns.SetWaypoint(first)
 	else
-		ns.Print(L["Shortest Path Forever is needed to plan this trip."])
+		ns.Print(L["Shortest Path Forever cannot plan the full trip; setting a waypoint to the first trainer."])
 	end
+	ns.SetWaypoint(first)
 	return false
 end
 
@@ -829,7 +836,7 @@ function API.Stats()
 	local value, eventUnix = ns.Stats.Local()
 	return {
 		{
-			addon = "SkillUpForever",
+			addon = "ProfessionPlanner",
 			metric = STATS_METRIC,
 			subject = "all",
 			value = value,
@@ -868,9 +875,9 @@ function API.OpenRecipes(skillLineID)
 end
 
 ---@type SkillUpPublicAddon
-SkillUpForever = { API = API }
+ProfessionPlanner = { API = API }
 if (ForeverCore.APIKit.minor or 1) >= 2 then
-	ForeverCore.APIKit.Publish("SkillUpForever", API)
+	ForeverCore.APIKit.Publish("ProfessionPlanner", API)
 end
 
 ns.WhenEvent("ITEM_DATA_LOAD_RESULT", function()

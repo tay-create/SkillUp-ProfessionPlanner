@@ -33,6 +33,43 @@ local function Usable(npcID)
 	return npc ~= nil and OurFaction(npc.side)
 end
 
+-- Whether this character can train one recipe. Nil means the provider has not identified its trainers yet.
+---@param profession SkillUpContext
+---@param recipeID integer
+---@return boolean?
+function ns.RecipeTrainerAvailable(profession, recipeID)
+	local recipe = ns.RecipeData and ns.RecipeData[recipeID]
+	if recipe and recipe.skillLine ~= profession.skillLine then
+		return nil
+	end
+	local byProfession = ns.RecipeTrainers and ns.RecipeTrainers[profession.skillLine]
+	if not byProfession then
+		return nil
+	end
+	local trainerIDs = byProfession[recipeID]
+	if not trainerIDs then
+		if next(byProfession) then
+			return nil
+		end
+		return false
+	end
+	local unknown = false
+	for _, npcID in ipairs(trainerIDs) do
+		local npc = C.NPC(npcID)
+		if npc then
+			if OurFaction(npc.side) then
+				return true
+			end
+		else
+			unknown = true
+		end
+	end
+	if unknown then
+		return nil
+	end
+	return false
+end
+
 ---@param source SkillUpScrollSource
 ---@return integer?
 local function QuestFor(source)
@@ -219,6 +256,28 @@ function ns.DropZone(itemID)
 	return zone
 end
 
+-- Prefer Shortest Path Forever, then TomTom, then the client map for any known map point.
+-- Returns the navigation mode so callers can describe the result in their own context.
+local function PlaceMapWaypoint(where)
+	local api = ShortestPath()
+	if
+		api
+		and type(api.Navigate) == "function"
+		and api.Navigate("ProfessionPlanner", where.map, where.x, where.y, where.name)
+	then
+		return "route"
+	end
+	if TomTom and TomTom.AddWaypoint then
+		TomTom:AddWaypoint(where.map, where.x, where.y, { title = where.name, from = "Profession Planner" })
+	elseif C_Map.CanSetUserWaypointOnMap(where.map) then
+		C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(where.map, where.x, where.y))
+		C_SuperTrack.SetSuperTrackedUserWaypoint(true)
+	else
+		return nil
+	end
+	return "waypoint"
+end
+
 -- Shortest Path Forever's route when it takes one (it declines in combat, with its
 -- journeys off or without a player position), else TomTom's arrow, else the map's
 -- own waypoint, super-tracked; false when there is only a chat line to give, or no NPC to name.
@@ -233,26 +292,191 @@ function ns.SetWaypoint(npcID)
 		ns.Print(string.format(L["%s is in %s."], where.name, where.label))
 		return false
 	end
-	local api = ShortestPath()
-	if
-		api
-		and type(api.Navigate) == "function"
-		and api.Navigate("SkillUpForever", where.map, where.x, where.y, where.name)
-	then
+	local mode = PlaceMapWaypoint(where)
+	if mode == "route" then
 		ns.Print(string.format(L["route set to %s, %s."], where.name, ns.LocationText(where)))
 		return true
 	end
-	if TomTom and TomTom.AddWaypoint then
-		TomTom:AddWaypoint(where.map, where.x, where.y, { title = where.name, from = "SkillUp Forever" })
-	elseif C_Map.CanSetUserWaypointOnMap(where.map) then
-		C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(where.map, where.x, where.y))
-		C_SuperTrack.SetSuperTrackedUserWaypoint(true)
-	else
+	if not mode then
 		ns.Print(string.format(L["%s is at %s."], where.name, ns.LocationText(where)))
 		return false
 	end
 	ns.Print(string.format(L["waypoint set to %s, %s."], where.name, ns.LocationText(where)))
 	return true
+end
+
+-- Zone-only loot data stays approximate; it is used if there are no usable catch reports.
+local function NearestFishingZone(zones)
+	local px, py, _, instance = UnitPosition("player")
+	if not px then
+		return nil
+	end
+	local nearest, bestDistance
+	for _, mapID in ipairs(zones) do
+		local zoneInstance, position = C_Map.GetWorldPosFromMapPos(mapID, CreateVector2D(0.5, 0.5))
+		if zoneInstance == instance and position then
+			local x, y = position:GetXY()
+			local distance = (px - x) ^ 2 + (py - y) ^ 2
+			if not bestDistance or distance < bestDistance then
+				nearest, bestDistance = mapID, distance
+			end
+		end
+	end
+	return nearest
+end
+
+-- Historical catch reports contain coordinates, but say nothing about an active school.
+-- Convert only maps on the player's current world instance to world-space distances.
+local function NearestFishingPoint(itemID, px, py, instance, visited)
+	local maps = ns.FishingPoints and ns.FishingPoints[itemID]
+	if not maps or not px or not py then
+		return nil
+	end
+	local nearest, bestDistance
+	for mapID, coords in pairs(maps) do
+		local zoneInstance = C_Map.GetWorldPosFromMapPos(mapID, CreateVector2D(0.5, 0.5))
+		if zoneInstance == instance then
+			for index = 1, #coords, 2 do
+				local key = mapID .. ":" .. index
+				if not visited[key] then
+					local x, y = coords[index] / 1000, coords[index + 1] / 1000
+					local pointInstance, world = C_Map.GetWorldPosFromMapPos(mapID, CreateVector2D(x, y))
+					if pointInstance == instance and world then
+						local wx, wy = world:GetXY()
+						local distance = (px - wx) ^ 2 + (py - wy) ^ 2
+						if not bestDistance or distance < bestDistance then
+							nearest = { map = mapID, x = x, y = y, key = key }
+							bestDistance = distance
+						end
+					end
+				end
+			end
+		end
+	end
+	return nearest
+end
+
+-- When the player is on another continent or their position is unknown, a
+-- recorded catch is still a better destination than the middle of a zone.
+local function OtherFishingPoint(itemID, visited, preferredMap)
+	local maps = ns.FishingPoints and ns.FishingPoints[itemID]
+	if not maps then
+		return nil
+	end
+	local mapIDs = {}
+	for mapID in pairs(maps) do
+		mapIDs[#mapIDs + 1] = mapID
+	end
+	table.sort(mapIDs, function(a, b)
+		if a == preferredMap then
+			return true
+		elseif b == preferredMap then
+			return false
+		end
+		return a < b
+	end)
+	for _, mapID in ipairs(mapIDs) do
+		if C_Map.GetMapInfo(mapID) then
+			local coords = maps[mapID]
+			for index = 1, #coords, 2 do
+				local key = mapID .. ":" .. index
+				if not visited[key] then
+					return { map = mapID, x = coords[index] / 1000, y = coords[index + 1] / 1000, key = key }
+				end
+			end
+		end
+	end
+	return nil
+end
+
+local fishingSelection = { visited = {} }
+
+---@param itemID integer
+---@return boolean
+function ns.FindFishing(itemID)
+	local zones = ns.FishingZones and ns.FishingZones[itemID]
+	local name = C_Item.GetItemNameByID(itemID) or string.format(L["item %d"], itemID)
+	local px, py, _, instance = UnitPosition("player")
+	local current = C_Map.GetBestMapForUnit("player")
+	local ancestors = {}
+	while current and not ancestors[current] do
+		ancestors[current] = true
+		local info = C_Map.GetMapInfo(current)
+		current = info and info.parentMapID or nil
+	end
+	local preferredZone
+	for _, mapID in ipairs(zones or {}) do
+		if ancestors[mapID] then
+			preferredZone = mapID
+			break
+		end
+	end
+	preferredZone = preferredZone or NearestFishingZone(zones or {})
+	if fishingSelection.itemID ~= itemID or fishingSelection.instance ~= instance then
+		fishingSelection = { itemID = itemID, instance = instance, visited = {} }
+	end
+	local point = NearestFishingPoint(itemID, px, py, instance, fishingSelection.visited)
+	if not point and next(fishingSelection.visited) then
+		fishingSelection.visited = {}
+		point = NearestFishingPoint(itemID, px, py, instance, fishingSelection.visited)
+	end
+	if not point then
+		point = OtherFishingPoint(itemID, fishingSelection.visited, preferredZone)
+		if not point and next(fishingSelection.visited) then
+			fishingSelection.visited = {}
+			point = OtherFishingPoint(itemID, fishingSelection.visited, preferredZone)
+		end
+	end
+	if point then
+		fishingSelection.visited[point.key] = true
+		local info = C_Map.GetMapInfo(point.map)
+		local where = {
+			name = name,
+			label = info and info.name or L["unknown location"],
+			map = point.map,
+			x = point.x,
+			y = point.y,
+		}
+		local location = ns.LocationText(where)
+		local mode = PlaceMapWaypoint(where)
+		if mode == "route" then
+			ns.Print(string.format(L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."], name, location))
+		elseif mode == "waypoint" then
+			ns.Print(string.format(L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."], name, location))
+		else
+			ns.Print(string.format(L["Reported fishing spot for %s: %s. Unable to set waypoint."], name, location))
+		end
+		return mode ~= nil
+	end
+	if not zones or #zones == 0 then
+		ns.Print(string.format(L["No known fishing zone for %s."], name))
+		return false
+	end
+	if not preferredZone then
+		for _, mapID in ipairs(zones) do
+			if C_Map.GetMapInfo(mapID) then
+				preferredZone = mapID
+				break
+			end
+		end
+	end
+	if preferredZone then
+		local info = C_Map.GetMapInfo(preferredZone)
+		if info then
+			local where = { name = name, label = info.name, map = preferredZone, x = 0.5, y = 0.5 }
+			local mode = PlaceMapWaypoint(where)
+			if mode == "route" then
+				ns.Print(string.format(L["Fishing route for %s: %s (approximate zone; look for fishable water)."], name, info.name))
+			elseif mode == "waypoint" then
+				ns.Print(string.format(L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."], name, info.name))
+			else
+				ns.Print(string.format(L["Fishing zone for %s: %s. Unable to set route or waypoint."], name, info.name))
+			end
+			return mode ~= nil
+		end
+	end
+	ns.Print(string.format(L["No known fishing zone for %s."], name))
+	return false
 end
 
 local VENDOR, QUEST, DROP, WORLD = 1, 2, 3, 4
@@ -299,6 +523,11 @@ end
 function ns.RecipeNPC(profession, recipeID)
 	local training = ns.TrainingFor(profession, recipeID)
 	if training then
+		local byProfession = ns.RecipeTrainers and ns.RecipeTrainers[profession.skillLine]
+		local trainerIDs = byProfession and byProfession[recipeID]
+		if trainerIDs then
+			return ns.NearestNPC(trainerIDs, true)
+		end
 		return ns.NearestTrainer(profession, training[2] + 1, true)
 	end
 	local source = C.Recipe(recipeID)
@@ -513,8 +742,8 @@ end
 local SHORTEST_PATH = "ShortestPathForever"
 local ADVENTURE_GUIDE = "AdventureGuideForever"
 -- Hint keys are shared by every Forever addon (ForeverCore.Family), so they start with this addon's folder.
-local HINT_TRAVEL = "SkillUpForever:travel"
-local HINT_QUEST_CHAIN = "SkillUpForever:questChain"
+local HINT_TRAVEL = "ProfessionPlanner:travel"
+local HINT_QUEST_CHAIN = "ProfessionPlanner:questChain"
 
 -- Whether Shortest Path Forever is installed but switched off in the AddOns list. A read the client won't give
 -- (a secret value, or no C_AddOns) is "don't know", so no line.

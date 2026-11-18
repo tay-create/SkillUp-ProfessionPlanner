@@ -1,30 +1,30 @@
-SkillUp Forever shows skill-up chances, recipe costs and colour thresholds in the Professions window. Its side panel has levelling routes, shopping lists, crafted gear and the buffs each profession makes.
+Profession Planner builds on SkillUp Forever with skill-up chances, recipe costs and colour thresholds in the Professions window. Its side panel has levelling routes, shopping lists, crafted gear and the buffs each profession makes.
 
-Free, with nothing locked behind it. If it saves you time, you can [sponsor me on GitHub](https://github.com/sponsors/cjber), which takes no fees, or [buy me a coffee on Ko-fi](https://ko-fi.com/cjber). For help and each day's release notes, [join me on Discord](https://discord.gg/FpHugGxRJY).
+Free, with nothing locked behind it. For help and each day's release notes, [join me on Discord](https://discord.gg/FpHugGxRJY).
 
-[![Join me on Discord](https://raw.githubusercontent.com/cjber/skillup-forever/main/docs/discord-button.png)](https://discord.gg/FpHugGxRJY) [![Sponsor me on GitHub](https://raw.githubusercontent.com/cjber/skillup-forever/main/docs/github-sponsors-button.png)](https://github.com/sponsors/cjber) [![Support me on Ko-fi](https://raw.githubusercontent.com/cjber/skillup-forever/main/docs/kofi-button.png)](https://ko-fi.com/cjber)
+[![Join me on Discord](https://raw.githubusercontent.com/tay-create/SkillUp-ProfessionPlanner/main/docs/discord-button.png)](https://discord.gg/FpHugGxRJY)
 
-![Leatherworking levelling from 48 to 60](https://raw.githubusercontent.com/cjber/skillup-forever/main/docs/screenshots/demo.gif)
+![Leatherworking levelling from 48 to 60](https://raw.githubusercontent.com/tay-create/SkillUp-ProfessionPlanner/main/docs/screenshots/demo.gif)
 
 From 48 to 60 the rows re-sort by cost per skill-up, and the bracers turn green at 55.
 
-![Recipe tooltip with thresholds, reagent prices and cost per skill-up](https://raw.githubusercontent.com/cjber/skillup-forever/main/docs/screenshots/tooltip.png)
+![Recipe tooltip with thresholds, reagent prices and cost per skill-up](https://raw.githubusercontent.com/tay-create/SkillUp-ProfessionPlanner/main/docs/screenshots/tooltip.png)
 
 Colour thresholds and reagent prices for the recipe you hover.
 
-![The SkillUp route tab with training and crafting steps and the reagents they need](https://raw.githubusercontent.com/cjber/skillup-forever/main/docs/screenshots/route.png)
+![The SkillUp route tab with training and crafting steps and the reagents they need](https://raw.githubusercontent.com/tay-create/SkillUp-ProfessionPlanner/main/docs/screenshots/route.png)
 
 The route tab from 48 to 73: what to train, what to craft and where reagents come from.
 
-![A Leatherworking trainer's recipes with skill-up chance, cost and a green arrow on the one that best helps the route](https://raw.githubusercontent.com/cjber/skillup-forever/main/docs/screenshots/trainer.png)
+![A Leatherworking trainer's recipes with skill-up chance, cost and a green arrow on the one that best helps the route](https://raw.githubusercontent.com/tay-create/SkillUp-ProfessionPlanner/main/docs/screenshots/trainer.png)
 
 At the trainer, a green arrow marks the recipe that best extends or cheapens your route.
 
-![The Crafted gear tab: item slots around the edge with the newest crafted item, and one slot's recipe, reagents and status](https://raw.githubusercontent.com/cjber/skillup-forever/main/docs/screenshots/gear.png)
+![The Crafted gear tab: item slots around the edge with the newest crafted item, and one slot's recipe, reagents and status](https://raw.githubusercontent.com/tay-create/SkillUp-ProfessionPlanner/main/docs/screenshots/gear.png)
 
 The gear tab, turned on in settings: each slot shows the newest thing this character could craft for it.
 
-![The Buffs tab: the Cooking buff timeline by skill, its rank divider and legend, and the selected buff's words and reagents](https://raw.githubusercontent.com/cjber/skillup-forever/main/docs/screenshots/buffs.png)
+![The Buffs tab: the Cooking buff timeline by skill, its rank divider and legend, and the selected buff's words and reagents](https://raw.githubusercontent.com/tay-create/SkillUp-ProfessionPlanner/main/docs/screenshots/buffs.png)
 
 The buffs tab: what each profession can make for your level, in columns on a skill timeline.
 
@@ -63,7 +63,7 @@ Settings cover rows and tooltips, the recipe list's width, prices, the route, ge
 
 For a bug report, paste `/skillup report`. It shows a report to copy.
 
-Translated into German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated; corrections welcome through the [translation form](https://github.com/cjber/skillup-forever/issues/new?template=translation.yml)).
+Translated into German, French, Spanish, Brazilian Portuguese, Russian, Korean and Chinese (machine translated; corrections welcome through the [translation form](https://github.com/tay-create/SkillUp-ProfessionPlanner/issues/new?template=translation.yml)).
 
 <!-- forever-family:start -->
 
@@ -96,6 +96,6 @@ Thanks to kopuliak, bromidious, Mouchoir, Chuujitsuna, trias6657, iPulse, cotije
 
 <!-- forever-credits:end -->
 
-Source code and issues: [github.com/cjber/skillup-forever](https://github.com/cjber/skillup-forever). Licence: GPL-3.0-or-later.
+Source code and issues: [github.com/tay-create/SkillUp-ProfessionPlanner](https://github.com/tay-create/SkillUp-ProfessionPlanner). Licence: GPL-3.0-or-later.
 
 Built with AI assistance.

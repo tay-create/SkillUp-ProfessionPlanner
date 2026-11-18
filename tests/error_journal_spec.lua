@@ -1,13 +1,13 @@
 -- Run from the repository root: luajit tests/error_journal_spec.lua
--- The shared error journal (Core/SafeCall.lua) and debug log (Core/Log.lua) live in SkillUpForeverDB, attached once the
+-- The shared error journal (Core/SafeCall.lua) and debug log (Core/Log.lua) live in ProfessionPlannerDB, attached once the
 -- saved variables and their defaults are in, so the report lists earlier sessions' errors and the lines that led to
 -- them after a /reload.
 local Client = dofile("tests/client.lua")
 
--- A first install, with no saved table at all: the load makes the journal and the log in SkillUpForeverDB and
+-- A first install, with no saved table at all: the load makes the journal and the log in ProfessionPlannerDB and
 -- attaches them.
 local c = Client.load()
-local db = assert(c.G.SkillUpForeverDB, "the saved table was not made")
+local db = assert(c.G.ProfessionPlannerDB, "the saved table was not made")
 assert(type(db.errors) == "table", "the saved table has no error journal")
 assert(type(db.log) == "table", "the saved table has no debug log")
 
@@ -60,9 +60,9 @@ local saved = {
 	},
 }
 local reloaded = Client.load({ saved = saved })
-assert(reloaded.G.SkillUpForeverDB == saved, "the saved table was replaced")
-assert(reloaded.G.SkillUpForeverDB.errors == saved.errors, "the journal is not the saved errors table")
-assert(reloaded.G.SkillUpForeverDB.log == saved.log, "the log is not the saved log table")
+assert(reloaded.G.ProfessionPlannerDB == saved, "the saved table was replaced")
+assert(reloaded.G.ProfessionPlannerDB.errors == saved.errors, "the journal is not the saved errors table")
+assert(reloaded.G.ProfessionPlannerDB.log == saved.log, "the log is not the saved log table")
 local earlier
 for _, candidate in ipairs(reloaded.ns.core.CaughtErrors()) do
 	if candidate.message == "error from an earlier session" then

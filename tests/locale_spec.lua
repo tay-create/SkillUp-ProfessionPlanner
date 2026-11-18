@@ -40,7 +40,7 @@ local SINKS = {
 -- A settings option, { value, label }, closes after its label.
 local OPTION = '{%s*"%l+",%s*"([^"\n]*)"%s*}'
 
--- Literals that may stay English. /skillup audit and /skillup report build their lines as data, so none pass a sink.
+-- Literals that may stay English. /pp audit and /pp report build their lines as data, so none pass a sink.
 local ALLOWED = {}
 
 -- Hardcoded text passed straight to a sink, as "file: literal" lines.
@@ -76,7 +76,7 @@ equal(#Unwrapped("x.lua", 'ns.Print("|cffff4040" .. L["Hi"] .. "|r")'), 0, "colo
 equal(#Unwrapped("x.lua", '\t-- label:SetText("Hello")'), 0, "comments are skipped")
 
 local unwrapped = {}
-for line in Read("SkillUpForever.toc"):gmatch("[^\r\n]+") do
+for line in Read("ProfessionPlanner.toc"):gmatch("[^\r\n]+") do
 	local path = line:gsub("\\", "/")
 	if path:match("%.lua$") and not path:match("^Locales/") and not path:match("^Data/") then
 		local found, used = Unwrapped(path, Read(path))
@@ -98,27 +98,18 @@ equal(Read("Locales/phrases.txt"), phrases, "Locales/phrases.txt is python3 tool
 assert(loadfile("Locales/phrases.txt"), "the translation template is valid Lua")
 
 -- CurseForge's localization export is gone: the packager fails a release on any keyword asking for it.
-local scan = assert(io.popen([[python3 - <<'PYSCAN'
-from pathlib import Path
-from tools.forever_tools.pkgmeta import localization_toc_files
-from tools.forever_tools.visual_proof import packaged_runtime_files
-root = Path.cwd()
-files = {p for p in packaged_runtime_files(root).values() if p.suffix == ".lua"}
-files.update(localization_toc_files(root))
-for path in sorted(files):
-    if "@" + "localization" in path.read_text(encoding="utf-8-sig"):
-        print(path.relative_to(root))
-print("scan-ok")
-PYSCAN
-]]))
+local scan = assert(io.popen("python3 tools/check_localization.py"))
 local hits = scan:read("*a")
 scan:close()
 -- LuaJIT 5.1 does not expose a failed pipe status; require Python to finish the scan.
-assert(hits == "scan-ok\n", "packaged localization scan failed or found a forbidden keyword:\n" .. hits)
+assert(
+	hits:gsub("\r\n", "\n") == "scan-ok\n",
+	"packaged localization scan failed or found a forbidden keyword:\n" .. hits
+)
 
 -- Untranslated phrases fall back to the English key.
 local ns = {}
-assert(loadfile("Locales/enUS.lua"))("SkillUpForever", ns)
+assert(loadfile("Locales/enUS.lua"))("ProfessionPlanner", ns)
 equal(ns.L["Craft next"], "Craft next", "a missing translation is the English phrase")
 
 -- A sample argument for each placeholder in the English key, in order (a positional %2$s counts as one).
@@ -146,7 +137,7 @@ equal(Format("%2$s, %1$d", { 3, "a" }), "a, 3", "positional placeholders reorder
 
 -- Every translation the TOC loads: its GetLocale guard, then each line formats with the English key's arguments.
 local loaded = 0
-for line in Read("SkillUpForever.toc"):gmatch("[^\r\n]+") do
+for line in Read("ProfessionPlanner.toc"):gmatch("[^\r\n]+") do
 	local locale = line:match("^Locales\\(%a%a%u%u)%.lua$")
 	if locale and locale ~= "enUS" then
 		loaded = loaded + 1
@@ -163,12 +154,12 @@ for line in Read("SkillUpForever.toc"):gmatch("[^\r\n]+") do
 			end,
 		}, { __index = _G })
 		setfenv(chunk, env)
-		chunk("SkillUpForever", stub)
+		chunk("ProfessionPlanner", stub)
 		equal(next(stub.L), nil, path .. " leaves another client's phrases alone")
 		env.GetLocale = function()
 			return locale
 		end
-		chunk("SkillUpForever", stub)
+		chunk("ProfessionPlanner", stub)
 		local count = 0
 		for key, text in pairs(stub.L) do
 			count = count + 1

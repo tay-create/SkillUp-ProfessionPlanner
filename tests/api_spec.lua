@@ -58,13 +58,13 @@ local c = Client.load({
 		quests = { [7002] = { name = "Leather Lesson", races = 77, starts = { TELONIS } } },
 	},
 })
-local ns, API = c.ns, c.G.SkillUpForever.API
+local ns, API = c.ns, c.G.ProfessionPlanner.API
 equal(API.version, 1, "version 1")
 equal(API.minor, 6, "minor 6 adds tracking, the shopping trip, limits, stats and the leaderboard")
 -- Publishing is discovery, not an API change (#594): the suite lists the addon with the API's own version and minor.
 local published
 for _, entry in ipairs(c.G.ForeverCore.APIKit.Addons()) do
-	if entry.name == "SkillUpForever" then
+	if entry.name == "ProfessionPlanner" then
 		published = entry
 	end
 end
@@ -388,7 +388,7 @@ ns.ShoppingTrip = shoppingTrip
 local stats = API.Stats()
 local startValue = stats[1].value
 equal(#stats, 1, "one local activity row")
-equal(stats[1].addon, "SkillUpForever", "this addon")
+equal(stats[1].addon, "ProfessionPlanner", "this addon")
 equal(stats[1].metric, "recipes_observed_learned", "the observed-recipes metric")
 equal(stats[1].subject, "all", "for the whole record")
 if startValue == 0 then
@@ -530,7 +530,8 @@ local scrollClient = Client.load({
 			},
 		},
 		RecipeScrolls = { [SCROLL_RECIPE] = { SCROLL, 50 } },
-		TrainerFees = {},
+		RecipeTrainers = { [COOKING] = {} },
+		TrainerFees = { [SCROLL_RECIPE] = { 500, 50 } },
 		TrainerRanks = {},
 		RankBooks = {},
 		ProfessionTrainers = {},
@@ -561,7 +562,7 @@ scrollClient.professions = { { name = "Cooking", icon = 1, rank = 50, max = 75, 
 scrollNs.db.routeTargets[COOKING] = 60
 scrollNs.Catalogue.EnsureProfession(COOKING)
 scrollClient.Advance(0)
-local scrollAPI = scrollClient.G.SkillUpForever.API
+local scrollAPI = scrollClient.G.ProfessionPlanner.API
 local trainerAsked = false
 local nearestTrainer = scrollNs.NearestTrainer
 scrollNs.NearestTrainer = function(...)
@@ -608,7 +609,7 @@ kit.Publish = function()
 end
 local chunk = assert(loadfile("Core/API.lua"))
 setfenv(chunk, c.G)
-equal(pcall(chunk, "SkillUpForever", c.ns), true, "the addon loads on a kit from before Publish")
+equal(pcall(chunk, "ProfessionPlanner", c.ns), true, "the addon loads on a kit from before Publish")
 equal(publishCalls, 0, "and a minor 1 kit is handed nothing")
 kit.minor = kitMinor
 

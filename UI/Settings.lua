@@ -6,7 +6,7 @@ if ns.broken then
 end
 local L = ns.L
 
--- Options > AddOns > SkillUp Forever: a short index page, then a stock subpage per group so no page grows
+-- Options > AddOns > Profession Planner: a short index page, then a stock subpage per group so no page grows
 -- tall. Every row goes in through Settings.RegisterInitializer, which inserts it from Blizzard's secure delegate.
 -- Settings.CreateCheckbox/CreateDropdown insert from our code instead, and the settings search reads every
 -- layout, so that tainted it: a restricted button in the results (Social's Discord Sign In) was then blocked
@@ -16,7 +16,7 @@ local category
 ---@param target SkillUpCategory
 local function Register(target, key, varType, name)
 	local setting =
-		Settings.RegisterAddOnSetting(target, "SkillUpForever_" .. key, key, ns.db, varType, name, ns.DEFAULTS[key])
+		Settings.RegisterAddOnSetting(target, "ProfessionPlanner_" .. key, key, ns.db, varType, name, ns.DEFAULTS[key])
 	setting:SetValueChangedCallback(function()
 		ns.Changed("settings")
 	end)
@@ -44,7 +44,7 @@ local function Choice(target, key, name, options, tooltip)
 	end
 	-- Forever's native settings dropdown enters a menu VM assertion.
 	-- A discrete stock slider avoids menus; the string setting remains the saved-value owner.
-	local variable = "SkillUpForever_" .. key .. "_choice"
+	local variable = "ProfessionPlanner_" .. key .. "_choice"
 	local proxy = Settings.RegisterProxySetting(
 		target,
 		variable,
@@ -57,7 +57,7 @@ local function Choice(target, key, name, options, tooltip)
 		function(value)
 			local option = options[value]
 			if option then
-				Settings.SetValue("SkillUpForever_" .. key, option[1])
+				Settings.SetValue("ProfessionPlanner_" .. key, option[1])
 			end
 		end
 	)
@@ -196,7 +196,7 @@ function ns.RegisterSettings()
 		)
 		local host = ForeverCore.TrackerHost
 		if host and host.GetSettings and host.SetAttached and host.OnAttachmentChanged then
-			local variable = "SkillUpForever_trackerAttached"
+			local variable = "ProfessionPlanner_trackerAttached"
 			local setting = Settings.RegisterProxySetting(
 				rows,
 				variable,
@@ -227,7 +227,7 @@ function ns.RegisterSettings()
 		if host and host.GetScale and host.SetScale then
 			local scale = Settings.RegisterProxySetting(
 				rows,
-				"SkillUpForever_trackerScale",
+				"ProfessionPlanner_trackerScale",
 				Settings.VarType.Number,
 				L["Tracker scale"],
 				100,
@@ -257,7 +257,7 @@ function ns.RegisterSettings()
 		if host and host.GetSettings and host.SetLocked then
 			local lock = Settings.RegisterProxySetting(
 				rows,
-				"SkillUpForever_trackerLocked",
+				"ProfessionPlanner_trackerLocked",
 				Settings.VarType.Boolean,
 				L["Lock the tracker"],
 				false,
@@ -283,21 +283,27 @@ function ns.RegisterSettings()
 			rows,
 			"showRouteTab",
 			L["Show the levelling route tab"],
-			L["A tab at the bottom of the Professions window with a route to your target skill and its reagents. It opens from the SkillUp side tab, beside the crafted gear and buffs tabs. Tracked professions stay in the objective tracker either way."]
+			L["A tab at the bottom of the Professions window with a route to your target skill and its reagents. It opens from the Profession Planner side tab, beside the crafted gear and buffs tabs. Tracked professions stay in the objective tracker either way."]
+		)
+		Checkbox(
+			rows,
+			"combineCookingFishing",
+			L["Combine Cooking and Fishing"],
+			L["Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."]
 		)
 
 		Checkbox(
 			rows,
 			"showGearTab",
 			L["Show the crafted gear tab"],
-			L["A tab at the bottom of the Professions window listing the newest crafted item this character can equip in each slot. It opens from the SkillUp side tab, beside the route and buffs tabs."]
+			L["A tab at the bottom of the Professions window listing the newest crafted item this character can equip in each slot. It opens from the Profession Planner side tab, beside the route and buffs tabs."]
 		)
 
 		Checkbox(
 			rows,
 			"showBuffsTab",
 			L["Show the buffs tab"],
-			L["A tab at the bottom of the Professions window listing the buff consumables this profession makes, by the skill they unlock at and what each one is for. It opens from the SkillUp side tab, beside the route and crafted gear tabs."]
+			L["A tab at the bottom of the Professions window listing the buff consumables this profession makes, by the skill they unlock at and what each one is for. It opens from the Profession Planner side tab, beside the route and crafted gear tabs."]
 		)
 
 		Checkbox(
@@ -378,13 +384,13 @@ end
 -- Through the setting, so the settings panel and its change callback stay in step.
 ---@param mode string
 function ns.SetSortMode(mode)
-	Settings.SetValue("SkillUpForever_sortMode", mode)
+	Settings.SetValue("ProfessionPlanner_sortMode", mode)
 end
 
 -- Through the setting, so the settings panel and its change callback stay in step.
 ---@param on boolean
 function ns.SetBuffsOnly(on)
-	Settings.SetValue("SkillUpForever_buffsOnly", on)
+	Settings.SetValue("ProfessionPlanner_buffsOnly", on)
 end
 
 function ns.OpenSettings()

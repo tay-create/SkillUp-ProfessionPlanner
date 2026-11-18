@@ -5,16 +5,17 @@ local Client = dofile("tests/client.lua")
 local equal = Client.equal
 
 local TAILORING = 197
-local SOLD, HORDE_SOLD, QUESTED, DROPPED, WORLD, ADVANCED = 11, 12, 13, 14, 15, 16
+local SOLD, HORDE_SOLD, QUESTED, DROPPED, WORLD, ADVANCED, TRAINED, HORDE_TRAINED = 11, 12, 13, 14, 15, 16, 17, 18
 local SELLER, HORDE_SELLER, FAR_SELLER, BOSS, TRAINER, HOSTILE_TRAINER = 301, 302, 303, 304, 305, 306
 local FARTHER_SELLER, FARTHEST_SELLER, BLUFF_SELLER = 307, 308, 309
+local RECIPE_TRAINER, HORDE_RECIPE_TRAINER = 310, 311
 local THUNDER_BLUFF = 1638
 local COOK, ISLE = 900, 2
 local THREAD = 2321
 
 local function Load(questie, atlasLoot, saved, build)
 	local recipes, thresholds = {}, {}
-	for recipeID = SOLD, ADVANCED do
+	for recipeID = SOLD, HORDE_TRAINED do
 		recipes[recipeID] = { skillLine = TAILORING, reagents = { { itemID = THREAD, quantity = 1 } } }
 		thresholds[recipeID] = { 40, 60, 70 + recipeID, 80 + recipeID }
 	end
@@ -25,12 +26,23 @@ local function Load(questie, atlasLoot, saved, build)
 		data = {
 			Thresholds = thresholds,
 			RecipeData = recipes,
-			TrainerFees = {},
+			TrainerFees = { [TRAINED] = { 500, 40 }, [HORDE_TRAINED] = { 500, 40 } },
 			TrainerRanks = {},
 			ItemSellPrices = {},
 			GatheredBy = {},
 			VendorPrices = { [THREAD] = 100 },
-			ProfessionTrainers = { [TAILORING] = { { HOSTILE_TRAINER, 300 }, { TRAINER, 150 } } },
+			ProfessionTrainers = {
+				[TAILORING] = {
+					{ HOSTILE_TRAINER, 300 },
+					{ TRAINER, 150 },
+				},
+			},
+			RecipeTrainers = {
+				[TAILORING] = {
+					[TRAINED] = { RECIPE_TRAINER },
+					[HORDE_TRAINED] = { HORDE_RECIPE_TRAINER },
+				},
+			},
 			ScrollDrops = { [200 + DROPPED] = { { BOSS, 4 } } },
 			WorldDrops = { [200 + WORLD] = true },
 		},
@@ -49,6 +61,8 @@ local function Load(questie, atlasLoot, saved, build)
 				[BOSS] = { name = "Boss", spawns = { [1581] = { { -1, -1 } } } },
 				[TRAINER] = { name = "Trainer", spawns = { [10] = { { 50, 50 } } }, side = "AH" },
 				[HOSTILE_TRAINER] = { name = "Hostile Trainer", spawns = { [10] = { { 1, 1 } } } },
+				[RECIPE_TRAINER] = { name = "Recipe Trainer", spawns = { [10] = { { 70, 70 } } }, side = "A" },
+				[HORDE_RECIPE_TRAINER] = { name = "Horde Recipe Trainer", spawns = { [10] = { { 5, 5 } } }, side = "H" },
 				[FARTHER_SELLER] = { name = "Farther Seller", spawns = { [10] = { { 70, 70 } } }, side = "A" },
 				[FARTHEST_SELLER] = { name = "Farthest Seller", spawns = { [10] = { { 80, 80 } } }, side = "A" },
 				-- Friendly to both by QuestieDB, inside a Horde capital.
@@ -188,6 +202,8 @@ equal(ns.ScrollPrice(suggestions[1].source), 250, "the price at a merchant's win
 
 equal(ns.NearestTrainer(tailoring, 150), TRAINER, "the trainer this character can use")
 equal(ns.NearestTrainer(tailoring, 225), nil, "a hostile trainer is nobody's")
+equal(ns.RecipeNPC(tailoring, TRAINED), RECIPE_TRAINER, "a recipe waypoint goes to the trainer who teaches that recipe")
+equal(ns.TrainingFor(tailoring, HORDE_TRAINED), nil, "a recipe taught only by the other faction is not trainable here")
 equal(ns.NearestVendor(THREAD), nil, "a reagent's vendors are read when first asked for")
 c.Advance(0)
 equal(ns.NearestVendor(THREAD), SELLER, "then the nearest is named")
@@ -222,7 +238,7 @@ equal(ns.NearestVendor(THREAD), COOK, "a vendor seen selling the item is the nea
 equal(ns.LocationText(ns.NPCLocation(COOK)), "Zephras Isle  50, 50", "placed where the player stood at its window")
 equal(ns.NPCLocation(COOK).name, "Cook", "under the name it had")
 equal(ns.SuggestionNPC(ns.RecipeSuggestions(tailoring, 50)[1]), COOK, "a scroll it sells is bought from it too")
-local seen = c.G.SkillUpForeverDB.sellers[COOK]
+local seen = c.G.ProfessionPlannerDB.sellers[COOK]
 equal(seen.items[THREAD] and seen.items[200 + SOLD], true, "the reagent and the scroll it sells are saved")
 equal(seen.items[999], nil, "and nothing the addon has no use for")
 c.player.instance = 0
@@ -230,7 +246,7 @@ equal(ns.NearestVendor(THREAD), SELLER, "back on the mainland the vendor there i
 c.npc = { id = 901, name = "Baker" }
 c.merchant = { { itemID = 999, price = 25, stackCount = 1 } }
 c.Fire("MERCHANT_SHOW")
-equal(c.G.SkillUpForeverDB.sellers[901], nil, "a vendor of nothing the addon uses is not kept")
+equal(c.G.ProfessionPlannerDB.sellers[901], nil, "a vendor of nothing the addon uses is not kept")
 
 --[[ Without AtlasLoot: QuestieDB names no recipe on a scroll, so no scroll is known ]]
 
@@ -307,5 +323,29 @@ equal(
 )
 c.Advance(0)
 equal(#c.chat, 0, "the addon runs without a word")
+
+-- Barbecued Buzzard Wing is taught by Slagg to Horde and sold as a scroll to Alliance.
+local BUZZARD_WING, BUZZARD_SCROLL, SLAGG, NARJ = 4094, 4609, 2818, 312
+local cookingClient = Client.load({
+	questie = {
+		items = { [BUZZARD_SCROLL] = { vendors = { NARJ }, teaches = BUZZARD_WING } },
+		npcs = {
+			[SLAGG] = { name = "Slagg", spawns = { [10] = { { 10, 10 } } }, side = "H" },
+			[NARJ] = { name = "Narj Deepslice", spawns = { [10] = { { 20, 20 } } }, side = "A" },
+		},
+		areas = { [10] = 10 },
+	},
+	atlasLoot = { recipes = { [BUZZARD_SCROLL] = { 8, 175, BUZZARD_WING } } },
+})
+local cooking = { skillLine = 185, base = 175, modifier = 0 }
+equal(cookingClient.ns.RecipeTrainers[185][BUZZARD_WING][1], SLAGG, "the generated source names Slagg for Barbecued Buzzard Wing")
+cookingClient.ns.Catalogue.EnsureProfession(185)
+cookingClient.Advance(0)
+cookingClient.player.faction = "Horde"
+equal(cookingClient.ns.TrainingFor(cooking, BUZZARD_WING)[2], 175, "Horde can train Barbecued Buzzard Wing")
+equal(cookingClient.ns.RecipeNPC(cooking, BUZZARD_WING), SLAGG, "Horde is routed to Slagg")
+cookingClient.player.faction = "Alliance"
+equal(cookingClient.ns.TrainingFor(cooking, BUZZARD_WING), nil, "Alliance does not get routed to the Horde trainer")
+equal(cookingClient.ns.RecipeNPC(cooking, BUZZARD_WING), NARJ, "Alliance is routed to the scroll vendor")
 
 Client.report("sources_spec")

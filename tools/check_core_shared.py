@@ -86,12 +86,8 @@ VENDORED = {
     ".github/workflows/visual-proof.yml": SUITE_CONSUMERS,
     "tools/deadcode.py": DEADCODE_CONSUMERS,
     "tools/deadcode-allow.txt": DEADCODE_CONSUMERS,
-    # The store page's button row (wow-forever-addon/store-page.md), identical on every page.
+    # The store page's community button.
     "docs/discord-button.png": SUITE_CONSUMERS,
-    "docs/github-sponsors-button.png": SUITE_CONSUMERS,
-    "docs/kofi-button.png": SUITE_CONSUMERS,
-    # GitHub's Sponsor button on every addon repo, pointing at the same GitHub Sponsors and Ko-fi accounts.
-    ".github/FUNDING.yml": SUITE_CONSUMERS,
 }
 # Core keeps the consumers' workflow out of its own .github/workflows, where it would run against core itself.
 SOURCES = {

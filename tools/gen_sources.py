@@ -167,16 +167,36 @@ def node_skills(tables, locks):
 
 
 def trainer_caps(trainer, teaches, rank_of):
-    """[skill line][npc] = the highest rank cap that trainer teaches."""
+    """[skill line][npc] = the highest rank cap or individual recipe requirement it teaches."""
     caps = defaultdict(dict)
-    for entry, spell, _, skill, _, _ in trainable_rows(trainer):
+    for entry, spell, _, skill, required, _ in trainable_rows(trainer):
         for taught in teaches.get(spell, ()):
             line_cap = rank_of.get(taught)
-            if line_cap and line_cap[0] == skill:
-                caps[skill][entry] = max(caps[skill].get(entry, 0), line_cap[1])
+            if line_cap:
+                if line_cap[0] != skill:
+                    continue
+                cap = line_cap[1]
+            else:
+                # RecipeNPC and the route ask for one point past the recipe's required skill.
+                cap = required + 1
+            caps[skill][entry] = max(caps[skill].get(entry, 0), cap)
     if not caps:
         raise ValueError("No profession trainers resolved; leaving existing output untouched")
     return caps
+
+
+def recipe_trainers(trainer, teaches, recipe_ids):
+    """[skill line][recipe spell] = the NPCs that teach that individual recipe."""
+    recipes = set(recipe_ids)
+    found = defaultdict(lambda: defaultdict(set))
+    for entry, spell, _, skill, _, _ in trainable_rows(trainer):
+        for taught in teaches.get(spell, ()):
+            if taught in recipes:
+                found[skill][taught].add(entry)
+    return {
+        skill: {recipe: sorted(npcs) for recipe, npcs in sorted(by_recipe.items())}
+        for skill, by_recipe in sorted(found.items())
+    }
 
 
 def loot_chances(rows, group=0):
@@ -263,7 +283,32 @@ def scroll_items(ids, rows, teaches):
     return scrolls
 
 
-def generate(ids, tables, effect_rows, locks):
+def fishing_zones(tables, area_rows, map_rows, items):
+    """[fish reagent] = UiMapIDs where the classic-db fishing loot can provide it."""
+    parents = {int(row["ID"]): int(row["ParentAreaID"]) for row in area_rows}
+    maps = {int(row["AreaID"]): int(row["UiMapID"]) for row in map_rows if int(row["AreaID"]) > 0}
+    references = defaultdict(list)
+    for row in tables["reference_loot_template"]:
+        references[int(row["entry"])].append(row)
+    by_area = defaultdict(list)
+    for row in tables["fishing_loot_template"]:
+        by_area[int(row["entry"])].append(row)
+
+    zones = defaultdict(set)
+    for area, rows in by_area.items():
+        current, visited = area, set()
+        while current not in maps and current not in visited and current > 0:
+            visited.add(current)
+            current = parents.get(current, 0)
+        if current not in maps:
+            continue
+        for item, chance in loot_items(rows, references):
+            if item in items and chance * 100 >= GATHER_CHANCE:
+                zones[item].add(maps[current])
+    return {item: sorted(map_ids) for item, map_ids in sorted(zones.items())}
+
+
+def generate(ids, tables, effect_rows, locks, area_rows=(), map_rows=()):
     teaches, rank_of = spell_maps(effect_rows)
     drops, world = scroll_drops(tables, scroll_items(ids, tables["item_template"], teaches))
     items = reagent_items()
@@ -275,7 +320,9 @@ def generate(ids, tables, effect_rows, locks):
         "trainers": {
             skill: sorted(caps.items()) for skill, caps in trainer_caps(tables["npc_trainer"], teaches, rank_of).items()
         },
+        "recipe_trainers": recipe_trainers(tables["npc_trainer"], teaches, ids),
         "gathered": gathered_items,
+        "fishing_zones": fishing_zones(tables, area_rows, map_rows, items),
         "looted": sorted(looted_from(tables, items, node_gathered)),
         "limited": limited_stock(tables["npc_vendor"]),
         **dict(zip(("nodes", "shared_nodes"), node_skills(tables, locks), strict=True)),
@@ -307,7 +354,7 @@ def render(data):
     lines += [
         "}",
         "",
-        "-- [skill line] = { { trainer npc, highest cap it teaches } }",
+        "-- [skill line] = { { trainer npc, highest skill it can teach } }",
         "-- stylua: ignore",
         "ns.ProfessionTrainers = {",
     ]
@@ -316,11 +363,30 @@ def render(data):
     lines += [
         "}",
         "",
+        "-- [skill line][recipe spell] = { trainer npc IDs }",
+        "-- stylua: ignore",
+        "ns.RecipeTrainers = {",
+    ]
+    for skill, recipes in sorted(data["recipe_trainers"].items()):
+        lines.append(f"\t[{skill}] = {{")
+        lines += [f"\t\t[{recipe}] = {{ " + ", ".join(map(str, npcs)) + " }," for recipe, npcs in sorted(recipes.items())]
+        lines.append("\t},")
+    lines += [
+        "}",
+        "",
         f"-- [reagent item] = gathering skill line that yields it ({GATHER_CHANCE}%+ of the time)",
         "-- stylua: ignore",
         "ns.GatheredBy = {",
     ]
     lines += [f"\t[{item}] = {skill}," for item, skill in sorted(data["gathered"].items())]
+    lines += [
+        "}",
+        "",
+        f"-- [fish reagent] = {{ UiMapIDs }}: fishing loot for this area ({GATHER_CHANCE}%+ per cast)",
+        "-- stylua: ignore",
+        "ns.FishingZones = {",
+    ]
+    lines += [f"\t[{item}] = {{ " + ", ".join(map(str, zones)) + " }," for item, zones in data["fishing_zones"].items()]
     lines += [
         "}",
         "",
@@ -367,12 +433,15 @@ def main():
         dump_tables(classicdb(**options), TABLES),
         teach_effects(**options),
         db2("Lock", ["ID"] + [f"{c}_{i}" for c in ("Type", "_Index", "Skill") for i in range(8)], **options),
+        db2("AreaTable", ["ID", "ParentAreaID"], **options),
+        db2("UiMapAssignment", ["AreaID", "UiMapID"], **options),
     )
-    OUTPUT.write_text(render(data), encoding="utf-8")
+    OUTPUT.write_text(render(data), encoding="utf-8", newline="\n")
     print(
         f"Wrote {OUTPUT.relative_to(ROOT)}: {len(data['drops'])} scrolls with named drops, "
         f"{len(data['world'])} world drops, {sum(map(len, data['trainers'].values()))} trainers, "
-        f"{len(data['gathered'])} gathered reagents, {len(data['looted'])} lootable reagents, "
+        f"{len(data['gathered'])} gathered reagents, {len(data['fishing_zones'])} fish with zones, "
+        f"{len(data['looted'])} lootable reagents, "
         f"{sum(len(vendors) for vendors in data['limited'].values())} limited vendor rows, "
         f"{len(data['nodes'])} gathering nodes "
         f"(left out, shared by nodes asking different skills: {data['shared_nodes']})"

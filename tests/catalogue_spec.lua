@@ -112,7 +112,7 @@ local function Load(questieDB, atlasLootDB, options)
 		"Integrations/AtlasLoot.lua",
 		"Integrations/Catalogue.lua",
 	}) do
-		setfenv(assert(loadfile(file)), env)("SkillUpForever", ns)
+		setfenv(assert(loadfile(file)), env)("ProfessionPlanner", ns)
 	end
 	ns.InitCatalogue()
 	local c = { ns = ns, env = env, changes = changes, watchers = watchers, db = questieDB }

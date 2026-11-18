@@ -1,9 +1,13 @@
--- Machine translated (2026-10-16); corrections welcome: https://github.com/cjber/skillup-forever/issues/new?template=translation.yml
+-- Machine translated (2026-10-16); corrections welcome: https://github.com/tay-create/SkillUp-ProfessionPlanner/issues
 local _, ns = ...
 if GetLocale() ~= "zhTW" then
 	return
 end
 local L = ns.L
+L["No vendor or trainer location found for this list. Check NPC locations in QuestieDB; auction and gathered items are separate."] =
+	"找不到此清單的商人或訓練師位置。請檢查 QuestieDB 中的 NPC 位置；拍賣場和採集材料需另外處理。"
+L["Shortest Path Forever cannot plan the full trip; setting a waypoint to the first trainer."] =
+	"Shortest Path Forever 無法規劃完整路線；正在為第一位訓練師設定路徑點。"
 
 L["%d %s"] = "%d %s"
 L["%d crafts to %d, %s"] = "製造%d次至%d，%s"
@@ -28,10 +32,10 @@ L["%s, source unknown"] = "%s，來源不明"
 L["%s: %d moved, %d confirmed at a trainer, %d wrong."] =
 	"%s：移動%d個，在訓練師處確認%d個，錯誤%d個。"
 L["+%d more"] = "另有%d個"
-L["/skillup skipped lists the recipes you skipped, with their IDs."] =
-	"/skillup skipped 列出你跳過的配方及其ID。"
-L["/skillup unskip <recipe ID> shows one again, /skillup unskip all every one."] =
-	"/skillup unskip <recipe ID> 恢復顯示一個，/skillup unskip all 恢復全部。"
+L["/pp skipped lists the recipes you skipped, with their IDs."] =
+	"/pp skipped 列出你跳過的配方及其ID。"
+L["/pp unskip <recipe ID> shows one again, /pp unskip all every one."] =
+	"/pp unskip <recipe ID> 恢復顯示一個，/pp unskip all 恢復全部。"
 L["A Reagents tab on a merchant's window that lists the reagents your tracked routes still need from that merchant and their total cost. Buy them from the merchant's own window."] =
 	"在商人視窗顯示材料分頁，列出你追蹤的路線仍需要向該商人購買的材料及其總費用。請在商人視窗中購買。"
 L["A material your professions gather costs what selling it would bring instead of nothing: its auction price after the 5% cut, or its vendor sell price if that is more. Used for the route and the costs on recipe rows. Auction prices need Auctionator or TradeSkillMaster."] =
@@ -234,7 +238,7 @@ L["Skill-up chance"] = "技能提升機率"
 L["Skill-up chance and cost per skill-up at the right of each recipe."] =
 	"在每個配方右側顯示技能提升機率和每點技能成本。"
 L["Skill-up chance: %d%%"] = "技能提升機率：%d%%"
-L["SkillUp report"] = "SkillUp報告"
+L["Profession Planner report"] = "Profession Planner報告"
 L["Skipped (%d)"] = "已跳過（%d）"
 L["Skipped (%d):"] = "已跳過（%d）："
 L["Sold by"] = "出售者"
@@ -367,14 +371,13 @@ L["%s to %d"] = "%s至%d"
 L[" · "] = " · "
 L[", "] = "，"
 L[", price seen %d days ago"] = "，%d 天前的價格"
-L["/skillup export - show the trainer requirements this character has seen, to paste into a report"] =
-	"/skillup export - 顯示此角色見過的訓練師要求，以便貼到報告中"
-L["/skillup issue - report a bug or request a feature with a ready-made GitHub issue link"] =
-	"/skillup issue - 回報錯誤或請求功能，並附上現成的 GitHub issue 連結"
-L["/skillup report - show a report to copy into a bug report"] =
-	"/skillup report - 顯示報告，以便複製到錯誤回報中"
+L["/pp export - show the trainer requirements this character has seen, to paste into a report"] =
+	"/pp export - 顯示此角色見過的訓練師要求，以便貼到報告中"
+L["/pp issue - report a bug or request a feature with a ready-made GitHub issue link"] =
+	"/pp issue - 回報錯誤或請求功能，並附上現成的 GitHub issue 連結"
+L["/pp report - show a report to copy into a bug report"] =
+	"/pp report - 顯示報告，以便複製到錯誤回報中"
 L[": "] = "："
-L["A buy trip needs Shortest Path Forever."] = "購買行程需要 Shortest Path Forever。"
 L["Copy list"] = "複製清單"
 L["Copy shopping list"] = "複製購物清單"
 L["Gather"] = "採集"
@@ -387,8 +390,7 @@ L["Plan this route again from today's prices and recipes."] = "依照今天的�
 L["Shopping list"] = "購物清單"
 L["Shortest Path Forever cannot plan the full trip; setting a waypoint to the first vendor."] =
 	"Shortest Path Forever 無法規劃整個行程；已設定前往第一個商人的導航點。"
-L["Shortest Path Forever is needed to plan this trip."] = "規劃此行程需要 Shortest Path Forever。"
-L["SkillUp Forever shopping list"] = "SkillUp Forever 購物清單"
+L["Profession Planner shopping list"] = "Profession Planner 購物清單"
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it."] =
 	"文字已選取。按Ctrl+C（Mac上為Cmd+C）複製。"
 L["Total for priced items: "] = "有價格物品合計："
@@ -446,12 +448,12 @@ L["%s drops in %s"] = "%s 在 %s 掉落" -- mt
 L["Made by %s %d"] = "%s %d 製作" -- mt
 L["Made by %s"] = "%s 製作" -- mt
 L["%s at %d"] = "%s（%d）" -- mt
-L["A tab at the bottom of the Professions window listing the buff consumables this profession makes, by the skill they unlock at and what each one is for. It opens from the SkillUp side tab, beside the route and crafted gear tabs."] =
-	"專業技能視窗底部的一個標籤頁，依解鎖所需的技能與用途列出該專業製造的增益消耗品。從 SkillUp 側邊標籤頁開啟，位於路線與製造裝備標籤頁旁。" -- mt
-L["A tab at the bottom of the Professions window listing the newest crafted item this character can equip in each slot. It opens from the SkillUp side tab, beside the route and buffs tabs."] =
-	"專業技能視窗底部的一個標籤頁，列出此角色每個部位可裝備的最新製造物品。從 SkillUp 側邊標籤頁開啟，位於路線與增益標籤頁旁。" -- mt
-L["A tab at the bottom of the Professions window with a route to your target skill and its reagents. It opens from the SkillUp side tab, beside the crafted gear and buffs tabs. Tracked professions stay in the objective tracker either way."] =
-	"專業技能視窗底部的一個標籤頁，顯示通往目標技能及其材料的路線。從 SkillUp 側邊標籤頁開啟，位於製造裝備與增益標籤頁旁。追蹤的專業無論如何都會留在目標追蹤器中。" -- mt
+L["A tab at the bottom of the Professions window listing the buff consumables this profession makes, by the skill they unlock at and what each one is for. It opens from the Profession Planner side tab, beside the route and crafted gear tabs."] =
+	"專業技能視窗底部的一個標籤頁，依解鎖所需的技能與用途列出該專業製造的增益消耗品。從 Profession Planner 側邊標籤頁開啟，位於路線與製造裝備標籤頁旁。" -- mt
+L["A tab at the bottom of the Professions window listing the newest crafted item this character can equip in each slot. It opens from the Profession Planner side tab, beside the route and buffs tabs."] =
+	"專業技能視窗底部的一個標籤頁，列出此角色每個部位可裝備的最新製造物品。從 Profession Planner 側邊標籤頁開啟，位於路線與增益標籤頁旁。" -- mt
+L["A tab at the bottom of the Professions window with a route to your target skill and its reagents. It opens from the Profession Planner side tab, beside the crafted gear and buffs tabs. Tracked professions stay in the objective tracker either way."] =
+	"專業技能視窗底部的一個標籤頁，顯示通往目標技能及其材料的路線。從 Profession Planner 側邊標籤頁開啟，位於製造裝備與增益標籤頁旁。追蹤的專業無論如何都會留在目標追蹤器中。" -- mt
 L["Above your level"] = "高於你的等級" -- mt
 L["Buffs"] = "增益" -- mt
 L["Known"] = "已知" -- mt
@@ -460,7 +462,7 @@ L["Learn now"] = "現在可學" -- mt
 L["No buff items for your level yet."] = "還沒有適合你等級的增益物品。" -- mt
 L["Only for level %d"] = "僅限等級 %d" -- mt
 L["Show the buffs tab"] = "顯示增益標籤頁" -- mt
-L["SkillUp"] = "SkillUp" -- mt
+L["Profession Planner"] = "Profession Planner" -- mt
 L["This profession makes no buff items."] = "該專業不製造增益物品。" -- mt
 L["spell %d"] = "法術 %d" -- mt
 L["Buffs by %s skill"] = "%s 增益" -- mt
@@ -485,7 +487,7 @@ L["On (the default), a reagent you could gather, fish or loot from creatures is 
 	"開啟（預設）：你可以採集、釣魚或從生物身上剝取的試劑會從商人或拍賣場購買。關閉：自行取得花費其出售價值。"
 L["Shift + wheel, or drag, scrolls the timeline sideways."] =
 	"按住 Shift 滾動滾輪，或拖曳，可橫向捲動時間軸。"
-L["SkillUp's list"] = "SkillUp 的清單"
+L["Profession Planner's list"] = "Profession Planner 的清單"
 L["Timeline"] = "時間軸"
 L["Turning Buy reagents on writes an Auctionator list with every auction reagent still missing."] =
 	"開啟「購買試劑」會寫入一個 Auctionator 清單，包含所有仍缺少的拍賣場試劑。"
@@ -494,7 +496,7 @@ L["Without Auctionator, a recipe's Search button fills the game's own auction bo
 L["%s: %s is out of date. Update it to fix this."] = "%s：%s 已過期。請更新它來解決此問題。" -- mt
 L["%s: %s are out of date. Update them to fix this."] = "%s：%s 已過期。請更新它們來解決此問題。" -- mt
 L["%s could not start. Reinstall %s to fix this."] = "%s 無法啟動。請重新安裝 %s 來解決此問題。" -- mt
-L["SkillUp no longer fills Auctionator with shopping lists."] = "SkillUp 不再把購物清單寫入 Auctionator。" -- mt
+L["Profession Planner no longer fills Auctionator with shopping lists."] = "Profession Planner 不再把購物清單寫入 Auctionator。" -- mt
 L["Region sale average"] = "地區平均成交價"
 L["Region sale average if higher"] = "較高時使用地區平均成交價"
 L["Region sale averages need TradeSkillMaster and its desktop app. They estimate value from reported regional sales and purchases, with the vendor price as a floor. They do not guarantee a sale."] =

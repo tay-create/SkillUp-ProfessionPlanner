@@ -1,5 +1,5 @@
 -- Run from the repository root: luajit tests/trainer_export_spec.lua
--- /skillup export trainers (#124): the requirements a trainer actually showed this character, as the table literal
+-- /pp export trainers (#124): the requirements a trainer actually showed this character, as the table literal
 -- tools/gen_trainer.py's SEEN_REQUIREMENTS takes. The text a player copies is read back with loadstring: if it is
 -- not valid Lua, the export is worthless, so every case here proves the round trip.
 local Client = dofile("tests/client.lua")
@@ -50,7 +50,7 @@ local function Load(trainer)
 	return c
 end
 
--- The lines /skillup export shows, as one string.
+-- The lines /pp export shows, as one string.
 local function Export(c)
 	local lines = c.ns.TrainerExport()
 	return table.concat(lines, "\n"), lines
@@ -91,36 +91,36 @@ do
 	local c = Load({})
 	equal(#c.ns.TrainerExport(), 0, "nothing seen exports nothing")
 	local before = #c.frames
-	c.G.SlashCmdList.SKILLUPFOREVER("export trainers")
+	c.G.SlashCmdList.PROFESSIONPLANNER("export trainers")
 	equal(#c.frames, before, "no window opens")
 	local last = c.chat[#c.chat]
 	equal(last:find("no trainer requirement seen yet", 1, true) ~= nil, true, "chat says what to do: " .. last)
 end
 
--- The command shows the table in the copy window, selected, and /skillup export alone is the same thing.
+-- The command shows the table in the copy window, selected, and /pp export alone is the same thing.
 do
 	local c = Load({ [COOKING] = { [BREAD] = { 40, 25, 25 } } })
-	c.G.SlashCmdList.SKILLUPFOREVER("export trainers")
+	c.G.SlashCmdList.PROFESSIONPLANNER("export trainers")
 	local edit = c.focus
 	equal(edit ~= nil, true, "the export opens in the copy window")
 	local text = edit and edit:GetText() or ""
 	equal(text:find("SEEN_REQUIREMENTS = {", 1, true) ~= nil, true, "holding the table: " .. text)
 	equal(edit and edit.highlighted, text, "all of it selected for copying")
 	equal(Parse(text)[BREAD], 25, "and it still loads as Lua")
-	c.G.SlashCmdList.SKILLUPFOREVER("export")
-	equal(c.focus and c.focus:GetText(), text, "/skillup export is the same export")
+	c.G.SlashCmdList.PROFESSIONPLANNER("export")
+	equal(c.focus and c.focus:GetText(), text, "/pp export is the same export")
 	equal(#c.errors, 0, "no errors")
 end
 
--- /skillup help lists it.
+-- /pp help lists it.
 do
 	local c = Load({})
-	c.G.SlashCmdList.SKILLUPFOREVER("help")
+	c.G.SlashCmdList.PROFESSIONPLANNER("help")
 	local listed = false
 	for _, message in ipairs(c.chat) do
-		listed = listed or message:find("/skillup export", 1, true) ~= nil
+		listed = listed or message:find("/pp export", 1, true) ~= nil
 	end
-	equal(listed, true, "/skillup help lists /skillup export")
+	equal(listed, true, "/pp help lists /pp export")
 end
 
 Client.report("trainer_export_spec")

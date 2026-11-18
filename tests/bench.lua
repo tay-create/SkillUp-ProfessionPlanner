@@ -1,5 +1,5 @@
 -- Run from the repository root: luajit tests/bench.lua
--- Measures the addon inside the headless harness the specs use: what each file SkillUpForever.toc lists
+-- Measures the addon inside the headless harness the specs use: what each file ProfessionPlanner.toc lists
 -- costs to load, what login and init do, and what each event, timer and hot lookup costs to run. Every
 -- number is CPU time from os.clock, printed per call. Nothing here asserts; it is a measuring stick.
 local Client = dofile("tests/client.lua")
@@ -137,7 +137,7 @@ local apiCold = 0
 for _ = 1, 5 do
 	ns.Changed("bags")
 	apiCold = apiCold + report("API.Professions (rebuilt)", 1, function()
-		c.G.SkillUpForever.API.Professions()
+		c.G.ProfessionPlanner.API.Professions()
 	end)
 end
 
@@ -220,7 +220,7 @@ end)
 -- Every call copies the cached answer into fresh tables, as each Forever API read does (forever-core
 -- docs/api-conventions.md), so it costs microseconds rather than a table lookup; a caller reads it once per refresh.
 report("API.Professions (cached, fresh copy)", 5000, function()
-	c.G.SkillUpForever.API.Professions()
+	c.G.ProfessionPlanner.API.Professions()
 end)
 
 local builtPlan = ns.PlanRoute(lw)

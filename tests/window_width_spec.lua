@@ -151,7 +151,7 @@ local env = setmetatable({
 	end,
 }, { __index = _G })
 
-setfenv(assert(loadfile("UI/RecipeList.lua")), env)("SkillUpForever", ns)
+setfenv(assert(loadfile("UI/RecipeList.lua")), env)("ProfessionPlanner", ns)
 ns.AttachRecipeList()
 
 local function fitted(label)

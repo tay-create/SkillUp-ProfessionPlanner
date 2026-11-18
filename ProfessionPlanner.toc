@@ -1,30 +1,28 @@
 ## Interface: 16001
 ## Dependencies: ForeverCore
-## X-Forever-Core: v1.12.0
-## Title: SkillUp Forever
-## Notes: Required skill, colour thresholds and skill-up chance for every recipe in the Professions window.
+## X-Forever-Core: v1.12.1
+## Title: Profession Planner
+## Notes: Plan your professions, track levelling routes, calculate costs and prepare shopping lists.
 ## Notes-deDE: Benötigte Fertigkeit, Farbschwellen und Chance auf Fertigkeitspunkt für jedes Rezept im Berufsfenster.
 ## Notes-esES: Habilidad requerida, umbrales de color y probabilidad de subida para cada receta en la ventana de profesiones.
 ## Notes-esMX: Habilidad requerida, umbrales de color y probabilidad de subida para cada receta en la ventana de profesiones.
 ## Notes-frFR: Compétence requise, seuils de couleur et chance de gain pour chaque recette dans la fenêtre des métiers.
 ## Notes-koKR: 전문 기술 창의 모든 제조법에 요구 숙련도, 색상 구간, 숙련도 상승 확률을 표시합니다.
-## Notes-ptBR: Perícia necessária, limiares de cor e chance de ponto de perícia para cada receita na janela de profissões.
+## Notes-ptBR: Planeje suas profissões, acompanhe rotas de evolução, calcule custos e prepare listas de compras.
 ## Notes-ruRU: Требуемый навык, цветовые пороги и шанс повышения навыка для каждого рецепта в окне профессий.
 ## Notes-zhCN: 在专业窗口中为每个配方显示所需技能、颜色分界点和技能提升几率。
 ## Notes-zhTW: 在專業技能視窗中為每個配方顯示所需技能、顏色分界點和技能提升機率。
-## Author: cjber
+## Author: tay-create
+## X-Original-Author: cjber
 ## Version: @project-version@
 ## Category: Professions
 ## X-License: GPL-3.0-or-later
-## X-Website: https://github.com/cjber/skillup-forever
-## X-Donate: https://github.com/sponsors/cjber
-## X-Curse-Project-ID: 1705762
-## X-Wago-ID: aNerqn62
-## SavedVariables: SkillUpForeverDB
+## X-Website: https://github.com/tay-create/SkillUp-ProfessionPlanner
+## SavedVariables: ProfessionPlannerDB, SkillUpForeverDB
 ## OptionalDeps: Auctionator, TradeSkillMaster, TomTom, Syndicator, ShortestPathForever, QuestieDB, Questie, AtlasLootClassic
-## IconTexture: Interface\AddOns\SkillUpForever\media\Icon
+## IconTexture: Interface\AddOns\ProfessionPlanner\media\Icon
 ## X-Forever-Icon: Interface\Icons\INV_Scroll_03
-## AddonCompartmentFunc: SkillUpForever_OnAddonCompartmentClick
+## AddonCompartmentFunc: ProfessionPlanner_OnAddonCompartmentClick
 
 Core\ForeverRequire.lua
 Core\Require.lua
@@ -43,6 +41,7 @@ Data\Vendor.lua
 Data\Recipes.lua
 Data\Trainer.lua
 Data\Sources.lua
+Data\FishingPoints.lua
 Data\Credits.lua
 Core\Model.lua
 Core\Changes.lua
@@ -65,6 +64,7 @@ Integrations\Sources.lua
 UI\List.lua
 UI\PageParts.lua
 UI\Pages.lua
+UI\HeaderButton.lua
 UI\Route.lua
 UI\Gear.lua
 UI\Buffs.lua

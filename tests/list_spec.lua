@@ -148,7 +148,7 @@ local env = setmetatable({
 	GRAY_FONT_COLOR = color,
 	NORMAL_FONT_COLOR = color,
 }, { __index = _G })
-setfenv(assert(loadfile("UI/List.lua")), env)("SkillUpForever", ns)
+setfenv(assert(loadfile("UI/List.lua")), env)("ProfessionPlanner", ns)
 
 local list = ns.CreateList(Region())
 
@@ -211,7 +211,7 @@ end
 
 -- A row is the game's item: a 37px icon in the stock border, the name beside it, the facts under it.
 local row, rowTemplate = Materialize(list.rows[1])
-equal(rowTemplate, "SkillUpForeverListRowTemplate", "a row is built from the row template")
+equal(rowTemplate, "ProfessionPlannerListRowTemplate", "a row is built from the row template")
 equal(row.kind, "row", "and knows it is a row")
 equal(Anchor(row.Icon, "LEFT")[2], 6, "the icon sits 6 in from the left")
 equal(row.Icon.width, 37, "at the game's own item size")
@@ -236,18 +236,18 @@ local pooled = Region()
 Materialize(list.rows[1], pooled)
 local detail = pooled.Detail
 row, rowTemplate = Materialize(list.rows[2], pooled)
-equal(rowTemplate, "SkillUpForeverListRowTemplate", "the second row is built from the same template")
+equal(rowTemplate, "ProfessionPlannerListRowTemplate", "the second row is built from the same template")
 equal(row.kind, "row", "the redrawn frame is still a row")
 equal(pooled.Detail, detail, "the scroll box's frame is reused")
 equal(pooled.Detail.shown, false, "a row without facts shows no detail")
 
 -- A heading is a stock line and a message is wrapped, measured text.
 local heading, headingTemplate = Materialize(list.rows[3])
-equal(headingTemplate, "SkillUpForeverListHeadingTemplate", "a heading is built from the heading template")
+equal(headingTemplate, "ProfessionPlannerListHeadingTemplate", "a heading is built from the heading template")
 equal(heading.kind, "heading", "and knows it is a heading")
 equal(heading.Text.text, "Head", "with its text")
 local message, messageTemplate = Materialize(list.rows[5])
-equal(messageTemplate, "SkillUpForeverListMessageTemplate", "a message is built from the message template")
+equal(messageTemplate, "ProfessionPlannerListMessageTemplate", "a message is built from the message template")
 equal(message.kind, "message", "and knows it is a message")
 equal(message.Text.text, list.rows[5].text, "with its text")
 equal(message.Text.wordWrap, true, "wrapped")

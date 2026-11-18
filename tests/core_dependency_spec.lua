@@ -1,5 +1,5 @@
 -- Run from the repository root: luajit tests/core_dependency_spec.lua
--- SkillUp Forever requires ForeverCore. This spec covers the two places the handover is the addon's: the one-line
+-- Profession Planner requires ForeverCore. This spec covers the two places the handover is the addon's: the one-line
 -- stop for a ForeverCore older than API 1, and the tracker settings the addon hands to the shared column once.
 local Client = dofile("tests/client.lua")
 
@@ -17,7 +17,7 @@ c.Advance(0)
 
 -- The addon registers once, and the same name returns core's one context for it.
 assert(ns.core ~= nil, "the addon registered its ForeverCore services")
-assert(ns.core == G.ForeverCore.Register("SkillUpForever"), "Register is idempotent for the addon's name")
+assert(ns.core == G.ForeverCore.Register("ProfessionPlanner"), "Register is idempotent for the addon's name")
 assert(type(ns.core.SafeCall) == "function", "the context carries the addon's SafeCall")
 assert(type(ns.core.Report.Show) == "function", "and its own report window")
 
@@ -32,7 +32,7 @@ assert(settings.backdropOpacity == 0.5, "the saved background carries over")
 assert(settings.x == 120 and settings.y == -240, "the saved detached position carries over")
 assert(ns.db.trackerHost == nil, "the addon no longer keeps its own tracker table")
 
-local module = G.SkillUpForeverObjectiveTracker
+local module = G.ProfessionPlannerObjectiveTracker
 assert(module ~= nil, "the tracker section exists")
 assert(G.ForeverCore.TrackerHost.IsAttached(module), "and hangs in the one shared column")
 
@@ -44,7 +44,7 @@ assert(G.ForeverCore.TrackerHost.IsAttached(module), "and hangs in the one share
 -- varargs, as the client does, not a table.
 local function Addons()
 	local entries = {
-		{ "SkillUpForever", "SkillUp Forever", "v1.5.0", { "ForeverCore" } },
+		{ "ProfessionPlanner", "Profession Planner", "v1.5.0", { "ForeverCore" } },
 		{ "ForeverCore", "ForeverCore", "v1.5.0", {} },
 	}
 	local function At(index)
@@ -102,8 +102,8 @@ local function Require(foreverCore)
 	setmetatable(env, { __index = _G })
 	local addon = {}
 	-- The TOC loads the shared warning before the addon's own Require, which calls it.
-	setfenv(assert(loadfile("Core/ForeverRequire.lua")), env)("SkillUpForever", addon)
-	setfenv(assert(loadfile("Core/Require.lua")), env)("SkillUpForever", addon)
+	setfenv(assert(loadfile("Core/ForeverRequire.lua")), env)("ProfessionPlanner", addon)
+	setfenv(assert(loadfile("Core/Require.lua")), env)("ProfessionPlanner", addon)
 	return addon, lines
 end
 
@@ -111,7 +111,7 @@ end
 local broken, lines = Require({ TrackerSection = {}, TrackerLine = {} })
 assert(broken.broken == true, "a ForeverCore without the API kit stops the addon")
 assert(#lines == 1, "and the shared warning says so in one error line")
-assert(lines[1].text == "SkillUp Forever could not start. Reinstall SkillUp Forever to fix this.", lines[1].text)
+assert(lines[1].text == "Profession Planner could not start. Reinstall Profession Planner to fix this.", lines[1].text)
 
 -- A missing core stops it too; the game normally refuses to load the addon first.
 local missing, missingLines = Require(nil)

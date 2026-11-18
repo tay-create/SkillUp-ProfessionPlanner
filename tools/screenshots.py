@@ -31,14 +31,14 @@ sys.path.insert(0, str(WOWMOCK))
 
 REPO = Path(__file__).resolve().parent.parent
 OUT = REPO / "docs" / "screenshots"
-TOC_TEXT = (REPO / "SkillUpForever.toc").read_text(encoding="utf-8-sig")
+TOC_TEXT = (REPO / "ProfessionPlanner.toc").read_text(encoding="utf-8-sig")
 
 
 def toc_field(name):
     """A TOC metadata value, such as the addon's one identity icon."""
     match = re.search(rf"^##\s*{re.escape(name)}:\s*(.*?)\s*$", TOC_TEXT, re.MULTILINE)
     if match is None:
-        raise SystemExit(f"SkillUpForever.toc has no {name} field")
+        raise SystemExit(f"ProfessionPlanner.toc has no {name} field")
     return match[1]
 
 
@@ -55,7 +55,7 @@ LUA_TABLE_SERIALIZER = r"""
 local chunk = assert(loadfile(arg[1]))
 local ns = {}
 setfenv(chunk, setmetatable({}, { __index = _G }))
-chunk("SkillUpForever", ns)
+chunk("ProfessionPlanner", ns)
 local function quote(value)
     local result = { '"' }
     for index = 1, #value do
@@ -107,13 +107,14 @@ io.write(encode(ns))
 
 def parse_lua_tables(text):
     """Decode generated Lua with LuaJIT, preserving Lua string and number semantics."""
-    with tempfile.NamedTemporaryFile("w", suffix=".lua", encoding="utf-8") as source:
-        source.write(text)
-        source.flush()
+    with tempfile.TemporaryDirectory(prefix="skillup-lua-") as directory:
+        source = Path(directory) / "source.lua"
+        source.write_text(text, encoding="utf-8", newline="\n")
         result = subprocess.run(
-            ["luajit", "-", source.name],
+            ["luajit", "-", str(source)],
             input=LUA_TABLE_SERIALIZER,
             text=True,
+            encoding="utf-8",
             capture_output=True,
             check=True,
         )
@@ -372,7 +373,7 @@ TOOLTIP_ITEM = 2318  # Light Leather
 # what each would draw as JSON. Money is left as {coin:N} and item names as {item:N} for the renderer to fill in.
 LUA_SCENE = r"""
 -- STATE is defined above this line by screenshots.py.
-local ADDON = "SkillUpForever"
+local ADDON = "ProfessionPlanner"
 local FILES = {}
 for line in io.lines(ADDON .. ".toc") do
 	local file = line:match("^([%w_\\]+%.lua)%s*$")
@@ -897,7 +898,7 @@ env = setmetatable({
 	MenuUtil = Stub(),
 	-- The screenshots show the mouse and keyboard interface (Core/Core.lua ns.GamepadUI).
 	InputUtil = { IsGamepadUIEnabled = function() return false end },
-	SkillUpForeverDB = {
+	ProfessionPlannerDB = {
 		trackedProfessions = { [STATE.open.skillLine] = true },
 		collectModes = {},
 		showGearTab = true,
@@ -1213,7 +1214,7 @@ for _, list in ipairs(lists) do
 end
 
 -- The tracker: its module lays out blocks of objectives.
-local module = named.SkillUpForeverObjectiveTracker
+local module = named.ProfessionPlannerObjectiveTracker
 local blocks = {}
 local tracker = { header = module.headerText, blocks = blocks }
 module.LayoutContents({
@@ -1558,7 +1559,9 @@ def lua_scene(ui, *, buy_reagents=False, buffs=False):
         "requirementWidths": [canvas.text_width(requirement_text(req), F_SHADOW_SMALL) for req in range(MAX_SKILL + 1)],
     }
     source = f"local STATE = {to_lua(state)}\n{LUA_SCENE}"
-    result = subprocess.run(["luajit", "-"], input=source, capture_output=True, text=True, cwd=REPO, check=False)
+    result = subprocess.run(
+        ["luajit", "-"], input=source, capture_output=True, text=True, encoding="utf-8", cwd=REPO, check=False
+    )
     if result.returncode != 0 or result.stderr:
         sys.exit(f"the Lua scene failed:\n{result.stderr}")
     return json.loads(result.stdout)
@@ -2419,7 +2422,7 @@ def route_frame(ui, scene_data):
 
 
 def shopping_list_scene(ui, scene_data):
-    """Standalone shopping window, with rows emitted by SkillUpForever.API.ShoppingList in the Lua scene."""
+    """Standalone shopping window, with rows emitted by ProfessionPlanner.API.ShoppingList in the Lua scene."""
     w, h, margin = 620, 510, 24
     canvas = ui.canvas(w + margin * 2, h + margin * 2)
     x, y = margin, margin

@@ -1,9 +1,13 @@
--- Machine translated (2026-10-16); corrections welcome: https://github.com/cjber/skillup-forever/issues/new?template=translation.yml
+-- Machine translated (2026-10-16); corrections welcome: https://github.com/tay-create/SkillUp-ProfessionPlanner/issues
 local _, ns = ...
 if GetLocale() ~= "ruRU" then
 	return
 end
 local L = ns.L
+L["No vendor or trainer location found for this list. Check NPC locations in QuestieDB; auction and gathered items are separate."] =
+	"Для этого списка не найдены торговцы или учителя. Проверьте расположение NPC в QuestieDB. Аукционные и собираемые материалы обрабатываются отдельно."
+L["Shortest Path Forever cannot plan the full trip; setting a waypoint to the first trainer."] =
+	"Shortest Path Forever не может построить весь маршрут. Устанавливается метка к первому учителю."
 
 L["%d %s"] = "%d %s"
 L["%d crafts to %d, %s"] = "%d созд. до %d, %s"
@@ -28,10 +32,10 @@ L["%s, source unknown"] = "%s, источник неизвестен"
 L["%s: %d moved, %d confirmed at a trainer, %d wrong."] =
 	"%s: перемещено %d, подтверждено у учителя %d, неверно %d."
 L["+%d more"] = "и еще %d"
-L["/skillup skipped lists the recipes you skipped, with their IDs."] =
-	"/skillup skipped показывает пропущенные рецепты с их ID."
-L["/skillup unskip <recipe ID> shows one again, /skillup unskip all every one."] =
-	"/skillup unskip <recipe ID> возвращает один рецепт, /skillup unskip all — все."
+L["/pp skipped lists the recipes you skipped, with their IDs."] =
+	"/pp skipped показывает пропущенные рецепты с их ID."
+L["/pp unskip <recipe ID> shows one again, /pp unskip all every one."] =
+	"/pp unskip <recipe ID> возвращает один рецепт, /pp unskip all — все."
 L["A Reagents tab on a merchant's window that lists the reagents your tracked routes still need from that merchant and their total cost. Buy them from the merchant's own window."] =
 	"Вкладка «Реагенты» в окне торговца со списком реагентов, которые ещё нужны вашим отслеживаемым маршрутам у этого торговца, и их общей стоимостью. Покупайте их в окне торговца."
 L["A material your professions gather costs what selling it would bring instead of nothing: its auction price after the 5% cut, or its vendor sell price if that is more. Used for the route and the costs on recipe rows. Auction prices need Auctionator or TradeSkillMaster."] =
@@ -250,7 +254,7 @@ L["Skill-up chance"] = "Шанс повышения навыка"
 L["Skill-up chance and cost per skill-up at the right of each recipe."] =
 	"Шанс повышения навыка и стоимость за очко справа от каждого рецепта."
 L["Skill-up chance: %d%%"] = "Шанс повышения навыка: %d%%"
-L["SkillUp report"] = "Отчет SkillUp"
+L["Profession Planner report"] = "Отчет Profession Planner"
 L["Skipped (%d)"] = "Пропущено (%d)"
 L["Skipped (%d):"] = "Пропущено (%d):"
 L["Sold by"] = "Продает"
@@ -390,15 +394,13 @@ L["%s to %d"] = "%s до %d"
 L[" · "] = " • "
 L[", "] = ", "
 L[", price seen %d days ago"] = ", цена замечена %d дн. назад"
-L["/skillup export - show the trainer requirements this character has seen, to paste into a report"] =
-	"/skillup export - показать требования учителя, которые видел этот персонаж, чтобы вставить их в отчет"
-L["/skillup issue - report a bug or request a feature with a ready-made GitHub issue link"] =
-	"/skillup issue - сообщить об ошибке или попросить новую возможность с готовой ссылкой на issue GitHub"
-L["/skillup report - show a report to copy into a bug report"] =
-	"/skillup report - показать отчет, чтобы скопировать его в сообщение об ошибке"
+L["/pp export - show the trainer requirements this character has seen, to paste into a report"] =
+	"/pp export - показать требования учителя, которые видел этот персонаж, чтобы вставить их в отчет"
+L["/pp issue - report a bug or request a feature with a ready-made GitHub issue link"] =
+	"/pp issue - сообщить об ошибке или попросить новую возможность с готовой ссылкой на issue GitHub"
+L["/pp report - show a report to copy into a bug report"] =
+	"/pp report - показать отчет, чтобы скопировать его в сообщение об ошибке"
 L[": "] = ": "
-L["A buy trip needs Shortest Path Forever."] =
-	"Для поездки за покупками нужен Shortest Path Forever."
 L["Copy list"] = "Копировать список"
 L["Copy shopping list"] = "Копировать список покупок"
 L["Gather"] = "Добыча"
@@ -413,9 +415,7 @@ L["Plan this route again from today's prices and recipes."] =
 L["Shopping list"] = "Список покупок"
 L["Shortest Path Forever cannot plan the full trip; setting a waypoint to the first vendor."] =
 	"Shortest Path Forever не может спланировать весь путь; ставится точка маршрута к первому торговцу."
-L["Shortest Path Forever is needed to plan this trip."] =
-	"Для планирования этого пути нужен Shortest Path Forever."
-L["SkillUp Forever shopping list"] = "Список покупок SkillUp Forever"
+L["Profession Planner shopping list"] = "Список покупок Profession Planner"
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it."] =
 	"Текст выделен. Нажмите Ctrl+C (Cmd+C на Mac), чтобы скопировать его."
 L["Total for priced items: "] = "Всего по предметам с ценой: "
@@ -479,12 +479,12 @@ L["%s drops in %s"] = "%s выпадает в %s" -- mt
 L["Made by %s %d"] = "Изготовлено: %s %d" -- mt
 L["Made by %s"] = "Изготовлено: %s" -- mt
 L["%s at %d"] = "%s на %d" -- mt
-L["A tab at the bottom of the Professions window listing the buff consumables this profession makes, by the skill they unlock at and what each one is for. It opens from the SkillUp side tab, beside the route and crafted gear tabs."] =
-	"Вкладка внизу окна профессий со списком усиливающих расходников этой профессии, по навыку, на котором они открываются, и их назначению. Открывается с боковой вкладки SkillUp, рядом с вкладками маршрута и изготовленной экипировки." -- mt
-L["A tab at the bottom of the Professions window listing the newest crafted item this character can equip in each slot. It opens from the SkillUp side tab, beside the route and buffs tabs."] =
-	"Вкладка внизу окна профессий: самый новый изготовленный предмет, который этот персонаж может надеть в каждую ячейку. Открывается с боковой вкладки SkillUp, рядом с вкладками маршрута и усилений." -- mt
-L["A tab at the bottom of the Professions window with a route to your target skill and its reagents. It opens from the SkillUp side tab, beside the crafted gear and buffs tabs. Tracked professions stay in the objective tracker either way."] =
-	"Вкладка внизу окна профессий с маршрутом до целевого навыка и его реагентов. Открывается с боковой вкладки SkillUp, рядом с вкладками изготовленной экипировки и усилений. Отслеживаемые профессии в любом случае остаются в отслеживании целей." -- mt
+L["A tab at the bottom of the Professions window listing the buff consumables this profession makes, by the skill they unlock at and what each one is for. It opens from the Profession Planner side tab, beside the route and crafted gear tabs."] =
+	"Вкладка внизу окна профессий со списком усиливающих расходников этой профессии, по навыку, на котором они открываются, и их назначению. Открывается с боковой вкладки Profession Planner, рядом с вкладками маршрута и изготовленной экипировки." -- mt
+L["A tab at the bottom of the Professions window listing the newest crafted item this character can equip in each slot. It opens from the Profession Planner side tab, beside the route and buffs tabs."] =
+	"Вкладка внизу окна профессий: самый новый изготовленный предмет, который этот персонаж может надеть в каждую ячейку. Открывается с боковой вкладки Profession Planner, рядом с вкладками маршрута и усилений." -- mt
+L["A tab at the bottom of the Professions window with a route to your target skill and its reagents. It opens from the Profession Planner side tab, beside the crafted gear and buffs tabs. Tracked professions stay in the objective tracker either way."] =
+	"Вкладка внизу окна профессий с маршрутом до целевого навыка и его реагентов. Открывается с боковой вкладки Profession Planner, рядом с вкладками изготовленной экипировки и усилений. Отслеживаемые профессии в любом случае остаются в отслеживании целей." -- mt
 L["Above your level"] = "Выше вашего уровня" -- mt
 L["Buffs"] = "Усиления" -- mt
 L["Known"] = "Известно" -- mt
@@ -494,7 +494,7 @@ L["No buff items for your level yet."] =
 	"Пока нет предметов усиления для вашего уровня." -- mt
 L["Only for level %d"] = "Только для уровня %d" -- mt
 L["Show the buffs tab"] = "Показывать вкладку усилений" -- mt
-L["SkillUp"] = "SkillUp" -- mt
+L["Profession Planner"] = "Profession Planner" -- mt
 L["This profession makes no buff items."] =
 	"Эта профессия не создаёт предметы усиления." -- mt
 L["spell %d"] = "заклинание %d" -- mt
@@ -521,7 +521,7 @@ L["On (the default), a reagent you could gather, fish or loot from creatures is 
 	"Вкл. (по умолчанию): реагент, который можно собрать, выловить или добыть с существ, покупается у торговца или на аукционе. Выкл.: добыть его самостоятельно стоит столько, за сколько его можно продать."
 L["Shift + wheel, or drag, scrolls the timeline sideways."] =
 	"Shift + колесо мыши или перетаскивание прокручивает временную шкалу вбок."
-L["SkillUp's list"] = "Список SkillUp"
+L["Profession Planner's list"] = "Список Profession Planner"
 L["Timeline"] = "Временная шкала"
 L["Turning Buy reagents on writes an Auctionator list with every auction reagent still missing."] =
 	"Если включить «Покупать реагенты», будет записан список Auctionator со всеми недостающими аукционными реагентами."
@@ -533,8 +533,8 @@ L["%s: %s are out of date. Update them to fix this."] =
 	"%s: %s устарели. Обновите их, чтобы это исправить." -- mt
 L["%s could not start. Reinstall %s to fix this."] =
 	"%s не удалось запустить. Переустановите %s, чтобы это исправить." -- mt
-L["SkillUp no longer fills Auctionator with shopping lists."] =
-	"SkillUp больше не заполняет Auctionator списками покупок." -- mt
+L["Profession Planner no longer fills Auctionator with shopping lists."] =
+	"Profession Planner больше не заполняет Auctionator списками покупок." -- mt
 L["Region sale average"] = "Средняя цена продажи в регионе"
 L["Region sale average if higher"] = "Средняя цена продажи в регионе, если выше"
 L["Region sale averages need TradeSkillMaster and its desktop app. They estimate value from reported regional sales and purchases, with the vendor price as a floor. They do not guarantee a sale."] =

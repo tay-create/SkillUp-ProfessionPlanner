@@ -53,7 +53,7 @@ c.live[3] = {
 }
 c.auction[4306], c.auctionAge = 50, 3
 c.bags = { [4306] = 2, [2321] = 1 }
-equal(#c.G.SkillUpForever.API.ShoppingList(), 0, "no saved variables returns an empty list")
+equal(#c.G.ProfessionPlanner.API.ShoppingList(), 0, "no saved variables returns an empty list")
 c.Boot()
 c.ns.SetCollectMode("gather")
 c.maps = { [0] = { mapID = 10, name = "Darkshire" } }
@@ -72,7 +72,7 @@ c.G.Syndicator = {
 		end,
 	},
 }
-local api = c.G.SkillUpForever.API
+local api = c.G.ProfessionPlanner.API
 equal(api.minor, 6, "API minor version")
 local lists = api.ShoppingList()
 equal(#lists, 2, "both tracked professions are present")
@@ -108,7 +108,7 @@ lists[2].items[1].missing = 0
 equal(api.ShoppingList()[2].items[1].missing > 0, true, "each call is a fresh copy")
 equal(api.ShoppingList(111)[1], nil, "an untracked skill line has no profession row")
 local text = c.ns.ShoppingText()
-equal(text:find("SkillUp Forever shopping list", 1, true) ~= nil, true, "text header")
+equal(text:find("Profession Planner shopping list", 1, true) ~= nil, true, "text header")
 equal(text:find("Auction house", 1, true) ~= nil, true, "text source heading")
 equal(text:find("Silk Cloth", 1, true) ~= nil, true, "text item name")
 equal(text:find("price unknown", 1, true) ~= nil, true, "text marks unpriced items")
@@ -130,6 +130,18 @@ equal(routed[1].kind, "vendor", "the vendor is the first stop")
 equal(routed[1].title:find("Fine Thread", 1, true) ~= nil, true, "the vendor stop names its items")
 equal(routed[1].title:find("Heavy Thread", 1, true) ~= nil, true, "vendor title names all its items")
 equal(#routed, 1, "one stop covers multiple items from the same vendor")
+-- With no known NPC stops, the error must describe missing locations, even if Shortest Path is loaded.
+local nearestVendor = c.ns.NearestVendor
+c.ns.NearestVendor = function()
+	return nil
+end
+equal(c.ns.ShoppingTrip(197), false, "missing NPC locations cannot start a trip")
+equal(
+	c.chat[#c.chat]:find("No vendor or trainer location found for this list", 1, true) ~= nil,
+	true,
+	"missing destinations give a location explanation"
+)
+c.ns.NearestVendor = nearestVendor
 c.G.ShortestPathForever = nil
 c.G.C_Map.CanSetUserWaypointOnMap = function()
 	return true
@@ -157,7 +169,15 @@ c.Fire("PLAYER_ENTERING_WORLD")
 c.Fire("VARIABLES_LOADED")
 c.Advance(0)
 c.ns.OpenShoppingList()
-local window = c.G.SkillUpForeverShoppingList
+local window = c.G.ProfessionPlannerShoppingList
+local tripButton
+for _, child in ipairs({ window:GetChildren() }) do
+	if child.text == c.ns.L["Plan buy trip"] then
+		tripButton = child
+	end
+end
+assert(tripButton, "the buy trip button was built")
+equal(tripButton:IsEnabled(), true, "the trip button allows waypoint fallback without Shortest Path")
 local function Find(root, match)
 	for _, child in ipairs({ root:GetChildren() }) do
 		if match(child) then
@@ -223,7 +243,7 @@ for _, child in ipairs({ window:GetChildren() }) do
 end
 assert(copyButton, "the Copy list button was built")
 copyButton.scripts.OnClick(copyButton)
-local copyWindow = c.G.SkillUpForeverShoppingCopy
+local copyWindow = c.G.ProfessionPlannerShoppingCopy
 assert(copyWindow, "the copy window was built")
 equal(copyWindow.title, c.ns.L["Copy shopping list"], "the copy window has its own title")
 local anchor = copyWindow.points[1]
@@ -320,7 +340,19 @@ local function VisibleTexts(root)
 	return table.concat(texts, "\n")
 end
 scoped.ns.OpenShoppingList(LEATHERWORKING)
-local scopedWindow = scoped.G.SkillUpForeverShoppingList
+local scopedWindow = scoped.G.ProfessionPlannerShoppingList
+local scopedTrip = Find(scopedWindow, function(region)
+	return region.text == scoped.ns.L["Plan buy trip"]
+end)
+assert(scopedTrip, "the scoped shopping list has a trip button")
+local clickedSkillLine
+local originalShoppingTrip = scoped.ns.ShoppingTrip
+scoped.ns.ShoppingTrip = function(skillLine)
+	clickedSkillLine = skillLine
+end
+scopedTrip.scripts.OnClick(scopedTrip)
+equal(clickedSkillLine, LEATHERWORKING, "buy trip respects the profession shown in the list")
+scoped.ns.ShoppingTrip = originalShoppingTrip
 local scopedBody = Find(scopedWindow, function(region)
 	return region.width == 550
 end)
@@ -348,15 +380,15 @@ equal(untrackedText:find(scoped.ns.L["No tracked profession"], 1, true) ~= nil, 
 -- The Shopping list's Auction house section says how the Auctionator list works (#554): its name, where it
 -- lives, and that each row is a click. With Buy reagents off it says turning it on writes the list, and
 -- without Auctionator it says the bar searches the game's own box.
-local offNote = c.ns.AuctionListNote({ "SkillUp: Tester-Realm: Tailoring" })
+local offNote = c.ns.AuctionListNote({ "Profession Planner: Tester-Realm: Tailoring" })
 equal(
 	offNote:find("Turning Buy reagents on writes an Auctionator list", 1, true) ~= nil,
 	true,
 	"with Buy reagents off the section says how to get the list"
 )
 c.ns.SetCollectMode("auction")
-local onNote = c.ns.AuctionListNote({ "SkillUp: Tester-Realm: Tailoring", "SkillUp: Tester-Realm: Blacksmithing" })
-equal(onNote:find("Auctionator list: SkillUp: Tester-Realm: Tailoring", 1, true) ~= nil, true, "it names the list")
+local onNote = c.ns.AuctionListNote({ "Profession Planner: Tester-Realm: Tailoring", "Profession Planner: Tester-Realm: Blacksmithing" })
+equal(onNote:find("Auctionator list: Profession Planner: Tester-Realm: Tailoring", 1, true) ~= nil, true, "it names the list")
 equal(onNote:find("Open the auction house, Shopping tab, pick it and Search", 1, true) ~= nil, true, "where it is")
 equal(onNote:find("buy each row with a click", 1, true) ~= nil, true, "and that buying stays one click a row")
 local noAuctionator = Client.load({ auctionator = false, boot = false })

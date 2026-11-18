@@ -1,9 +1,13 @@
--- Machine translated (2026-10-16); corrections welcome: https://github.com/cjber/skillup-forever/issues/new?template=translation.yml
+-- Machine translated (2026-10-16); corrections welcome: https://github.com/tay-create/SkillUp-ProfessionPlanner/issues
 local _, ns = ...
 if GetLocale() ~= "deDE" then
 	return
 end
 local L = ns.L
+L["No vendor or trainer location found for this list. Check NPC locations in QuestieDB; auction and gathered items are separate."] =
+	"Für diese Liste wurde kein Händler oder Lehrer gefunden. Prüfe die NPC-Standorte in QuestieDB; Auktions- und Sammelmaterialien werden separat behandelt."
+L["Shortest Path Forever cannot plan the full trip; setting a waypoint to the first trainer."] =
+	"Shortest Path Forever kann die ganze Reise nicht planen; setze einen Wegpunkt zum ersten Lehrer."
 
 L["%d %s"] = "%d %s"
 L["%d crafts to %d, %s"] = "%d-mal herstellen bis %d, %s"
@@ -27,10 +31,10 @@ L["%s, %s, to %d"] = "%s, %s, bis %d"
 L["%s, source unknown"] = "%s, Quelle unbekannt"
 L["%s: %d moved, %d confirmed at a trainer, %d wrong."] = "%s: %d verschoben, %d beim Lehrer bestätigt, %d falsch."
 L["+%d more"] = "+%d weitere"
-L["/skillup skipped lists the recipes you skipped, with their IDs."] =
-	"/skillup skipped listet die übersprungenen Rezepte mit ihren IDs auf."
-L["/skillup unskip <recipe ID> shows one again, /skillup unskip all every one."] =
-	"/skillup unskip <recipe ID> zeigt eines wieder an, /skillup unskip all alle."
+L["/pp skipped lists the recipes you skipped, with their IDs."] =
+	"/pp skipped listet die übersprungenen Rezepte mit ihren IDs auf."
+L["/pp unskip <recipe ID> shows one again, /pp unskip all every one."] =
+	"/pp unskip <recipe ID> zeigt eines wieder an, /pp unskip all alle."
 L["A Reagents tab on a merchant's window that lists the reagents your tracked routes still need from that merchant and their total cost. Buy them from the merchant's own window."] =
 	"Ein Reiter „Reagenzien“ am Händlerfenster, der die Reagenzien auflistet, die Eure verfolgten Routen bei diesem Händler noch brauchen, samt Gesamtkosten. Kauft sie im Fenster des Händlers selbst."
 L["A material your professions gather costs what selling it would bring instead of nothing: its auction price after the 5% cut, or its vendor sell price if that is more. Used for the route and the costs on recipe rows. Auction prices need Auctionator or TradeSkillMaster."] =
@@ -239,7 +243,7 @@ L["Skill-up chance"] = "Chance auf Fertigkeitspunkt"
 L["Skill-up chance and cost per skill-up at the right of each recipe."] =
 	"Chance auf Fertigkeitspunkt und Kosten pro Punkt rechts neben jedem Rezept."
 L["Skill-up chance: %d%%"] = "Chance auf Fertigkeitspunkt: %d%%"
-L["SkillUp report"] = "SkillUp-Bericht"
+L["Profession Planner report"] = "Profession Planner-Bericht"
 L["Skipped (%d)"] = "Übersprungen (%d)"
 L["Skipped (%d):"] = "Übersprungen (%d):"
 L["Sold by"] = "Verkauft von"
@@ -368,14 +372,13 @@ L["%s to %d"] = "%s bis %d"
 L[" · "] = " · "
 L[", "] = ", "
 L[", price seen %d days ago"] = ", Preis vor %d Tagen gesehen"
-L["/skillup export - show the trainer requirements this character has seen, to paste into a report"] =
-	"/skillup export - zeigt die Lehreranforderungen, die dieser Charakter gesehen hat, zum Einfügen in einen Bericht"
-L["/skillup issue - report a bug or request a feature with a ready-made GitHub issue link"] =
-	"/skillup issue - meldet einen Fehler oder wünscht eine Funktion, mit fertigem GitHub-Issue-Link"
-L["/skillup report - show a report to copy into a bug report"] =
-	"/skillup report - zeigt einen Bericht zum Kopieren in einen Fehlerbericht"
+L["/pp export - show the trainer requirements this character has seen, to paste into a report"] =
+	"/pp export - zeigt die Lehreranforderungen, die dieser Charakter gesehen hat, zum Einfügen in einen Bericht"
+L["/pp issue - report a bug or request a feature with a ready-made GitHub issue link"] =
+	"/pp issue - meldet einen Fehler oder wünscht eine Funktion, mit fertigem GitHub-Issue-Link"
+L["/pp report - show a report to copy into a bug report"] =
+	"/pp report - zeigt einen Bericht zum Kopieren in einen Fehlerbericht"
 L[": "] = ": "
-L["A buy trip needs Shortest Path Forever."] = "Eine Einkaufsreise braucht Shortest Path Forever."
 L["Copy list"] = "Liste kopieren"
 L["Copy shopping list"] = "Einkaufsliste kopieren"
 L["Gather"] = "Sammeln"
@@ -389,8 +392,7 @@ L["Plan this route again from today's prices and recipes."] =
 L["Shopping list"] = "Einkaufsliste"
 L["Shortest Path Forever cannot plan the full trip; setting a waypoint to the first vendor."] =
 	"Shortest Path Forever kann die ganze Reise nicht planen; Wegpunkt zum ersten Händler wird gesetzt."
-L["Shortest Path Forever is needed to plan this trip."] = "Für diese Reise wird Shortest Path Forever benötigt."
-L["SkillUp Forever shopping list"] = "SkillUp Forever Einkaufsliste"
+L["Profession Planner shopping list"] = "Profession Planner Einkaufsliste"
 L["The text is selected. Press Ctrl+C (Cmd+C on a Mac) to copy it."] =
 	"Der Text ist markiert. Drückt Strg+C (Cmd+C auf dem Mac), um ihn zu kopieren."
 L["Total for priced items: "] = "Gesamt für bepreiste Gegenstände: "
@@ -450,12 +452,12 @@ L["%s drops in %s"] = "%s: Beute in %s" -- mt
 L["Made by %s %d"] = "Hergestellt von %s %d" -- mt
 L["Made by %s"] = "Hergestellt von %s" -- mt
 L["%s at %d"] = "%s bei %d" -- mt
-L["A tab at the bottom of the Professions window listing the buff consumables this profession makes, by the skill they unlock at and what each one is for. It opens from the SkillUp side tab, beside the route and crafted gear tabs."] =
-	"Ein Reiter unten im Berufefenster, der die Stärkungsmittel dieses Berufs nach der Fertigkeit auflistet, ab der sie verfügbar sind, und wofür jedes gut ist. Er öffnet sich über den SkillUp-Seitenreiter, neben dem Routen- und dem Ausrüstungsreiter." -- mt
-L["A tab at the bottom of the Professions window listing the newest crafted item this character can equip in each slot. It opens from the SkillUp side tab, beside the route and buffs tabs."] =
-	"Ein Reiter unten im Berufefenster, der für jeden Platz den neuesten hergestellten Gegenstand zeigt, den dieser Charakter anlegen kann. Er öffnet sich über den SkillUp-Seitenreiter, neben dem Routen- und dem Stärkungsreiter." -- mt
-L["A tab at the bottom of the Professions window with a route to your target skill and its reagents. It opens from the SkillUp side tab, beside the crafted gear and buffs tabs. Tracked professions stay in the objective tracker either way."] =
-	"Ein Reiter unten im Berufefenster mit einer Route zu Eurer Zielfertigkeit und ihren Reagenzien. Er öffnet sich über den SkillUp-Seitenreiter, neben dem Ausrüstungs- und dem Stärkungsreiter. Verfolgte Berufe bleiben so oder so in der Questzielverfolgung." -- mt
+L["A tab at the bottom of the Professions window listing the buff consumables this profession makes, by the skill they unlock at and what each one is for. It opens from the Profession Planner side tab, beside the route and crafted gear tabs."] =
+	"Ein Reiter unten im Berufefenster, der die Stärkungsmittel dieses Berufs nach der Fertigkeit auflistet, ab der sie verfügbar sind, und wofür jedes gut ist. Er öffnet sich über den Profession Planner-Seitenreiter, neben dem Routen- und dem Ausrüstungsreiter." -- mt
+L["A tab at the bottom of the Professions window listing the newest crafted item this character can equip in each slot. It opens from the Profession Planner side tab, beside the route and buffs tabs."] =
+	"Ein Reiter unten im Berufefenster, der für jeden Platz den neuesten hergestellten Gegenstand zeigt, den dieser Charakter anlegen kann. Er öffnet sich über den Profession Planner-Seitenreiter, neben dem Routen- und dem Stärkungsreiter." -- mt
+L["A tab at the bottom of the Professions window with a route to your target skill and its reagents. It opens from the Profession Planner side tab, beside the crafted gear and buffs tabs. Tracked professions stay in the objective tracker either way."] =
+	"Ein Reiter unten im Berufefenster mit einer Route zu Eurer Zielfertigkeit und ihren Reagenzien. Er öffnet sich über den Profession Planner-Seitenreiter, neben dem Ausrüstungs- und dem Stärkungsreiter. Verfolgte Berufe bleiben so oder so in der Questzielverfolgung." -- mt
 L["Above your level"] = "Über Eurer Stufe" -- mt
 L["Buffs"] = "Stärkungen" -- mt
 L["Known"] = "Bekannt" -- mt
@@ -464,7 +466,7 @@ L["Learn now"] = "Jetzt lernen" -- mt
 L["No buff items for your level yet."] = "Noch keine Stärkungsgegenstände für Eure Stufe." -- mt
 L["Only for level %d"] = "Nur für Stufe %d" -- mt
 L["Show the buffs tab"] = "Stärkungsreiter anzeigen" -- mt
-L["SkillUp"] = "SkillUp" -- mt
+L["Profession Planner"] = "Profession Planner" -- mt
 L["This profession makes no buff items."] = "Dieser Beruf stellt keine Stärkungsgegenstände her." -- mt
 L["spell %d"] = "Zauber %d" -- mt
 L["Buffs by %s skill"] = "Stärkungen durch %s" -- mt
@@ -489,7 +491,7 @@ L["On (the default), a reagent you could gather, fish or loot from creatures is 
 	"An (Standard): Ein Reagenz, das Ihr sammeln, fischen oder von Kreaturen erbeuten könntet, wird beim Händler oder im Auktionshaus gekauft. Aus: Es selbst zu besorgen kostet seinen Verkaufswert."
 L["Shift + wheel, or drag, scrolls the timeline sideways."] =
 	"Umschalt + Mausrad oder Ziehen scrollt die Zeitleiste seitwärts."
-L["SkillUp's list"] = "SkillUps Liste"
+L["Profession Planner's list"] = "Profession Planners Liste"
 L["Timeline"] = "Zeitleiste"
 L["Turning Buy reagents on writes an Auctionator list with every auction reagent still missing."] =
 	"Wenn Ihr „Reagenzien kaufen“ einschaltet, wird eine Auctionator-Liste mit allen noch fehlenden Auktionsreagenzien geschrieben."
@@ -499,8 +501,8 @@ L["%s: %s is out of date. Update it to fix this."] = "%s: %s ist nicht aktuell. 
 L["%s: %s are out of date. Update them to fix this."] =
 	"%s: %s sind nicht aktuell. Aktualisiert sie, um das zu beheben." -- mt
 L["%s could not start. Reinstall %s to fix this."] = "%s konnte nicht starten. Installiert %s neu, um das zu beheben." -- mt
-L["SkillUp no longer fills Auctionator with shopping lists."] =
-	"SkillUp füllt Auctionator nicht mehr mit Einkaufslisten." -- mt
+L["Profession Planner no longer fills Auctionator with shopping lists."] =
+	"Profession Planner füllt Auctionator nicht mehr mit Einkaufslisten." -- mt
 L["Region sale average"] = "Regionaler Verkaufsdurchschnitt"
 L["Region sale average if higher"] = "Regionaler Verkaufsdurchschnitt, wenn höher"
 L["Region sale averages need TradeSkillMaster and its desktop app. They estimate value from reported regional sales and purchases, with the vendor price as a floor. They do not guarantee a sale."] =

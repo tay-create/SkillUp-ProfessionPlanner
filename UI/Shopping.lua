@@ -6,7 +6,7 @@ if ns.broken then
 end
 local L = ns.L
 
-local CALLER = "SkillUp Forever"
+local CALLER = "Profession Planner"
 -- Missing reagents shown per profession before "...".
 local MAX_OBJECTIVES = 6
 -- The header menu lists each missing vendor item, so it scrolls past 20 rows of 20 px (WFA-36).
@@ -78,7 +78,7 @@ ns.WithItemNames = WithNames
 ---@return string?
 function ns.AuctionListName(profession)
 	local character = ns.CharacterKey()
-	return character and ("SkillUp: " .. character .. ": " .. profession) or nil
+	return character and ("Profession Planner: " .. character .. ": " .. profession) or nil
 end
 
 -- What the Shopping list says under Auction house, and the auction bar's Search tooltip says in one line (#554).
@@ -92,7 +92,7 @@ function ns.AuctionListNote(names)
 	if ns.CollectMode() ~= "auction" then
 		return L["Turning Buy reagents on writes an Auctionator list with every auction reagent still missing."]
 	end
-	local listed = names and #names > 0 and table.concat(names, ", ") or L["SkillUp's list"]
+	local listed = names and #names > 0 and table.concat(names, ", ") or L["Profession Planner's list"]
 	return string.format(
 		L["Auctionator list: %s. Open the auction house, Shopping tab, pick it and Search; buy each row with a click."],
 		listed
@@ -550,7 +550,7 @@ local function ShowCover(tabID)
 		return
 	end
 	if not merchantCover then
-		local cover = CreateFrame("Button", "SkillUpForeverMerchantTabCover", MerchantFrame, TAB_TEMPLATE)
+		local cover = CreateFrame("Button", "ProfessionPlannerMerchantTabCover", MerchantFrame, TAB_TEMPLATE)
 		merchantCover = cover --[[@as Button]]
 		merchantCover:Hide()
 		merchantCover:SetScript("OnClick", function()
@@ -626,7 +626,7 @@ local function CreateMerchantCell(index)
 	-- The merchant's own item cell: its slot, label art, name and item button. Its click buys, which the addon
 	-- never does, so the scripts the template brought are replaced by a tooltip only.
 	-- Named, as the template names its regions and item button after the cell ("$parentName").
-	local name = "SkillUpForeverMerchantItem" .. index
+	local name = "ProfessionPlannerMerchantItem" .. index
 	local frame = CreateFrame("Frame", name, merchantPage, "MerchantItemTemplate") --[[@as SkillUpMerchantItemFrame]]
 	frame:SetSize(CELL_WIDTH, CELL_HEIGHT)
 	local button = frame.ItemButton --[[@as SkillUpMerchantItemButton]]
@@ -673,7 +673,7 @@ local function EnsureMerchantFrames()
 			end)
 		end
 	end
-	local tab = CreateFrame("Button", "SkillUpForeverMerchantTab", MerchantFrame, TAB_TEMPLATE)
+	local tab = CreateFrame("Button", "ProfessionPlannerMerchantTab", MerchantFrame, TAB_TEMPLATE)
 	merchantTab = tab --[[@as Button]]
 	merchantTab:SetID(3)
 	merchantTab:SetText(L["Reagents"])
@@ -683,7 +683,7 @@ local function EnsureMerchantFrames()
 	end)
 	PanelTemplates_DeselectTab(merchantTab)
 
-	merchantPage = CreateFrame("Frame", "SkillUpForeverMerchantPage", MerchantFrame) --[[@as SkillUpMerchantPage]]
+	merchantPage = CreateFrame("Frame", "ProfessionPlannerMerchantPage", MerchantFrame) --[[@as SkillUpMerchantPage]]
 	merchantPage:SetPoint("TOPLEFT", MerchantFrame, "TOPLEFT", 7, -60)
 	merchantPage:SetPoint("BOTTOMRIGHT", MerchantFrame, "BOTTOMRIGHT", -7, 52)
 	merchantPage:SetFrameLevel(MerchantFrame:GetFrameLevel() + 10)
@@ -714,7 +714,7 @@ local function EnsureMerchantFrames()
 		merchantPage.Items[index] = cell
 	end
 
-	local buy = CreateFrame("Button", "SkillUpForeverMerchantBuyAll", merchantPage, "SharedButtonSmallTemplate")
+	local buy = CreateFrame("Button", "ProfessionPlannerMerchantBuyAll", merchantPage, "SharedButtonSmallTemplate")
 	merchantBuyAll = buy --[[@as Button]]
 	merchantBuyAll:SetPoint("BOTTOM", merchantPage, "BOTTOM", 0, 33)
 	merchantBuyAll:SetScript("OnClick", AskToBuy)
@@ -1091,7 +1091,7 @@ local function CreateModule()
 	-- and no old table is this file's problem: core records the first two and offers the third once. The column's
 	-- scale, Lock and position were SkillUp's before ForeverCore kept them, so the player keeps the layout they
 	-- chose.
-	local created = ForeverCore.TrackerSection.Create("SkillUpForeverObjectiveTracker", ModuleMixin, {
+	local created = ForeverCore.TrackerSection.Create("ProfessionPlannerObjectiveTracker", ModuleMixin, {
 		header = ModuleMixin.headerText,
 		legacy = function()
 			return ns.db

@@ -6,7 +6,7 @@ local ns = { L = setmetatable({}, {
 	end,
 }) }
 ns.ProfessionSkillLines = { Leatherworking = 165, Blacksmithing = 164, Tailoring = 197, Engineering = 202 }
-setfenv(assert(loadfile("Core/Gear.lua")), setmetatable({}, { __index = _G }))("SkillUpForever", ns)
+setfenv(assert(loadfile("Core/Gear.lua")), setmetatable({}, { __index = _G }))("ProfessionPlanner", ns)
 local Gear = ns.Gear
 local checks = 0
 

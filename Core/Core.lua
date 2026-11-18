@@ -6,7 +6,7 @@ if ns.broken then
 	return
 end
 
-ns.ReportTitle = L["SkillUp report"]
+ns.ReportTitle = L["Profession Planner report"]
 -- The one client icon every in-game identity surface draws: the side tab and the shopping windows.
 -- tab. The TOC declares it once and the drawn media/Icon stays the addon's store and TOC identity.
 ns.ICON = C_AddOns.GetAddOnMetadata(addonName, "X-Forever-Icon") --[[@as string]]
@@ -21,7 +21,7 @@ ns.core = ForeverCore.Register(addonName, {
 -- Hands the generated player credits to the shared Thanks page (WFA-31). An older core has no Credits module, and the
 -- addon loads as before.
 if type(ForeverCore.Credits) == "table" then
-	ns.core.SafeCall("credits", ForeverCore.Credits.Register, "SkillUp Forever", ns.Credits)
+	ns.core.SafeCall("credits", ForeverCore.Credits.Register, "Profession Planner", ns.Credits)
 end
 
 ---@type SkillUpDefaults
@@ -41,6 +41,7 @@ local DEFAULTS = {
 	sortMode = "blizzard",
 	showTrainer = true,
 	showRouteTab = true,
+	combineCookingFishing = true, -- show fishing locations for fish used in profession routes
 	showTracker = true,
 	showGearTab = false,
 	showBuffsTab = true,
@@ -67,6 +68,7 @@ local DEFAULTS = {
 	-- after the one it was seen on.
 	builds = {},
 	routeTargets = {}, -- [profession skill line] = target base skill
+	committedRoutes = {}, -- ["Name-Realm"][skill line] = compact planned crafts and training, kept across /reload
 	learned = {}, -- ["Name-Realm"] = { [recipeID] = true }
 	observedRecipes = {}, -- ["Name-Realm"] = { ids = { [recipeID] = true }, eventUnix = latest observation }
 	professionIDs = {}, -- [localized profession name] = skill line, seen with the profession open
@@ -105,13 +107,13 @@ ns.REAGENT_TOOLTIP_OPTIONS = {
 	{ "route", L["Tracked routes (Shift for all)"] },
 	{ "full", L["Every recipe that uses it"] },
 }
-ns.TITLE = "SkillUp Forever"
+ns.TITLE = "Profession Planner"
 -- The newest release in CHANGELOG.md with a bold headline, and that headline: said once in chat after an update. A
 -- core sync's maintenance entry has no headline, so these stay on the release before it, and an update to a
 -- maintenance version says nothing new but still remembers the version. Rewrite both lines for each release that has
 -- a headline (tests/core_spec.lua checks them against CHANGELOG.md).
 ns.WHATS_NEW_VERSION = "1.10.1"
-ns.WHATS_NEW = L["SkillUp no longer fills Auctionator with shopping lists."]
+ns.WHATS_NEW = L["Profession Planner no longer fills Auctionator with shopping lists."]
 
 -- Classic difficulty colours, matching the retail recipe list's own palette.
 ns.COLORS = {
@@ -182,8 +184,27 @@ end
 
 -- Forever's SavedVariables often fail to load (forever-bugs#34), so defaults
 -- are always the base and whatever did load is merged over them.
+local function CopySavedData(source, seen)
+	if type(source) ~= "table" then
+		return source
+	end
+	seen = seen or {}
+	if seen[source] then
+		return seen[source]
+	end
+	local copy = {}
+	seen[source] = copy
+	for key, value in pairs(source) do
+		copy[CopySavedData(key, seen)] = CopySavedData(value, seen)
+	end
+	return copy
+end
+
 local function LoadDB()
-	local loaded = type(SkillUpForeverDB) == "table" and SkillUpForeverDB or {}
+	local loaded = ProfessionPlannerDB
+	if type(loaded) ~= "table" then
+		loaded = type(SkillUpForeverDB) == "table" and CopySavedData(SkillUpForeverDB) or {}
+	end
 	-- Reagent tooltips were on or off before they had a compact mode.
 	if loaded.showReagentTooltip == false then
 		loaded.reagentTooltip = "off"
@@ -243,7 +264,7 @@ local function LoadDB()
 	end
 	-- Earlier versions saved a trainer row that showed no skill requirement as needing 0, which planned
 	-- learning it at once; the bundled requirement stands in for those. A shown requirement that is no
-	-- skill is forgotten, so /skillup trainers never reports it.
+	-- skill is forgotten, so /pp trainers never reports it.
 	for skillLine, recipes in pairs(loaded.trainer) do
 		if type(skillLine) ~= "number" or type(recipes) ~= "table" then
 			loaded.trainer[skillLine] = nil
@@ -294,7 +315,7 @@ local function LoadDB()
 			loaded.collectModes[key] = nil
 		end
 	end
-	SkillUpForeverDB = loaded
+	ProfessionPlannerDB = loaded
 	loaded.peerStats = nil
 	loaded.statsShare = nil
 	ns.db = loaded
@@ -826,7 +847,7 @@ function ns.RowColor(d)
 	return ns.COLORS[d.chance and d.color or (d.thresholds and "red" or "unknown")]
 end
 
--- /skillup audit's lines: with a profession open, the bundled thresholds against the colours the game shows, as a
+-- /pp audit's lines: with a profession open, the bundled thresholds against the colours the game shows, as a
 -- summary line then each mismatch; nil with none open. English throughout: it is a data check for bug reports.
 ---@return string[]?
 function ns.AuditLines()
@@ -891,7 +912,7 @@ local function Audit()
 	end
 end
 
--- /skillup skipped: this character's skipped recipes, each with its ID for /skillup unskip.
+-- /pp skipped: this character's skipped recipes, each with its ID for /pp unskip.
 local function ListSkipped()
 	local skipped = ns.SkippedRecipes()
 	if #skipped == 0 then
@@ -902,10 +923,10 @@ local function ListSkipped()
 	for _, recipe in ipairs(skipped) do
 		ns.Print(string.format("%s (%d)", recipe.name, recipe.recipeID))
 	end
-	ns.Print(L["/skillup unskip <recipe ID> shows one again, /skillup unskip all every one."])
+	ns.Print(L["/pp unskip <recipe ID> shows one again, /pp unskip all every one."])
 end
 
--- /skillup unskip <recipe ID> or /skillup unskip all: Show again, from chat.
+-- /pp unskip <recipe ID> or /pp unskip all: Show again, from chat.
 ---@param argument string
 local function Unskip(argument)
 	if argument == "all" then
@@ -917,7 +938,7 @@ local function Unskip(argument)
 	end
 	local recipeID = tonumber(argument)
 	if not (recipeID and ns.IsSkipped(recipeID)) then
-		ns.Print(L["/skillup skipped lists the recipes you skipped, with their IDs."])
+		ns.Print(L["/pp skipped lists the recipes you skipped, with their IDs."])
 		return
 	end
 	ns.SetSkipped(recipeID, false)
@@ -925,9 +946,9 @@ local function Unskip(argument)
 	ns.Print(string.format(L["Show again: %s"], name))
 end
 
--- /skillup export trainers (#124): the requirements this character's trainers actually showed, as a table for
+-- /pp export trainers (#124): the requirements this character's trainers actually showed, as a table for
 -- tools/gen_trainer.py's SEEN_REQUIREMENTS, so a value no bundled rule guessed right can be fixed for everyone.
--- Trainers are the only export, so /skillup export does the same as /skillup export trainers. The copy window
+-- Trainers are the only export, so /pp export does the same as /pp export trainers. The copy window
 -- when it can open, the same lines in chat when it cannot: nothing is written, nothing prints on login, nothing
 -- waits on an event, and there is no protected call in it.
 local function Export()
@@ -945,11 +966,11 @@ local function Export()
 	end
 end
 
-SLASH_SKILLUPFOREVER1 = "/skillup"
+SLASH_PROFESSIONPLANNER1 = "/pp"
 
--- The /skillup commands, in dispatch order. The shared report commands come first, as they did before the table,
--- so the table order is also the order /skillup help prints. `arguments`, when set, lists the only values the command
--- accepts; nil accepts any argument. `help` is the line /skillup help prints, or nil for a command the help leaves out.
+-- The /pp commands, in dispatch order. The shared report commands come first, as they did before the table,
+-- so the table order is also the order /pp help prints. `arguments`, when set, lists the only values the command
+-- accepts; nil accepts any argument. `help` is the line /pp help prints, or nil for a command the help leaves out.
 ---@return nil
 local function Help()
 	for _, entry in ipairs(ns.SlashCommands) do
@@ -972,19 +993,19 @@ ns.SlashCommands = {
 	{
 		word = "report",
 		handler = ReportCommand,
-		help = L["/skillup report - show a report to copy into a bug report"],
+		help = L["/pp report - show a report to copy into a bug report"],
 	},
 	{
 		word = "issue",
 		aliases = { BUG, FEATURE },
 		handler = ReportCommand,
-		help = L["/skillup issue - report a bug or request a feature with a ready-made GitHub issue link"],
+		help = L["/pp issue - report a bug or request a feature with a ready-made GitHub issue link"],
 	},
 	{ word = "help", handler = Help },
 	{
 		word = "export",
 		handler = Export,
-		help = L["/skillup export - show the trainer requirements this character has seen, to paste into a report"],
+		help = L["/pp export - show the trainer requirements this character has seen, to paste into a report"],
 	},
 	{
 		word = "shopping",
@@ -1032,11 +1053,11 @@ local function Slash(msg)
 	end
 	ns.OpenSettings()
 end
-SlashCmdList.SKILLUPFOREVER = function(msg)
+SlashCmdList.PROFESSIONPLANNER = function(msg)
 	ns.core.SafeCall("slash command", Slash, msg)
 end
 
-function SkillUpForever_OnAddonCompartmentClick()
+function ProfessionPlanner_OnAddonCompartmentClick()
 	ns.OpenSettings()
 end
 
@@ -1066,7 +1087,7 @@ EventUtil.ContinueOnAddOnLoaded(addonName, function()
 	LoadDB()
 	-- The saved journal and log are core's now, under the same table: what SafeCall recorded before this line (the
 	-- client's own early errors) arrives with it, and a /reload keeps it.
-	ns.core.Attach(SkillUpForeverDB)
+	ns.core.Attach(ProfessionPlannerDB)
 	ns.NoteBuild()
 	ReadChanceBonus()
 	ns.InitCatalogue()
@@ -1085,6 +1106,7 @@ EventUtil.ContinueOnAddOnLoaded(addonName, function()
 	ns.RegisterSettings()
 	ns.AttachItemTooltips()
 	ns.InitShopping()
+	EventUtil.ContinueOnAddOnLoaded("Blizzard_Professions", ns.AttachHeaderButton)
 	EventUtil.ContinueOnAddOnLoaded("Blizzard_Professions", ns.AttachRecipeList)
 	EventUtil.ContinueOnAddOnLoaded("Blizzard_TrainerUI", ns.AttachTrainer)
 end)

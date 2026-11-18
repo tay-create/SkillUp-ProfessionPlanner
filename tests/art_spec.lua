@@ -42,7 +42,7 @@ end
 local ns = {}
 local chunk = assert(loadfile("UI/Art.lua"))
 setfenv(chunk, setmetatable({ C_Texture = C_Texture }, { __index = _G }))
-chunk("SkillUpForever", ns)
+chunk("ProfessionPlanner", ns)
 local Art = ns.Art
 
 -- Fit: the largest size in the box at the atlas's aspect.

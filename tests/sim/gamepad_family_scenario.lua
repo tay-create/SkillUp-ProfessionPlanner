@@ -20,11 +20,11 @@ scenario("the gamepad cursor enters the Forever addons page", { addons = Forever
 	assert(ns and G.ForeverCore and G.ForeverCore.OpenSettingsPanel, "the shared settings opener is loaded")
 	local category
 	for _, c in ipairs(G.SettingsPanel:GetAllCategories()) do
-		if c:GetName() == "SkillUp Forever" then
+		if c:GetName() == "Profession Planner" then
 			category = c
 		end
 	end
-	assert(category, "SkillUp Forever is under Options > AddOns")
+	assert(category, "Profession Planner is under Options > AddOns")
 	local sub
 	for _, s in ipairs(category:GetSubcategories()) do
 		if s:GetName() == "Forever addons" then

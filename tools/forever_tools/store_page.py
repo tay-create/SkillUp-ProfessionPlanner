@@ -19,11 +19,7 @@ MIN_IMAGES, MAX_IMAGES = 3, 6
 MIN_FEATURES, MAX_FEATURES = 3, 8
 MAX_WORDS = 1000
 DISCORD = "https://discord.gg/FpHugGxRJY"
-SPONSOR = (
-    "Free, with nothing locked behind it. If it saves you time, you can [sponsor me on GitHub]"
-    "(https://github.com/sponsors/cjber), which takes no fees, or [buy me a coffee on Ko-fi](https://ko-fi.com/cjber)."
-    f" For help and each day's release notes, [join me on Discord]({DISCORD})."
-)
+COMMUNITY = f"Free, with nothing locked behind it. For help and each day's release notes, [join me on Discord]({DISCORD})."
 AI_LINE = "Built with AI assistance."
 FAMILY = re.compile(r"<!-- forever-family:start -->.*?<!-- forever-family:end -->", re.DOTALL)
 FAMILY_TOKEN = "<!-- forever-family -->"
@@ -63,25 +59,23 @@ def _toc(root: Path) -> dict[str, str]:
     return fields
 
 
-def _raw(repo: str, path: str) -> str:
-    return f"https://raw.githubusercontent.com/cjber/{repo}/main/{path}"
+def _raw(repo: str, path: str, owner: str = "cjber") -> str:
+    return f"https://raw.githubusercontent.com/{owner}/{repo}/main/{path}"
 
 
-def buttons(repo: str) -> str:
-    """The button row under the sponsor sentence on every page: Discord, GitHub Sponsors, Ko-fi."""
+def buttons(repo: str, owner: str = "cjber") -> str:
+    """The Discord button below the community information."""
     return " ".join(
-        f"[![{alt}]({_raw(repo, 'docs/' + image)})]({target})"
+        f"[![{alt}]({_raw(repo, 'docs/' + image, owner)})]({target})"
         for alt, image, target in (
             ("Join me on Discord", "discord-button.png", DISCORD),
-            ("Sponsor me on GitHub", "github-sponsors-button.png", "https://github.com/sponsors/cjber"),
-            ("Support me on Ko-fi", "kofi-button.png", "https://ko-fi.com/cjber"),
         )
     )
 
 
-def source_line(repo: str) -> str:
-    url = f"https://github.com/cjber/{repo}"
-    return f"Source code and issues: [github.com/cjber/{repo}]({url}). Licence: GPL-3.0-or-later."
+def source_line(repo: str, owner: str = "cjber") -> str:
+    url = f"https://github.com/{owner}/{repo}"
+    return f"Source code and issues: [github.com/{owner}/{repo}]({url}). Licence: GPL-3.0-or-later."
 
 
 def _blocks(text: str) -> list[str]:
@@ -104,10 +98,11 @@ def check(root: Path) -> list[str]:
         return [f"{FILE}: missing; write it from wow-forever-addon/store-page.md"]
     text = path.read_text(encoding="utf-8")
     toc = _toc(root)
-    website = re.fullmatch(r"https://github\.com/cjber/([\w.-]+)", toc.get("X-Website", ""))
+    website = re.fullmatch(r"https://github\.com/([\w.-]+)/([\w.-]+)", toc.get("X-Website", ""))
     if not website or "Title" not in toc:
-        return ["root .toc: needs `## Title` and `## X-Website: https://github.com/cjber/<repo>`"]
-    repo, title = website.group(1), COLOUR.sub("", toc["Title"]).split(" - ")[0].strip()
+        return ["root .toc: needs `## Title` and `## X-Website: https://github.com/<owner>/<repo>`"]
+    owner, repo = website.groups()
+    title = COLOUR.sub("", toc["Title"]).split(" - ")[0].strip()
     problems: list[str] = []
     blocks = _blocks(text)
 
@@ -127,7 +122,7 @@ def check(root: Path) -> list[str]:
     if not (headings[:1] == ["Features"] and headings[-1:] == ["Usage"] and len(headings) in (2, 3)):
         problems.append(f"{FILE}: headings are {headings}; want Features, at most one more, then Usage")
 
-    sponsor = where(lambda b: b == SPONSOR, "the sponsor sentence")
+    community = where(lambda b: b == COMMUNITY, "the community information")
     features = where(lambda b: b == "## Features", "`## Features`")
     usage = where(lambda b: b == "## Usage", "`## Usage`")
     previews_line = re.compile(r"These images are generated previews of the .+ UI\.")
@@ -140,7 +135,7 @@ def check(root: Path) -> list[str]:
         problems.append(f"{FILE}: {len(shots)} screenshots; want {MIN_IMAGES} to {MAX_IMAGES}")
     for i, match in shots:
         alt, url = match.groups()
-        prefix = _raw(repo, "docs/screenshots/")
+        prefix = _raw(repo, "docs/screenshots/", owner)
         if not url.startswith(prefix):
             problems.append(f"{FILE}: {url} is not under {prefix}")
         elif not (root / "docs/screenshots" / url[len(prefix) :]).is_file():
@@ -169,26 +164,26 @@ def check(root: Path) -> list[str]:
         lines = [line.removeprefix("- ") for b in section for line in b.splitlines()]
         if not any(re.match(r"For a bug report, paste `/\S+ report`\.", line) for line in lines):
             problems.append(f"{FILE}: `## Usage` needs the line: For a bug report, paste `/<command> report`.")
-        form = f"https://github.com/cjber/{repo}/issues/new?template=translation.yml"
+        form = f"https://github.com/{owner}/{repo}/issues/new?template=translation.yml"
         translated = any(p.stem != "enUS" for p in (root / "Locales").glob("*.lua"))
         if translated and not any(line.startswith("Translated into") and form in line for line in lines):
             problems.append(
                 f"{FILE}: the addon ships translations, so `## Usage` needs the translation line linking {form}"
             )
 
-    if sponsor is not None and blocks[sponsor + 1 : sponsor + 2] != [buttons(repo)]:
-        problems.append(f"{FILE}: the button row must follow the sponsor sentence, exactly:\n{buttons(repo)}")
-    tail = [source_line(repo), AI_LINE]
+    if community is not None and blocks[community + 1 : community + 2] != [buttons(repo, owner)]:
+        problems.append(f"{FILE}: the Discord button must follow the community information, exactly:\n{buttons(repo, owner)}")
+    tail = [source_line(repo, owner), AI_LINE]
     if blocks[-2:] != tail:
         problems.append(f"{FILE}: the page must end with these two lines, exactly:\n" + "\n".join(tail))
-    for image_name in ("discord-button.png", "github-sponsors-button.png", "kofi-button.png"):
+    for image_name in ("discord-button.png",):
         if not (root / "docs" / image_name).is_file():
             problems.append(f"docs/{image_name}: missing; run forever-core's tools/sync_consumers.py")
 
-    order = [sponsor, shots[0][0] if shots else None, previews, features, usage, family]
+    order = [community, shots[0][0] if shots else None, previews, features, usage, family]
     known = [i for i in order if i is not None]
     if known != sorted(known):
-        want = "pitch, sponsor, screenshots, previews, Features, Usage, family"
+        want = "pitch, community, screenshots, previews, Features, Usage, family"
         problems.append(f"{FILE}: parts out of order; want {want}")
 
     count = words(text)

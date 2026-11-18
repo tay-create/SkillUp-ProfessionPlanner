@@ -124,6 +124,12 @@ local function NewRegion(parent, frameType)
 	function region:IsChecked()
 		return self.checked == true
 	end
+	function region:SetEnabled(enabled)
+		self.enabled = enabled
+	end
+	function region:IsEnabled()
+		return self.enabled ~= false
+	end
 	function region:HookScript(name, fn)
 		self.hooks[name] = self.hooks[name] or {}
 		table.insert(self.hooks[name], fn)
@@ -200,6 +206,7 @@ local function NewRegion(parent, frameType)
 end
 
 local tabs, bottomTabs = {}, {}
+local headerButton
 local function CreateFrame(frameType, _, parent, template)
 	local region = NewRegion(parent, frameType)
 	region.template = template
@@ -209,6 +216,8 @@ local function CreateFrame(frameType, _, parent, template)
 	elseif template == "PanelTabButtonTemplate" then
 		bottomTabs[#bottomTabs + 1] = region
 		region.Text = NewRegion(region, "FontString")
+	elseif template == "UIPanelButtonTemplate" then
+		headerButton = region
 	end
 	return region
 end
@@ -263,6 +272,7 @@ function Core.SetMinWidth(key, width)
 end
 
 local handlers = {}
+local professionSelected
 local lastPage
 local ns = {
 	L = setmetatable({}, {
@@ -293,6 +303,13 @@ local env = setmetatable({
 	ForeverCore = { ProfessionTabs = Core },
 	CreateFrame = CreateFrame,
 	ProfessionsFrame = ProfessionsFrame,
+	EventRegistry = {
+		RegisterCallback = function(_, event, callback)
+			if event == "Professions.ProfessionSelected" then
+				professionSelected = callback
+			end
+		end,
+	},
 	C_Timer = {
 		After = function(_, fn)
 			timers[#timers + 1] = fn
@@ -320,7 +337,10 @@ local env = setmetatable({
 	end,
 })
 
-setfenv(assert(loadfile("UI/Pages.lua")), env)("SkillUpForever", ns)
+setfenv(assert(loadfile("UI/Pages.lua")), env)("ProfessionPlanner", ns)
+setfenv(assert(loadfile("UI/HeaderButton.lua")), env)("ProfessionPlanner", ns)
+ns.AttachHeaderButton()
+equal(headerButton:IsEnabled(), false, "the header button waits for pages and a profession")
 
 local prepared = {}
 local function Page(id)
@@ -352,7 +372,7 @@ local buffs = Page("buffs")
 equal(#tabs, 1, "the pages share core's one side tab")
 equal(ns.Pages.SideTab(), coreTab, "the side tab is the one core registered")
 equal(coreEntry.spec.icon, ns.ICON, "it wears the addon's icon")
-equal(coreEntry.spec.tooltip, "SkillUp", "and says its name")
+equal(coreEntry.spec.tooltip, "Profession Planner", "and says its name")
 equal(coreEntry.spec.minWidth, nil, "no wide list means no width of its own")
 equal(coreEntry.spec.safeCall, ns.core.SafeCall, "its failures go to SkillUp's journal")
 equal(ns.Pages.SetMinWidth, nil, "SkillUp does not expose a host resize hook")
@@ -360,9 +380,23 @@ equal(ns.Pages.Count(), 3, "three pages are registered")
 equal(#bottomTabs, 3, "and each has a bottom tab")
 equal(ns.Pages.BottomTab("route") ~= nil, true, "the route tab is kept by id")
 equal(ns.Pages.BottomTab("gear").shown, false, "no page tabs show before a page does")
+equal(coreTab.shown, false, "the side tab stays hidden")
+equal(headerButton.Label:GetText(), "Profession Planner", "the header button has its title")
+equal(headerButton.Icon.texture, ns.ICON, "the header button has its icon")
+equal(headerButton:IsEnabled(), false, "the header button is disabled without a selected profession")
+headerButton:Click()
+Flush()
+equal(coreSelected, nil, "clicking without a profession does not change core's selection")
+equal(lastPage, nil, "and does not save a page")
+local childCount = #ProfessionsFrame.children
+ns.AttachHeaderButton()
+equal(#ProfessionsFrame.children, childCount, "attaching the header button again is a no-op")
+ProfessionsFrame.professionInfo = { professionID = 129 }
+professionSelected()
+equal(headerButton:IsEnabled(), true, "selecting a profession enables the header button")
 
--- The side tab opens the page the player used last, or Route before there is one.
-coreTab.scripts.OnMouseUp(nil, "LeftButton", true)
+-- The header button opens the page the player used last, or Route before there is one.
+headerButton:Click()
 Flush()
 equal(coreSelected, "skillup", "the side tab selects core's SkillUp tab")
 equal(route:IsShown(), true, "and opens Route by default")
@@ -373,7 +407,7 @@ equal(ns.Pages.BottomTab("route").shown, true, "Route's bottom tab shows with th
 equal(ns.Pages.BottomTab("gear").shown, false, "a page that is off has no bottom tab")
 equal(ns.Pages.BottomTab("buffs").shown, true, "a page that is on has one")
 
--- A bottom tab switches page, and the side tab remembers it.
+-- A bottom tab switches page, and the header button remembers it.
 ns.db.showGearTab = true
 handlers.pages()
 ns.Pages.BottomTab("gear").scripts.OnClick()
@@ -381,7 +415,17 @@ Flush()
 equal(gear:IsShown(), true, "the gear tab shows the gear page")
 equal(route:IsShown(), false, "and hides the route page")
 equal(lastPage, "gear", "the last page is saved")
-coreTab.scripts.OnMouseUp(nil, "LeftButton", true)
+Core.ShowNative()
+ProfessionsFrame.professionInfo = nil
+professionSelected()
+equal(headerButton:IsEnabled(), false, "losing the selected profession disables the header button")
+headerButton:Click()
+Flush()
+equal(coreSelected, nil, "the last page cannot open without a profession")
+equal(lastPage, "gear", "the saved page survives the missing profession")
+ProfessionsFrame.professionInfo = { professionID = 129 }
+professionSelected()
+headerButton:Click()
 Flush()
 equal(gear:IsShown(), true, "the side tab reopens the last page used")
 equal(prepared.gear, 2, "preparing it again")
@@ -395,14 +439,16 @@ equal(coreTab:IsChecked(), false, "the side tab unchecks with no page showing")
 equal(coreSelected, nil, "and core hands the window back")
 equal(ProfessionsFrame.CraftingPage:IsShown(), true, "the client's own page stays shown")
 
--- The side tab shows while at least one page is on, and goes when every page is off.
+-- The side tab remains hidden and the header button follows the page settings.
 ns.db.showRouteTab = false
 ns.db.showBuffsTab = false
 handlers.pages()
 equal(coreTab.shown, false, "the side tab hides when every page is off")
+equal(headerButton:IsEnabled(), false, "no enabled pages disables the header button")
 ns.db.showBuffsTab = true
 handlers.pages()
-equal(coreTab.shown, true, "and comes back with one page on")
+equal(coreTab.shown, false, "the side tab remains hidden with one page on")
+equal(headerButton:IsEnabled(), true, "a remaining page enables the header button")
 equal(ns.Pages.BottomTab("route").shown, false, "the route tab stays off")
 
 -- A client tab or page hands the window back: our page hides and the side tab unchecks.

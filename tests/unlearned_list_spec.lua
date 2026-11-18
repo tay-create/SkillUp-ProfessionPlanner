@@ -219,7 +219,7 @@ local env = setmetatable({
 	end,
 }, { __index = _G })
 
-setfenv(assert(loadfile("UI/RecipeList.lua")), env)("SkillUpForever", ns)
+setfenv(assert(loadfile("UI/RecipeList.lua")), env)("ProfessionPlanner", ns)
 ns.AttachRecipeList()
 
 -- The client's provider: a favourites category holding its favourite, then a learned recipe in a category.

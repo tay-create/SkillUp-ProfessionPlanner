@@ -112,8 +112,8 @@ ns.core = {
 		return pcall(fn, ...)
 	end,
 }
-setfenv(assert(loadfile("Core/Changes.lua")), env)("SkillUpForever", ns)
-setfenv(assert(loadfile("UI/List.lua")), env)("SkillUpForever", ns)
+setfenv(assert(loadfile("Core/Changes.lua")), env)("ProfessionPlanner", ns)
+setfenv(assert(loadfile("UI/List.lua")), env)("ProfessionPlanner", ns)
 
 ns.NearestVendor = function(itemID)
 	return vendors[itemID]

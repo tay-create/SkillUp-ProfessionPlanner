@@ -1,6 +1,6 @@
 ---@meta
 
--- SkillUp Forever's public API (version 1), read by other addons. A read returns a fresh table on every call; a
+-- Profession Planner's public API (version 1), read by other addons. A read returns a fresh table on every call; a
 -- field SkillUp can't establish is nil, and a read with nothing to answer adds a reason as its second value.
 
 ---@alias SkillUpAPIStepKind 'buy'|'craft'|'train'|'gather'
@@ -54,7 +54,7 @@
 ---@field reagents SkillUpAPIReagent[]
 
 ---@class SkillUpAPIStat
----@field addon 'SkillUpForever'
+---@field addon 'ProfessionPlanner'
 ---@field metric 'recipes_observed_learned'
 ---@field subject 'all'
 ---@field value number This character's distinct observed recipes.
@@ -97,4 +97,4 @@
 ---@class SkillUpPublicAddon
 ---@field API SkillUpPublicAPI
 ---@type SkillUpPublicAddon
-SkillUpForever = nil
+ProfessionPlanner = nil

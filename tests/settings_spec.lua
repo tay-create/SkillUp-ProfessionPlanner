@@ -1,5 +1,5 @@
 -- Run from the repository root: luajit tests/settings_spec.lua
--- Options > AddOns > SkillUp Forever is an index page (one button per group) over a stock subpage each.
+-- Options > AddOns > Profession Planner is an index page (one button per group) over a stock subpage each.
 -- Settings rows must reach their layout only through Settings.RegisterInitializer, which inserts them from
 -- Blizzard's secure attribute delegate. A row inserted from addon code (Settings.CreateCheckbox/CreateDropdown
 -- or layout:AddInitializer, which insert from the caller) taints the settings search, and a restricted button
@@ -72,7 +72,7 @@ local env = setmetatable({
 		RegisterProxySetting = function(_target, variable, varType, _name, default, get, set)
 			local setting = {
 				variable = variable,
-				key = variable:match("SkillUpForever_(.*)_choice") or variable:match("SkillUpForever_(.*)"),
+				key = variable:match("ProfessionPlanner_(.*)_choice") or variable:match("ProfessionPlanner_(.*)"),
 				varType = varType,
 				default = default,
 				GetValue = get,
@@ -183,7 +183,7 @@ local ns = {
 			return pcall(fn, ...)
 		end,
 	},
-	TITLE = "SkillUp Forever",
+	TITLE = "Profession Planner",
 	db = {},
 	DEFAULTS = {
 		craftValue = "vendor",
@@ -213,9 +213,9 @@ local ns = {
 		refreshed = refreshed + 1
 	end,
 }
-assert(loadfile("Locales/enUS.lua"))("SkillUpForever", ns)
+assert(loadfile("Locales/enUS.lua"))("ProfessionPlanner", ns)
 -- The shared opener is ForeverCore's: the settings page asks it, not Settings.OpenToCategory.
-setfenv(assert(loadfile("UI/Settings.lua")), env)("SkillUpForever", ns)
+setfenv(assert(loadfile("UI/Settings.lua")), env)("ProfessionPlanner", ns)
 ns.OpenSettings() -- before registration, as when an update's files are missing: no error
 assert(opens == 0, "no settings open before the category is registered")
 ns.RegisterSettings()
@@ -262,7 +262,7 @@ local groups = {
 	{
 		"Route and trainer",
 		"checkbox:showTracker checkbox:trackerAttached slider:trackerScale checkbox:trackerLocked"
-			.. " checkbox:showRouteTab"
+			.. " checkbox:showRouteTab checkbox:combineCookingFishing"
 			.. " checkbox:showGearTab checkbox:showBuffsTab"
 			.. " checkbox:merchantButton checkbox:auctionSearch checkbox:showTrainer",
 	},
@@ -288,7 +288,7 @@ expected[#expected + 1] = "button@" .. addOnCategory.name
 assert(canvas and canvas.name == "Forever addons", "the Forever addons page is registered")
 assert(family.parent == category, "the page belongs to the addon's category")
 assert(family.db() == ns.db, "the page reads and writes SkillUp's saved variables")
-assert(family.current == "SkillUpForever", "the page marks this addon's row")
+assert(family.current == "ProfessionPlanner", "the page marks this addon's row")
 assert(family.safeCall == ns.core.SafeCall, "the page reports its failures in SkillUp's journal")
 local familyOpens = opens
 Button("Forever addons").initializer.onClick()
@@ -305,7 +305,7 @@ assert(table.concat(kinds, " ") == table.concat(expected, " "), table.concat(kin
 
 local craftValue = Row("craftValue")
 assert(
-	craftValue.initializer.setting.variable == "SkillUpForever_craftValue_choice"
+	craftValue.initializer.setting.variable == "ProfessionPlanner_craftValue_choice"
 		and craftValue.initializer.setting.default == 2
 )
 assert(craftValue.initializer.options.formatter(3) == "Auction" and craftValue.initializer.tooltip:find("5%% cut"))
@@ -344,7 +344,7 @@ for _, key in ipairs({ "craftValue", "sortMode", "reagentTooltip", "recipeToolti
 		assert(ns.db[key] == option[1], "slider writes the original saved string")
 		assert(row.initializer.options.formatter(index) == option[2], "slider labels every choice")
 		assert(refreshed == before + 1, "one choice is reported once")
-		assert(notified[#notified] == "SkillUpForever_" .. key .. "_choice", "canonical change notifies visible proxy")
+		assert(notified[#notified] == "ProfessionPlanner_" .. key .. "_choice", "canonical change notifies visible proxy")
 	end
 	row.initializer.setting:SetValue(0)
 	assert(ns.db[key] == options[#options][1], "invalid slider position leaves value unchanged")
@@ -353,11 +353,11 @@ ns.SetSortMode("skill")
 assert(Row("sortMode").initializer.setting:GetValue() == 2, "recipe list sorting updates settings slider")
 print("settings: menu-free choices, saved values, defaults, labels, callbacks and external sorting: ok")
 
-local attachment = settings.SkillUpForever_trackerAttached
+local attachment = settings.ProfessionPlanner_trackerAttached
 assert(attachment:GetValue() == true, "tracker starts attached")
 attachment:SetValue(false)
 assert(attachment:GetValue() == false, "toggle detaches shared host")
-assert(notified[#notified] == "SkillUpForever_trackerAttached", "attachment change refreshes shared proxy")
+assert(notified[#notified] == "ProfessionPlanner_trackerAttached", "attachment change refreshes shared proxy")
 trackerState.attached = true
 attachmentChanged()
 assert(attachment:GetValue() == true, "another addon reattaches the same host")
@@ -375,21 +375,21 @@ assert(
 )
 assert(trackerScale.initializer.options.formatter(150) == "150%", "the tracker slider shows a percent")
 assert(trackerScale.initializer.tooltip:find("shared Forever tracker"), "the slider says it scales the shared tracker")
-assert(settings.SkillUpForever_trackerScale:GetValue() == 100, "the slider reads the shared host scale")
+assert(settings.ProfessionPlanner_trackerScale:GetValue() == 100, "the slider reads the shared host scale")
 trackerState.scale = 1.26
-assert(settings.SkillUpForever_trackerScale:GetValue() == 126, "a host scale reads back rounded to a percent")
-settings.SkillUpForever_trackerScale:SetValue(150)
+assert(settings.ProfessionPlanner_trackerScale:GetValue() == 126, "a host scale reads back rounded to a percent")
+settings.ProfessionPlanner_trackerScale:SetValue(150)
 assert(trackerState.scale == 1.5, "the tracker slider drives the shared host scale")
 
 -- Lock starts off, sits under the attach row, and drives the shared host rather than a copy of its own.
-local lock = settings.SkillUpForever_trackerLocked
+local lock = settings.ProfessionPlanner_trackerLocked
 assert(lock:GetValue() == false, "the shared tracker starts unlocked")
 lock:SetValue(true)
 assert(trackerState.locked == true and lock:GetValue(), "locking writes the shared host settings")
 lock:SetValue(false)
 assert(trackerState.locked == false and not lock:GetValue(), "unlocking writes them back")
 
--- /skillup and the compartment button use the same route, not Blizzard's restricted wrapper.
+-- /pp and the compartment button use the same route, not Blizzard's restricted wrapper.
 ns.Pages = {
 	Unlocked = function()
 		return true

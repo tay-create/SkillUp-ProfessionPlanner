@@ -425,7 +425,7 @@ def main():
     missing = [str(sid) for sid in sorted(REQUIRED_SKILLS) if sid not in skills]
     print("Missing required skill lines: " + (", ".join(missing) or "none"))
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT.write_text(render(emitted, coverage, names, sources), encoding="utf-8")
+    OUTPUT.write_text(render(emitted, coverage, names, sources), encoding="utf-8", newline="\n")
     print(f"Wrote {len(emitted)} unique recipe spell IDs to {OUTPUT.relative_to(ROOT)}")
 
 

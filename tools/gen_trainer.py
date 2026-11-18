@@ -340,7 +340,7 @@ def main():
         SEEN_REQUIREMENTS,
     )
     content = render(fees, conflicts, ranks, inferred, rank_quests(tables["quest_template"], effects))
-    OUTPUT.write_text(content, encoding="utf-8")
+    OUTPUT.write_text(content, encoding="utf-8", newline="\n")
     print(
         f"Wrote {OUTPUT.relative_to(ROOT)}: {len(fees)} recipes, {len(inferred)} requirements moved, "
         f"conflicts {conflicts}"

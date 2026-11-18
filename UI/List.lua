@@ -33,11 +33,11 @@ local SCROLL_BAR_WIDTH = 18
 -- Padding inside a message frame, left and right, so the text wraps where the frame does.
 local MESSAGE_PADDING = 12
 
-local ROW_TEMPLATE = "SkillUpForeverListRowTemplate"
-local HEADING_TEMPLATE = "SkillUpForeverListHeadingTemplate"
-local MESSAGE_TEMPLATE = "SkillUpForeverListMessageTemplate"
-local BAND_TEMPLATE = "SkillUpForeverListBandTemplate"
-local LINE_TEMPLATE = "SkillUpForeverListLineTemplate"
+local ROW_TEMPLATE = "ProfessionPlannerListRowTemplate"
+local HEADING_TEMPLATE = "ProfessionPlannerListHeadingTemplate"
+local MESSAGE_TEMPLATE = "ProfessionPlannerListMessageTemplate"
+local BAND_TEMPLATE = "ProfessionPlannerListBandTemplate"
+local LINE_TEMPLATE = "ProfessionPlannerListLineTemplate"
 
 local L = ns.L
 
@@ -192,15 +192,19 @@ local function InitializeRow(row, elementData)
 	end
 	row.Text:ClearAllPoints()
 	row.Text:SetPoint("TOPLEFT", row.Icon, "TOPRIGHT", 8, -2)
-	row.Text:SetPoint("RIGHT", row, "RIGHT", entry.sourceIcon and -(SOURCE_SIZE + 12) or -8, 0)
+	row.Text:SetPoint("RIGHT", row, "RIGHT", (entry.sourceIcon or entry.sourceTexture) and -(SOURCE_SIZE + 12) or -8, 0)
 	row.Text:SetText(entry.text)
 	row.Text:SetTextColor((entry.color or HIGHLIGHT_FONT_COLOR):GetRGB())
 	row.Current:SetShown(entry.current == true)
-	if entry.sourceIcon then
+	if entry.sourceIcon or entry.sourceTexture then
 		row.Source:Show()
 		row.Source:ClearAllPoints()
 		row.Source:SetPoint("TOPRIGHT", row, "TOPRIGHT", -6, -2)
-		ns.Art.Fit(row.Source, entry.sourceIcon, SOURCE_SIZE, SOURCE_SIZE)
+		if entry.sourceTexture then
+			ns.Art.Icon(row.Source, entry.sourceTexture, SOURCE_SIZE)
+		else
+			ns.Art.Fit(row.Source, entry.sourceIcon, SOURCE_SIZE, SOURCE_SIZE)
+		end
 	else
 		row.Source:Hide()
 	end

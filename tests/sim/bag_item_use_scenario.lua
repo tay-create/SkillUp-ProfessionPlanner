@@ -85,6 +85,6 @@ scenario("Shift over a bag item's tooltip leaves the client's tooltip untainted"
 	table.sort(written)
 	assert(
 		#written == 0,
-		"Shift over a bag item wrote the client's tooltip from SkillUpForever: " .. table.concat(written, ", ")
+		"Shift over a bag item wrote the client's tooltip from ProfessionPlanner: " .. table.concat(written, ", ")
 	)
 end)

@@ -206,7 +206,7 @@ local env = setmetatable({
 	end,
 }, { __index = _G })
 
-setfenv(assert(loadfile("UI/RecipeList.lua")), env)("SkillUpForever", ns)
+setfenv(assert(loadfile("UI/RecipeList.lua")), env)("ProfessionPlanner", ns)
 ns.AttachRecipeList()
 
 -- Decorating a row draws our text from a weak table, never a field on the client's row: a written field

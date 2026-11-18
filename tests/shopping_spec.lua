@@ -68,7 +68,7 @@ local c = Client.load({
 AuctionatorLists(c)
 local ns = c.ns
 ns.SetCollectMode("gather")
-local module = c.G.SkillUpForeverObjectiveTracker
+local module = c.G.ProfessionPlannerObjectiveTracker
 equal(c.host.IsAttached(module), false, "the section waits for the world to load")
 c.EnterWorld()
 c.Advance(0)
@@ -183,8 +183,8 @@ c.items[SILK].icon = 1234
 c.merchant = { { itemID = SILK, name = "Linen Cloth", price = 100, stackCount = 5 } }
 c.Fire("MERCHANT_SHOW")
 c.Advance(0)
-local tab = rawget(c.G, "SkillUpForeverMerchantTab")
-local page = rawget(c.G, "SkillUpForeverMerchantPage")
+local tab = rawget(c.G, "ProfessionPlannerMerchantTab")
+local page = rawget(c.G, "ProfessionPlannerMerchantPage")
 equal(tab ~= nil, true, "the merchant window has a Reagents tab")
 equal(tab.parent, c.G.MerchantFrame, "a Reagents tab belongs to the merchant window")
 equal(tab.text, "Reagents", "named for the reagents")
@@ -208,7 +208,7 @@ equal(c.G.MerchantItem1.alpha, 0, "the stock item cells make way")
 equal(c.G.MerchantPageText.alpha, 0, "the page row makes way")
 equal(c.G.MerchantBuyBackItem.alpha ~= 0, true, "the buyback cell stays in sight, as it stays clickable")
 equal(c.G.MerchantFrameTab1.alpha, 0, "the stock tab it came from reads unselected")
-local cover = rawget(c.G, "SkillUpForeverMerchantTabCover")
+local cover = rawget(c.G, "ProfessionPlannerMerchantTabCover")
 equal(cover.shown, true, "and an unselected copy covers it")
 equal(cover.template, "PanelTabButtonTemplate", "the cover is in the merchant's own tab template")
 equal(cover.width, c.G.MerchantFrameTab1:GetWidth(), "the cover is the width of the tab it covers")
@@ -219,7 +219,7 @@ equal(cell.name:GetText(), "Linen Cloth", "with its name")
 equal(cell.price:GetText(), "200c", "and the cost of whole stacks")
 equal(cell.icon, cell.button.icon, "and its icon, from the template's own icon region")
 equal(cell.icon.texture, 1234, "with the item's texture")
-local buy = rawget(c.G, "SkillUpForeverMerchantBuyAll")
+local buy = rawget(c.G, "ProfessionPlannerMerchantBuyAll")
 equal(buy.text, "Buy all  200c", "Buy all has the total")
 -- Buy all lists the need on a dialog of the addon's own on the merchant's window.
 local function Dialog()
@@ -266,7 +266,7 @@ c.G.MerchantFrame.width, c.G.MerchantFrame.height = 336, 444
 tab.scripts.OnClick(tab)
 c.ClickTab(1)
 tab.scripts.OnClick(tab)
-equal(rawget(c.G, "SkillUpForeverMerchantPage"), page, "the page is kept across tabs")
+equal(rawget(c.G, "ProfessionPlannerMerchantPage"), page, "the page is kept across tabs")
 equal(c.G.MerchantFrame.width, 336, "switching tabs keeps the window width")
 equal(c.G.MerchantFrame.height, 444, "and its height")
 -- The player can do without the tab, and its page goes with it.
@@ -299,47 +299,47 @@ equal(#c.chat, 0, "and none of it says anything in chat")
 
 -- The Auctionator list of what the tracked route still buys is kept up to date on its own: written
 -- once, left alone while the need is the same, and emptied when the bags cover it.
-equal(ns.AuctionListName("First Aid"), "SkillUp: Tester-Realm: First Aid", "the list is named for the profession")
+equal(ns.AuctionListName("First Aid"), "Profession Planner: Tester-Realm: First Aid", "the list is named for the profession")
 equal(ns.AuctionatorAutoscan(), nil, "an unread option says nothing")
 c.auctionAutoscan = false
 equal(ns.AuctionatorAutoscan(), false, "the scan-on-open option reads as off")
-equal(c.shoppingLists["SkillUp: Tester-Realm: First Aid"], nil, "gather mode writes no Auctionator list")
+equal(c.shoppingLists["Profession Planner: Tester-Realm: First Aid"], nil, "gather mode writes no Auctionator list")
 local personalList = { "Personal supplies" }
 c.shoppingLists["SkillUp: First Aid"] = personalList
 c.shoppingLists["SkillUp: Other-Realm: First Aid"] = personalList
 c.player.name = nil
 equal(ns.AuctionListName("First Aid"), nil, "an unknown character has no shared fallback list")
 ns.SetCollectMode("auction")
-equal(c.shoppingLists["SkillUp: Tester-Realm: First Aid"], nil, "no list is written before identity is ready")
+equal(c.shoppingLists["Profession Planner: Tester-Realm: First Aid"], nil, "no list is written before identity is ready")
 c.player.name = "Tester"
 ns.SetCollectMode("auction")
-local list = c.shoppingLists["SkillUp: Tester-Realm: First Aid"]
+local list = c.shoppingLists["Profession Planner: Tester-Realm: First Aid"]
 equal(type(list), "table", "buying keeps an Auctionator list")
 equal(c.shoppingLists["SkillUp: First Aid"], personalList, "the old generic list remains untouched")
 equal(c.shoppingLists["SkillUp: Other-Realm: First Aid"], personalList, "another character's list remains untouched")
 local realm = c.player.realm
 c.player.realm = "OtherRealm"
-equal(ns.AuctionListName("First Aid"), "SkillUp: Tester-OtherRealm: First Aid", "realms have separate list names")
+equal(ns.AuctionListName("First Aid"), "Profession Planner: Tester-OtherRealm: First Aid", "realms have separate list names")
 c.player.realm = realm
 equal(#list, 1, "with the route's one auction reagent")
 equal(list[1], "Linen Clothx" .. (Needed() - ns.Have(SILK)), "and what the route still needs")
 c.Fire("BAG_UPDATE_DELAYED")
-equal(c.shoppingLists["SkillUp: Tester-Realm: First Aid"], list, "an unchanged need does not rewrite the list")
+equal(c.shoppingLists["Profession Planner: Tester-Realm: First Aid"], list, "an unchanged need does not rewrite the list")
 c.ns.db.auctionSearch = false
 c.bags[SILK] = 1
 c.Fire("BAG_UPDATE_DELAYED")
-equal(c.shoppingLists["SkillUp: Tester-Realm: First Aid"], list, "disabled automatic search does not rewrite the list")
+equal(c.shoppingLists["Profession Planner: Tester-Realm: First Aid"], list, "disabled automatic search does not rewrite the list")
 c.ns.db.auctionSearch = true
 c.bags[SILK] = Needed()
 c.Fire("BAG_UPDATE_DELAYED")
-equal(#c.shoppingLists["SkillUp: Tester-Realm: First Aid"], 0, "a covered need empties the list")
-local originalList = c.shoppingLists["SkillUp: Tester-Realm: First Aid"]
+equal(#c.shoppingLists["Profession Planner: Tester-Realm: First Aid"], 0, "a covered need empties the list")
+local originalList = c.shoppingLists["Profession Planner: Tester-Realm: First Aid"]
 c.bags[SILK] = 0
 c.player.name = "Alt"
 ns.SetCollectMode("auction")
-equal(type(c.shoppingLists["SkillUp: Alt-Realm: First Aid"]), "table", "another character gets its own route list")
+equal(type(c.shoppingLists["Profession Planner: Alt-Realm: First Aid"]), "table", "another character gets its own route list")
 equal(
-	c.shoppingLists["SkillUp: Tester-Realm: First Aid"],
+	c.shoppingLists["Profession Planner: Tester-Realm: First Aid"],
 	originalList,
 	"another character cannot rewrite the first list"
 )
@@ -438,7 +438,7 @@ equal(ns.SearchReagents(HEAVY, 1), "auctionator", "manual search still works whe
 local bare = Client.load({ trackerManager = false })
 bare.EnterWorld()
 bare.Advance(0)
-equal(bare.host.IsAttached(bare.G.SkillUpForeverObjectiveTracker), true, "the section needs no tracker manager")
+equal(bare.host.IsAttached(bare.G.ProfessionPlannerObjectiveTracker), true, "the section needs no tracker manager")
 equal(#bare.chat, 0, "and says nothing about a missing tracker")
 
 -- #557: three training stops. The count says they are stops to train, and hovering the line lists the two

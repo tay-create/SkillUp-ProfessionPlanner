@@ -66,7 +66,7 @@ def main():
             raise ValueError(f"ItemSparse {item_id}: VendorStackCount {stack}, so no unit price")
         per_unit = int(row["BuyPrice"]) / stack
         prices.append((item_id, row["Display_lang"], per_unit))
-    OUTPUT.write_text(render(prices), encoding="utf-8")
+    OUTPUT.write_text(render(prices), encoding="utf-8", newline="\n")
     print(f"{len(prices)} vendor reagents written; {len(absent)} listed items not sold in {BUILD}: {absent}")
     return 0
 

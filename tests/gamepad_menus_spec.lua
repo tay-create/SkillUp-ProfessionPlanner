@@ -65,7 +65,7 @@ equal(menus[1].generator, Menu, "with the row's own generator")
 
 -- The tracker's header click, the section's own path into the menu. The stub client leaves out the stock
 -- module's context menu parent, so the spec gives it one.
-local module = G.SkillUpForeverObjectiveTracker
+local module = G.ProfessionPlannerObjectiveTracker
 function module.GetContextMenuParent()
 	return module
 end
@@ -170,7 +170,7 @@ equal(opened, 1, "with the gamepad interface off the client's OpenMenu runs")
 -- is wrapped for the gamepad interface.
 local function AddonFiles()
 	local files = {}
-	for line in Read("SkillUpForever.toc"):gmatch("[^\r\n]+") do
+	for line in Read("ProfessionPlanner.toc"):gmatch("[^\r\n]+") do
 		local path = line:gsub("\\", "/")
 		if path:match("^Core/.*%.lua$") or path:match("^UI/.*%.lua$") or path:match("^Integrations/.*%.lua$") then
 			files[#files + 1] = path

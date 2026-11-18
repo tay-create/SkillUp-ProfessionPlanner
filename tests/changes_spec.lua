@@ -64,12 +64,12 @@ end
 local function APIAnswer(prime)
 	apiCounting = false
 	if prime then
-		c.G.SkillUpForever.API.Professions()
+		c.G.ProfessionPlanner.API.Professions()
 		return 0
 	end
 	local before = apiBuilds
 	apiCounting = true
-	c.G.SkillUpForever.API.Professions()
+	c.G.ProfessionPlanner.API.Professions()
 	apiCounting = false
 	return apiBuilds > before and 1 or 0
 end

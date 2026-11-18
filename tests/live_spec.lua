@@ -231,7 +231,7 @@ ns3.RecipeData[202] = {
 	reagents = { { itemID = LEATHER, quantity = 1 }, { itemID = HIDE, quantity = 1 } },
 	output = { itemID = 40, quantity = 1 },
 }
-local skillUp = c3.G.SkillUpForever.API
+local skillUp = c3.G.ProfessionPlanner.API
 local rawInputs = skillUp.RequiredMaterials(202, 3)
 equal(#rawInputs, 1, "the same raw item is listed once")
 equal(rawInputs[1].itemID, HIDE, "the hide")

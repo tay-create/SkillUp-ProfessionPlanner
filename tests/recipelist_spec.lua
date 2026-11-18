@@ -145,7 +145,7 @@ local env = setmetatable({
 		error("native recipe methods must stay unhooked")
 	end,
 }, { __index = _G })
-setfenv(assert(loadfile("UI/RecipeList.lua")), env)("SkillUpForever", ns)
+setfenv(assert(loadfile("UI/RecipeList.lua")), env)("ProfessionPlanner", ns)
 ns.AttachRecipeList()
 local input = tree()
 input:Insert({ recipeInfo = { recipeID = 30, learned = true } })

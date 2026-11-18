@@ -133,9 +133,9 @@ being an equal share of what the others leave. A reference's `groupid` names the
 of the referenced loot it rolls (0 for all of it) and its `maxcount` how many times. Read
 that way no group in the dump sums past 100; one that does fails the run.
 
-`ns.ProfessionTrainers` lists each profession's trainers with the highest rank they teach
-(their `npc_trainer` rank spells). Where a trainer stands, and whether your side can use it,
-comes from QuestieDB.
+`ns.ProfessionTrainers` lists each profession's trainers with the highest skill they can teach,
+from rank spells or the requirements of their individual recipes in `npc_trainer`. Where a trainer
+stands, and whether your side can use it, comes from QuestieDB.
 
 `ns.GatheredBy` maps reagents to the gathering profession that yields them at least
 10% of the time: herb and mining nodes (`gameobject_template` chests whose `Lock`

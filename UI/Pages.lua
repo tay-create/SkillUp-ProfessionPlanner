@@ -160,7 +160,10 @@ local function Sync()
 		end
 	end
 	if tab then
-		tab:SetShown(AnyEnabled())
+		tab:Hide()
+	end
+	if ns.RefreshHeaderButton then
+		ns.RefreshHeaderButton()
 	end
 end
 
@@ -254,18 +257,19 @@ end
 -- Core's one frame for SkillUp: the client's side tab column, its checked state and the one page on show all
 -- belong to ForeverCore.ProfessionTabs. The frame itself carries no art; the pages still draw in the window.
 local function CreateFrames()
-	shell = CreateFrame("Frame", "SkillUpForeverProfessionTabPage", ProfessionsFrame)
+	shell = CreateFrame("Frame", "ProfessionPlannerProfessionTabPage", ProfessionsFrame)
 	shell:SetAllPoints(ProfessionsFrame.CraftingPage)
 	shell:Hide()
 	shell:SetScript("OnShow", Reveal)
 	shell:SetScript("OnHide", Hide)
 	tab = ForeverCore.ProfessionTabs.Register(KEY, {
 		icon = ns.ICON,
-		tooltip = L["SkillUp"],
+		tooltip = L["Profession Planner"],
 		page = shell,
 		onSelect = Selected,
 		safeCall = ns.core and ns.core.SafeCall,
 	})
+	tab:Hide()
 	-- Closing the window hands it back, as the client's own tabs do, so the tab is unchecked and the bottom
 	-- tabs are gone the next time the window opens.
 	ProfessionsFrame:HookScript("OnHide", function()
@@ -349,6 +353,21 @@ end
 ---@return integer
 function ns.Pages.Count()
 	return #pages
+end
+
+-- The header button is available before any profession page has registered.
+function ns.Pages.CanOpen()
+	return ProfessionsFrame ~= nil and ProfessionsFrame.professionInfo ~= nil and AnyEnabled()
+end
+
+function ns.Pages.OpenLast()
+	if not ns.Pages.CanOpen() then
+		return
+	end
+	local spec = Chosen()
+	if spec then
+		ns.Pages.Select(spec.id)
+	end
 end
 
 -- Blizzard reselects its profession tab on skill updates; core keeps our tab checked while our page shows.

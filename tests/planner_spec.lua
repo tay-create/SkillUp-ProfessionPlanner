@@ -9,7 +9,7 @@ local Client = dofile("tests/client.lua")
 local equal = Client.equal
 
 local ns = {}
-assert(loadfile("Core/Model.lua"))("SkillUpForever", ns)
+assert(loadfile("Core/Model.lua"))("ProfessionPlanner", ns)
 local Model = ns.Model
 
 --[[ The reference: v0.18.0's planner, re-planning every candidate in full ]]

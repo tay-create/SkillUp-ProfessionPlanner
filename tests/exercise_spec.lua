@@ -5,7 +5,7 @@
 -- geterrorhandler or a protected frame changed in combat fails the spec.
 local Client = dofile("tests/client.lua")
 
-local ADDON = "SkillUpForever"
+local ADDON = "ProfessionPlanner"
 local equal = Client.equal
 
 -- The client state a surface needs to draw something real: one known profession with a recipe, a vendor and a
@@ -245,7 +245,7 @@ local function Run(c, label, fn, ...)
 end
 
 -- Every slash command the addon registers. The table is the dispatch: its words, aliases and listed arguments are
--- the messages a player can send, and its help lines are what /skillup help prints.
+-- the messages a player can send, and its help lines are what /pp help prints.
 local function Commands(c)
 	local handlers = {}
 	for key in pairs(c.G.SlashCmdList) do
@@ -272,14 +272,14 @@ local function Commands(c)
 
 	for _, message in ipairs(messages) do
 		Run(c, "slash " .. message, function()
-			c.G.SlashCmdList.SKILLUPFOREVER(message)
+			c.G.SlashCmdList.PROFESSIONPLANNER(message)
 		end)
 	end
 
 	-- Help is built from the same table, in its order, and prints every entry that carries a help line.
 	local before = #c.chat
 	Run(c, "slash help", function()
-		c.G.SlashCmdList.SKILLUPFOREVER("help")
+		c.G.SlashCmdList.PROFESSIONPLANNER("help")
 	end)
 	local printed = {}
 	for index = before + 1, #c.chat do
@@ -413,10 +413,10 @@ local function Surfaces(c)
 		c.bags[3] = 0
 		ns.Changed("merchant")
 		c.Advance(0)
-		local tab = rawget(G, "SkillUpForeverMerchantTab")
+		local tab = rawget(G, "ProfessionPlannerMerchantTab")
 		assert(tab and tab:IsShown(), "the merchant's Reagents tab exists")
 		tab.scripts.OnClick(tab)
-		local buy = rawget(G, "SkillUpForeverMerchantBuyAll")
+		local buy = rawget(G, "ProfessionPlannerMerchantBuyAll")
 		assert(buy and buy:IsShown(), "the tab's Buy all button is shown")
 		buy.scripts.OnClick(buy)
 		local confirm
@@ -444,7 +444,7 @@ local function Surfaces(c)
 
 	-- The family link windows.
 	Run(c, "family link", function()
-		local opened = c.G.ForeverCore.Family.ShowLink(ns.db, "exercise", ADDON, nil)
+		local opened = c.G.ForeverCore.Family.ShowLink(ns.db, "exercise", c.G.ForeverCore.Family.ADDONS[1].folder, nil)
 		local window = rawget(G, "ForeverFamilyLink")
 		if c.combat then
 			assert(opened == false, "a family link never opens in combat")
@@ -465,7 +465,7 @@ local function Surfaces(c)
 	end)
 
 	-- The objective tracker section the addon attaches.
-	local module = rawget(G, "SkillUpForeverObjectiveTracker")
+	local module = rawget(G, "ProfessionPlannerObjectiveTracker")
 	Run(c, "tracker section show", function()
 		assert(module, "the tracker section is created")
 		module:Show()
@@ -545,7 +545,7 @@ local c = ClientFor(nil)
 Pass(c)
 
 -- Reload: the table the addon saved is what the next load starts from.
-local saved = c.G.SkillUpForeverDB
+local saved = c.G.ProfessionPlannerDB
 assert(type(saved) == "table", "the addon saved its settings")
 local reloaded = ClientFor(saved)
 Pass(reloaded)

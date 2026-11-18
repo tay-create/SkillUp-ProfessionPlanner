@@ -248,7 +248,7 @@ local env = setmetatable({
 	end,
 }, { __index = _G })
 
-setfenv(assert(loadfile("Core/Gear.lua")), env)("SkillUpForever", ns)
+setfenv(assert(loadfile("Core/Gear.lua")), env)("ProfessionPlanner", ns)
 
 -- The spec's own recipe data: an elixir (level 10), buff food (level 25), a healing potion and a sword
 -- that are no buff, two unlearned recipes (one buff), a second unlearned buff for the search test, and a
@@ -274,7 +274,7 @@ ns.ItemGear = {
 	[106] = { 10 },
 }
 
-setfenv(assert(loadfile("UI/RecipeList.lua")), env)("SkillUpForever", ns)
+setfenv(assert(loadfile("UI/RecipeList.lua")), env)("ProfessionPlanner", ns)
 ns.AttachRecipeList()
 
 local input = Provider({

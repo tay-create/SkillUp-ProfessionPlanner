@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 import gen_sources
-from gen_sources import CHEST, gathered, limited_stock, looted_from, node_skills
+from gen_sources import CHEST, gathered, limited_stock, looted_from, node_skills, trainer_caps
 
 MINE, VEIN, LOOT = "7", "70", "700"
 
@@ -30,6 +30,24 @@ def lock(lock_id=MINE, rank=125):
 
 def item(entry, item_class):
     return {"entry": str(entry), "class": str(item_class)}
+
+
+class TrainerCapTests(unittest.TestCase):
+    # Henry Stern teaches Goldthorn Tea directly at 175 Cooking, without teaching a profession rank.
+    def test_a_trainer_who_teaches_an_individual_recipe_is_kept(self):
+        trainer = [
+            {
+                "entry": "8696",
+                "spell": "13029",
+                "spellcost": "0",
+                "reqskill": "185",
+                "reqskillvalue": "175",
+                "reqlevel": "0",
+                "ReqAbility1": None,
+                "condition_id": "0",
+            }
+        ]
+        self.assertEqual(trainer_caps(trainer, {13029: {13028}}, {}), {185: {8696: 176}})
 
 
 class NodeSkillTests(unittest.TestCase):
@@ -222,6 +240,28 @@ class LootedTests(unittest.TestCase):
     def test_chance_below_the_gather_chance_is_left_out(self):
         rows = [loot(str(900 + n), 1, 9) for n in range(3)]
         self.assertEqual(self.looted(rows, [item(1, 7)], (1,)), set())
+
+
+class FishingZoneTests(unittest.TestCase):
+    def test_fish_can_be_found_in_direct_or_parent_mapped_areas(self):
+        tables = {
+            "reference_loot_template": [loot(900, 100, 80), loot(900, 101, 10)],
+            "fishing_loot_template": [
+                loot(50, 0, 50, ref=900),
+                loot(51, 100, 100),
+                loot(52, 101, 9),
+                loot(53, 102, 100),
+            ],
+        }
+        areas = [
+            {"ID": "50", "ParentAreaID": "49"},
+            {"ID": "51", "ParentAreaID": "0"},
+            {"ID": "52", "ParentAreaID": "0"},
+            {"ID": "53", "ParentAreaID": "0"},
+        ]
+        maps = [{"AreaID": "49", "UiMapID": "1429"}, {"AreaID": "51", "UiMapID": "1412"}]
+        result = gen_sources.fishing_zones(tables, areas, maps, {100, 101, 102})
+        self.assertEqual(result, {100: [1412, 1429]})
 
 
 if __name__ == "__main__":

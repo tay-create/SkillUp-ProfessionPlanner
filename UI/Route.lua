@@ -19,6 +19,7 @@ local SKIPPED_ICON = "Interface\\Icons\\INV_Misc_Note_01"
 local GOLD = CreateColor(1, 0.82, 0)
 -- A source a reagent's row can name with the client's own minimap art: there is no auction gavel.
 local SOURCE_ICON = { auction = "auctioneer", vendor = "reagents" }
+local FISH_ICON = "Interface\\Icons\\Trade_Fishing"
 -- An Auctionator price older than a day is flagged: auction prices move that fast.
 local STALE_AFTER = 24 * 3600
 
@@ -270,15 +271,22 @@ local function RankTooltip(tooltip, profession, rank)
 	end
 end
 
+-- Explain why a navigation click could not resolve a destination yet.
+local function MissingDestination()
+	ns.Print(ns.Catalogue.Hint(true) or L["No suitable destination found. Check trainer and vendor locations."])
+end
+
 -- A waypoint to the nearest trainer teaching up to `cap`.
 ---@param profession SkillUpProfession
----@param cap number
+---@param recipeID integer
 ---@return fun()
-local function TrainerClick(profession, cap)
+local function TrainerClick(profession, recipeID)
 	return function()
-		local npcID = ns.NearestTrainer(profession, cap, true)
+		local npcID = ns.RecipeNPC(profession, recipeID)
 		if npcID then
 			ns.SetWaypoint(npcID)
+		else
+			MissingDestination()
 		end
 	end
 end
@@ -291,6 +299,8 @@ local function ScrollClick(recipeID)
 		local npcID = ns.NearestScrollVendor(recipeID, true)
 		if npcID then
 			ns.SetWaypoint(npcID)
+		else
+			MissingDestination()
 		end
 	end
 end
@@ -304,6 +314,8 @@ local function RankClick(profession, rank)
 		local npcID = ns.NearestForRank(profession, rank, true)
 		if npcID then
 			ns.SetWaypoint(npcID)
+		else
+			MissingDestination()
 		end
 	end
 end
@@ -566,7 +578,7 @@ local function RenderRoute(list, plan)
 				tooltip = function(tooltip)
 					TrainTooltip(tooltip, profession, training)
 				end,
-				click = scroll and ScrollClick(training.recipeID) or TrainerClick(profession, training.cap),
+				click = scroll and ScrollClick(training.recipeID) or TrainerClick(profession, training.recipeID),
 				menu = RecipeMenu(training.recipeID),
 			})
 		elseif craft then
@@ -629,7 +641,7 @@ local LIMITED_VENDOR = L["vendor, limited stock"]
 
 ---@param tooltip GameTooltip
 ---@param item SkillUpNeededItem
-local function ReagentTooltip(tooltip, item)
+local function ReagentTooltip(tooltip, item, fishing)
 	tooltip:SetItemByID(item.itemID)
 	GameTooltip_AddBlankLineToTooltip(tooltip)
 	local have = ns.Have(item.itemID)
@@ -637,6 +649,9 @@ local function ReagentTooltip(tooltip, item)
 	AddLine(tooltip, L["Route needs"], tostring(item.need))
 	for _, alt in ipairs(ns.AltCounts(item.itemID)) do
 		AddLine(tooltip, string.format(L["On %s"], alt.name), tostring(alt.count), GRAY_FONT_COLOR)
+	end
+	if fishing then
+		GameTooltip_AddNormalLine(tooltip, L["Click to find a fishing spot. Click again to try the next one."])
 	end
 	local price = ns.Price(item.itemID)
 	if not price or price.unknown then
@@ -693,6 +708,8 @@ local function RenderReagents(list, reagents)
 		return
 	end
 	for _, item in ipairs(reagents) do
+		local fishing = ns.db.combineCookingFishing ~= false
+			and ns.FishingZones and ns.FishingZones[item.itemID]
 		local name = C_Item.GetItemNameByID(item.itemID)
 		if not name then
 			-- ITEM_DATA_LOAD_RESULT redraws once the name arrives.
@@ -711,14 +728,19 @@ local function RenderReagents(list, reagents)
 			detailColor = have >= item.need and ns.COLORS.green or HIGHLIGHT_FONT_COLOR,
 			bar = { have = math.min(have, item.need), need = item.need },
 			barColor = have >= item.need and ns.COLORS.green or ns.COLORS.yellow,
-			sourceIcon = SOURCE_ICON[item.source],
+			sourceIcon = not fishing and SOURCE_ICON[item.source] or nil,
+			sourceTexture = fishing and FISH_ICON or nil,
 			tooltip = function(tooltip)
-				ReagentTooltip(tooltip, item)
+				ReagentTooltip(tooltip, item, fishing)
 			end,
 			click = function()
 				local _, link = C_Item.GetItemInfo(item.itemID)
 				if link and IsModifiedClick() then
 					HandleModifiedItemClick(link)
+					return
+				end
+				if fishing then
+					ns.FindFishing(item.itemID)
 					return
 				end
 				local vendor = item.source == "vendor" and ns.NearestVendor(item.itemID, true)
@@ -887,12 +909,17 @@ end
 -- The step last drawn, so the client's own recipe-selection events can redraw the same step.
 ---@type SkillUpCraft?
 local currentCraft
+local emptyCraft = { text = "" }
 -- The recipe the client was asked to open and has not shown yet, so a redraw does not ask again.
 ---@type integer?
 local requestedRecipe
 -- The recipe of the step last drawn, so a new step asks for its recipe again.
 ---@type integer?
 local appliedRecipe
+
+-- Callbacks from an old recipe request must not select its recipe over a newer route step.
+local recipeRequestNumber = 0
+local RefreshCraft
 
 -- The recipe the crafting page shows, or nil when it shows none. Reading it is taint free; selecting one
 -- in Blizzard's list from addon code wrote the selection and schematic the craft path reads (#350).
@@ -919,9 +946,9 @@ local function FirstRecipeID(recipeInfo)
 	return recipeInfo and recipeInfo.recipeID
 end
 
--- Ask the client to show the route's recipe, as its own recipe tracker does, and say whether the page shows
--- it now. Opening is C_TradeSkillUI.OpenRecipe's job: never select, Init or Show Blizzard's page from here
--- (#350, #376).
+-- Ask the client to select the route's recipe while the PP page is open. A newly opened profession can ignore
+-- the first request until its schematic is ready. Retry through the client's API, then read its selection.
+-- Never write Blizzard's recipe list or schematic (#350, #376).
 ---@param recipeID integer
 ---@return boolean
 local function RequestRecipe(recipeID)
@@ -932,14 +959,42 @@ local function RequestRecipe(recipeID)
 	local first = FirstRecipeID(info)
 	local shown = ShownRecipe()
 	if shown and FirstRecipeID(shown) == first then
-		requestedRecipe = nil
+		if requestedRecipe then
+			requestedRecipe = nil
+			recipeRequestNumber = recipeRequestNumber + 1
+		end
 		return true
 	end
 	if requestedRecipe ~= first then
 		requestedRecipe = first
-		C_TradeSkillUI.OpenRecipe(recipeID)
+		recipeRequestNumber = recipeRequestNumber + 1
+		local requestNumber = recipeRequestNumber
+		local attempts = 0
+		local function TryOpen()
+			if requestedRecipe ~= first or recipeRequestNumber ~= requestNumber or appliedRecipe ~= recipeID or not page:IsShown() then
+				return
+			end
+			local current = ShownRecipe()
+			if current and FirstRecipeID(current) == first then
+				RefreshCraft()
+				return
+			end
+			attempts = attempts + 1
+			C_TradeSkillUI.OpenRecipe(recipeID)
+			current = ShownRecipe()
+			if current and FirstRecipeID(current) == first then
+				RefreshCraft()
+			elseif attempts < 3 then
+				C_Timer.After(attempts == 1 and 0.1 or 0.3, TryOpen)
+			elseif requestedRecipe == first and recipeRequestNumber == requestNumber then
+				requestedRecipe = nil
+				recipeRequestNumber = recipeRequestNumber + 1
+			end
+		end
+		TryOpen()
 	end
-	return false
+	shown = ShownRecipe()
+	return shown ~= nil and FirstRecipeID(shown) == first
 end
 
 ---@param craft SkillUpCraft
@@ -949,6 +1004,7 @@ local function ApplyCraft(craft)
 	button.recipeID, button.count = recipeID, count
 	if recipeID ~= appliedRecipe then
 		appliedRecipe, requestedRecipe = recipeID, nil
+		recipeRequestNumber = recipeRequestNumber + 1
 	end
 
 	local craftingPage = ProfessionsFrame and ProfessionsFrame.CraftingPage
@@ -1012,19 +1068,19 @@ local function SetCraft(craft)
 		-- The button is secure: its attributes, enabled state, size and visibility are protected in combat.
 		-- Keep only the latest wanted craft; PLAYER_REGEN_ENABLED applies it once combat ends.
 		pendingRoute = pendingRoute or {}
-		pendingRoute.craft = craft
+		pendingRoute.craft = craft or emptyCraft
 		return
 	end
 	-- Only the craft's own queued state is superseded: the other buttons' deferred values still apply.
 	if pendingRoute then
 		pendingRoute.craft, pendingRoute.craftShown = nil, nil
 	end
-	ApplyCraft(craft)
+	ApplyCraft(craft or emptyCraft)
 end
 
 -- The crafting page's selection or its own Create button changed: re-read them for the step on the route.
 -- The route page owns the button while it shows; a change on the native page is not ours to answer.
-local function RefreshCraft()
+RefreshCraft = function()
 	if currentCraft and page:IsShown() then
 		SetCraft(currentCraft)
 	end
@@ -1088,6 +1144,38 @@ local function RenderMoney(plan)
 	page.Money.money, page.Money.unpriced = money, plan.unpriced
 end
 
+-- Keep the next usable instruction above the scrolling route, including its existing click action.
+---@param plan SkillUpPlan
+local function RenderNextAction(plan)
+	local profession = plan.profession
+	local action, label
+	for _, step in ipairs(plan.steps or {}) do
+		if step.rank and not ns.RankHeld(step.rank) then
+			label = ns.RankText(step.rank)
+			action = RankClick(profession, step.rank)
+		elseif step.training then
+			local training = step.training
+			label = training.scroll and string.format(L["Buy %s"], ItemName(training.scroll))
+				or string.format(L["Train %s"], RecipeName(training.recipeID))
+			action = training.scroll and ScrollClick(training.recipeID) or TrainerClick(profession, training.recipeID)
+		elseif step.subcraft then
+			label = string.format(L["Craft %d× %s"], step.subcraft.crafts, RecipeName(step.subcraft.recipeID))
+			action = RecipeClick(step.subcraft.recipeID)
+		elseif step.craft then
+			label = string.format(L["Craft %d× %s"], step.craft.crafts, RecipeName(step.craft.recipeID))
+			action = RecipeClick(step.craft.recipeID)
+		end
+		if label then
+			break
+		end
+	end
+	page.NextAction.action = action
+	page.NextActionText:SetText(string.format(L["Next: %s"], label or L["No next step"]))
+	local target = math.max(1, plan.target or profession.base)
+	local progress = math.floor(math.min(100, math.max(0, profession.base / target * 100)))
+	page.ProgressText:SetText(string.format(L["Progress: %d/%d (%d%%)"], profession.base, target, progress))
+end
+
 local function Render()
 	local profession = selected and ns.RouteProfessions()[selected]
 	page.Profession:GenerateMenu()
@@ -1099,11 +1187,17 @@ local function Render()
 	page.RouteList:Begin()
 	page.ReagentList:Begin()
 	if not profession then
-		currentCraft = nil
+		requestedRecipe = nil
+		appliedRecipe = nil
+		recipeRequestNumber = recipeRequestNumber + 1
+		SetCraft(nil)
 		SetCollectEnabled(false)
 		SetProtected("vendorShown", false)
 		page.vendorItems = {}
 		page.MoneyText:SetText("")
+		page.NextAction.action = nil
+		page.NextActionText:SetText("")
+		page.ProgressText:SetText("")
 		page.RouteList:Message(L["Learn a crafting profession to plan a route."])
 		page.RouteList:Finish()
 		page.ReagentList:Finish()
@@ -1114,6 +1208,7 @@ local function Render()
 	LayoutHeader()
 	local plan = ns.PlanRoute(profession)
 	RenderMoney(plan)
+	RenderNextAction(plan)
 	if not page.Target:HasFocus() then
 		page.Target:SetText(tostring(plan.target))
 	end
@@ -1265,6 +1360,37 @@ local function CreateHeader()
 	money:SetScript("OnLeave", GameTooltip_Hide)
 	page.Money = money
 	page.MoneyText = moneyText
+
+	local nextAction = CreateFrame("Button", nil, page)
+	nextAction:SetPoint("TOPLEFT", page, "TOPLEFT", 20, -84)
+	nextAction:SetSize(390, 22)
+	local nextActionText = nextAction:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	nextActionText:SetPoint("LEFT")
+	nextActionText:SetWidth(390)
+	nextActionText:SetJustifyH("LEFT")
+	nextActionText:SetWordWrap(false)
+	nextAction:SetScript("OnClick", function(self)
+		if self.action then
+			self.action()
+		end
+	end)
+	nextAction:SetScript("OnEnter", function(self)
+		if self.action then
+			GameTooltip:SetOwner(self, "ANCHOR_TOP")
+			GameTooltip_SetTitle(GameTooltip, L["Click to open the recipe or set a waypoint."])
+			GameTooltip:Show()
+		end
+	end)
+	nextAction:SetScript("OnLeave", GameTooltip_Hide)
+	page.NextAction = nextAction
+	page.NextActionText = nextActionText
+
+	local progressText = page:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	progressText:SetPoint("TOPRIGHT", page, "TOPRIGHT", -16, -90)
+	progressText:SetWidth(205)
+	progressText:SetJustifyH("RIGHT")
+	progressText:SetWordWrap(false)
+	page.ProgressText = progressText
 end
 
 -- Keep the rank line between the profession menu and the buy switch. The available width changes with the host
@@ -1277,6 +1403,9 @@ LayoutHeader = function()
 	page.Skill:SetWidth(math.max(1, math.min(page.Skill:GetStringWidth(), available)))
 	page.Skill:SetJustifyH("LEFT")
 	page.Skill:SetWordWrap(false)
+	-- Leave room for the right-aligned progress line, even with a long translated action.
+	page.NextAction:SetWidth(math.max(1, page:GetWidth() - 300))
+	page.NextActionText:SetWidth(math.max(1, page:GetWidth() - 300))
 end
 
 local function CreateButtons()
@@ -1454,13 +1583,13 @@ local function CreatePage()
 	page:HookScript("OnSizeChanged", LayoutHeader)
 
 	local route = CreateInset(L["Route"])
-	route:SetPoint("TOPLEFT", 16, -88)
+	route:SetPoint("TOPLEFT", 16, -122)
 	-- The route gets the wider half: its names are longer and its rows carry more facts.
 	route:SetPoint("BOTTOMRIGHT", page, "BOTTOM", ROUTE_SHARE - 6, 44)
 	page.RouteList = ns.CreateList(route)
 
 	local reagents = CreateInset(L["Reagents  (have / need)"])
-	reagents:SetPoint("TOPLEFT", page, "TOP", ROUTE_SHARE + 6, -88)
+	reagents:SetPoint("TOPLEFT", page, "TOP", ROUTE_SHARE + 6, -122)
 	reagents:SetPoint("BOTTOMRIGHT", -16, 44)
 	page.ReagentList = ns.CreateList(reagents)
 
@@ -1482,9 +1611,13 @@ local function CreatePage()
 	local portrait
 	page:SetScript("OnShow", function()
 		portrait = ProfessionsFrame:GetPortrait():GetTexture()
+		requestedRecipe = nil
+		recipeRequestNumber = recipeRequestNumber + 1
 		Render()
 	end)
 	page:SetScript("OnHide", function()
+		requestedRecipe = nil
+		recipeRequestNumber = recipeRequestNumber + 1
 		if portrait then
 			ProfessionsFrame:SetPortraitToAsset(portrait)
 		end

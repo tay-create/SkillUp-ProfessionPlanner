@@ -16,7 +16,7 @@ equal(own(), 1, "the observation stays local")
 equal(ns.Stats.Observe(0), false, "invalid recipe IDs are refused")
 equal(ns.Stats.Observe(math.huge), false, "infinite recipe IDs are refused")
 
-local saved = c.G.SkillUpForeverDB
+local saved = c.G.ProfessionPlannerDB
 saved.peerStats = { ["Tester-Realm"] = { stale = true } }
 saved.statsShare = false
 local reloaded = Client.load({ saved = saved })

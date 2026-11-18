@@ -25,7 +25,7 @@ except ModuleNotFoundError:
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs/screenshots"
-TOC = ROOT / "SkillUpForever.toc"
+TOC = ROOT / "ProfessionPlanner.toc"
 # The one TOC field a scene draws: tools/screenshots.py puts it on every side tab and the shopping window, and
 # Core/Core.lua reads it onto ns.ICON for the addon's own identity surfaces. Title, Version and X-Forever-Core only
 # feed the out-of-date warning and the update chat line, which no scene draws, so they stay out of the dump.

@@ -604,7 +604,7 @@ def main():
         db2("SpellInterrupts", ("SpellID", "DifficultyID", "AuraInterruptFlags_0"), **options),
     )
     content = render(recipes, sell, gear, scrolls, names, professions, books, buffs, buff_row_effects, stats)
-    OUTPUT.write_text(content, encoding="utf-8")
+    OUTPUT.write_text(content, encoding="utf-8", newline="\n")
     for key, value in stats.items():
         print(f"{key}: {value}")
     print(f"Unresolved reagent recipes omitted: {sorted(ids - recipes.keys())}")
