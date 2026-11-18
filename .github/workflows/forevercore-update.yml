@@ -1,0 +1,90 @@
+name: Watch ForeverCore releases
+
+on:
+  schedule:
+    - cron: "19 11 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: forevercore-release-watch
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Notify about a newer ForeverCore release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          current=$(tr -d '[:space:]' < tools/forever-core.txt)
+          latest=$(gh api repos/cjber/forever-core/releases/latest --jq '.tag_name')
+          if [[ -z "$current" || -z "$latest" ]]; then
+            echo "::error::Missing ForeverCore pinned or latest release version"
+            exit 1
+          fi
+
+          title="ForeverCore update available"
+          number=$(
+            gh api --paginate "repos/$GITHUB_REPOSITORY/issues?state=all&per_page=100" \
+              --jq '.[] | select(.title == "ForeverCore update available" and (has("pull_request") | not)) | .number' |
+              sed -n '1p'
+          )
+
+          newest=$(printf '%s\n%s\n' "$current" "$latest" | sort -V | tail -n 1)
+          if [[ "$current" == "$latest" || "$newest" != "$latest" ]]; then
+            echo "ForeverCore is up to date ($current)."
+            if [[ -n "$number" ]]; then
+              state=$(gh api "repos/$GITHUB_REPOSITORY/issues/$number" --jq '.state')
+              if [[ "$state" == "open" ]]; then
+                gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/$number" \
+                  -f state=closed -f state_reason=completed >/dev/null
+                echo "Closed resolved update issue #$number."
+              fi
+            fi
+            exit 0
+          fi
+
+          body=$(cat <<EOF
+          O ForeverCore publicou uma nova versão. Precisamos verificar a compatibilidade do nosso addon.
+
+          - Versão atual na branch main: $current
+          - Nova versão: $latest
+          - Notas de lançamento: https://github.com/cjber/forever-core/releases/tag/$latest
+
+          Para atualizar:
+          - [ ] Ler as notas e conferir alterações na API do ForeverCore.
+          - [ ] Atualizar tools/forever-core.txt e adaptar o addon, se necessário.
+          - [ ] Executar os testes e validar dentro do WoW Forever.
+
+          Alerta criado automaticamente pelo GitHub Actions.
+          EOF
+          )
+
+          if [[ -z "$number" ]]; then
+            gh api --method POST "repos/$GITHUB_REPOSITORY/issues" \
+              -f title="$title" -f body="$body" -f 'assignees[]=tay-create' \
+              --jq '"Created update issue #\(.number)"'
+          else
+            state=$(gh api "repos/$GITHUB_REPOSITORY/issues/$number" --jq '.state')
+            previous_body=$(gh api "repos/$GITHUB_REPOSITORY/issues/$number" --jq '.body')
+            if [[ "$state" != "open" || "$previous_body" != "$body" ]]; then
+              gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/$number" \
+                -f state=open -f body="$body" --jq '"Updated issue #\(.number)"'
+            else
+              echo "Update issue #$number is already open."
+            fi
+          fi
+
