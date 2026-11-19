@@ -6,7 +6,7 @@ local equal = Client.equal
 
 local THREAD, LEATHER, SILK, BAR = 2321, 2319, 4306, 2840
 local GLOVES, HILLMANS, LEATHER_RECIPE, SHIRT, BRACERS = 1, 2, 9, 3, 4
-local GINA, TELONIS = 77, 88
+local GINA, TELONIS, RECIPE_TRAINER = 77, 88, 89
 -- A book that teaches Tailoring's 150 cap here (#121): no trainer rank is bundled in this spec.
 local BOOK = 5000
 
@@ -52,6 +52,7 @@ local c = Client.load({
 		npcs = {
 			[GINA] = { name = "Gina", spawns = { [10] = { { 50, 50 } } }, side = "AH" },
 			[TELONIS] = { name = "Telonis", spawns = { [141] = { { 50, 50 } } }, side = "AH" },
+			[RECIPE_TRAINER] = { name = "Recipe Trainer", spawns = { [141] = { { 50, 50 } } }, side = "AH" },
 		},
 		areas = { [10] = 10, [141] = 11 },
 		-- A rank only a quest teaches (#121): the giver is QuestieDB's.
@@ -190,6 +191,7 @@ equal(early[1].detail, "Vendor · 800c", "before the vendors are read a buy name
 equal(early[1].nav, false, "and routes nowhere")
 equal(early[3].detail, "Leatherworking trainer · 1800c", "nor does training name a trainer")
 c.Advance(0)
+ns.RecipeTrainers = { [165] = { [HILLMANS] = { RECIPE_TRAINER } } }
 list = API.Professions()
 local rawInputs = API.RequiredMaterials(GLOVES, 2)
 equal(#rawInputs, 2, "both unexpanded recipe inputs")
@@ -245,7 +247,7 @@ equal(craft.cost, nil, "the craft's cost is in its purchases")
 equal(craft.nav, false, "a craft has nowhere to go")
 equal(train.kind, "train", "then the recipe the route trains next")
 equal(train.text, "Train Hillman's Leather Gloves", "train text")
-equal(train.detail, "Telonis, Darnassus · 1800c", "train detail names the nearest trainer and fee")
+equal(train.detail, "Recipe Trainer, Darnassus · 1800c", "train detail names the trainer that teaches the recipe and fee")
 equal(train.spellID, HILLMANS, "train spell")
 equal(train.cost, 1800, "train fee")
 equal(train.nav, true, "a trainer can be routed to")
@@ -350,7 +352,7 @@ equal(API.Navigate(165, 1), true, "the vendor step routes")
 equal(routed, "Gina", "to the vendor")
 equal(estimates, 1, "picked by travel")
 equal(API.Navigate(165, 3), true, "the training step routes")
-equal(routed, "Telonis", "to the trainer")
+equal(routed, "Recipe Trainer", "to the trainer that teaches the recipe")
 equal(API.Navigate(165, 2), false, "a craft doesn't route")
 equal(API.Navigate(999, 1), false, "an unknown profession doesn't route")
 

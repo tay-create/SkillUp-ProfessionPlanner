@@ -234,7 +234,7 @@ local function TrainTooltip(tooltip, profession, step)
 	ns.AddNearest(
 		tooltip,
 		step.scroll and L["Nearest vendor"] or L["Nearest trainer"],
-		step.scroll and ns.NearestScrollVendor(step.recipeID, true) or ns.NearestTrainer(profession, step.cap, true)
+		step.scroll and ns.NearestScrollVendor(step.recipeID, true) or ns.RecipeNPC(profession, step.recipeID)
 	)
 	AddSkipHint(tooltip)
 end

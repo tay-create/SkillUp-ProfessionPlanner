@@ -179,10 +179,16 @@ end
 ---@param text string
 ---@param cap number
 ---@param fee number
+---@param recipeID integer?
 ---@return SkillUpAPIStep
 ---@return (fun(): integer?)?
-local function Train(profession, text, cap, fee)
-	local trainer = ns.NearestTrainer(profession, cap)
+local function Train(profession, text, cap, fee, recipeID)
+	local trainer
+	if recipeID then
+		trainer = ns.RecipeNPC(profession, recipeID, false)
+	else
+		trainer = ns.NearestTrainer(profession, cap)
+	end
 	local step = {
 		kind = "train",
 		text = text,
@@ -191,6 +197,9 @@ local function Train(profession, text, cap, fee)
 		nav = trainer ~= nil,
 	}
 	return step, trainer and function()
+		if recipeID then
+			return ns.RecipeNPC(profession, recipeID, true)
+		end
 		return ns.NearestTrainer(profession, cap, true)
 	end or nil
 end
@@ -304,7 +313,7 @@ local function Steps(plan)
 			if training.scroll then
 				step, pick = Scroll(training)
 			else
-				step, pick = Train(profession, string.format(L["Train %s"], name), training.cap, training.fee)
+				step, pick = Train(profession, string.format(L["Train %s"], name), training.cap, training.fee, training.recipeID)
 				step.spellID, step.itemID = training.recipeID, OutputItem(training.recipeID)
 			end
 			Add(step, pick)
@@ -702,7 +711,7 @@ function ns.ShoppingTrip(skillLineID)
 				vendorItems[npcID][#vendorItems[npcID] + 1] = first.scroll
 			end
 		elseif first then
-			local npcID = ns.NearestTrainer(profession, first.cap, true)
+			local npcID = ns.RecipeNPC(profession, first.recipeID, true)
 			if npcID then
 				trainers[npcID] = true
 			end

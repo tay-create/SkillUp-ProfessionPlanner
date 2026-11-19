@@ -480,23 +480,32 @@ local trainingPlan = {
 	ranks = {},
 	unpriced = 0,
 }
-local realTrackedNeeds, realNearestTrainer, realNearestForRank, realAddNearest =
-	ns.TrackedNeeds, ns.NearestTrainer, ns.NearestForRank, ns.AddNearest
+local realTrackedNeeds, realRecipeNPC, realNearestTrainer, realNearestForRank, realAddNearest, realSetWaypoint =
+	ns.TrackedNeeds, ns.RecipeNPC, ns.NearestTrainer, ns.NearestForRank, ns.AddNearest, ns.SetWaypoint
 ns.TrackedNeeds = function()
 	return { { plan = trainingPlan, items = {} } }
 end
 ns.NearestTrainer = function()
 	return 77
 end
+ns.RecipeNPC = function(_, recipeID)
+	return recipeID == BANDAGE and 88 or 89
+end
 ns.NearestForRank = function()
 	return 77, "Nearest trainer"
 end
 ns.AddNearest = noop
+local waypointID
+ns.SetWaypoint = function(npcID)
+	waypointID = npcID
+end
 local trainingLines = c.Tracker()[1].lines
 local firstText = "Train Linen Bandage at 20"
 local secondText = "Train Heavy Linen Bandage at 60"
 local thirdText = "Train Journeyman at 50"
 equal(trainingLines[1].key, "Train", "the training line leads")
+trainingLines[1].frame.scripts.OnMouseUp(trainingLines[1].frame, "LeftButton")
+equal(waypointID, 88, "tracker routes to the recipe trainer instead of a general profession trainer")
 equal(
 	trainingLines[1].text,
 	firstText .. string.format(" |cff808080(%s)|r", string.format(ns.L["+%d more to train"], 2)),
@@ -518,7 +527,7 @@ equal(joined:find(firstText, 1, true) ~= nil, true, "the tooltip titles the firs
 equal(joined:find(ns.L["Also train"], 1, true) ~= nil, true, "under the training heading")
 equal(joined:find(secondText, 1, true) ~= nil, true, "and lists the second training stop")
 equal(joined:find(thirdText, 1, true) ~= nil, true, "and the third")
-ns.TrackedNeeds, ns.NearestTrainer, ns.NearestForRank, ns.AddNearest =
-	realTrackedNeeds, realNearestTrainer, realNearestForRank, realAddNearest
+ns.TrackedNeeds, ns.RecipeNPC, ns.NearestTrainer, ns.NearestForRank, ns.AddNearest, ns.SetWaypoint =
+	realTrackedNeeds, realRecipeNPC, realNearestTrainer, realNearestForRank, realAddNearest, realSetWaypoint
 
 Client.report("shopping_spec")

@@ -543,16 +543,18 @@ end
 -- past the skill it asks), else the nearest NPC its scroll comes from. Nil until that is read.
 ---@param profession SkillUpContext
 ---@param recipeID integer
+---@param byTravel boolean?
 ---@return integer?
-function ns.RecipeNPC(profession, recipeID)
+function ns.RecipeNPC(profession, recipeID, byTravel)
+	byTravel = byTravel ~= false
 	local training = ns.TrainingFor(profession, recipeID)
 	if training then
 		local byProfession = ns.RecipeTrainers and ns.RecipeTrainers[profession.skillLine]
 		local trainerIDs = byProfession and byProfession[recipeID]
 		if trainerIDs then
-			return ns.NearestNPC(trainerIDs, true)
+			return ns.NearestNPC(trainerIDs, byTravel)
 		end
-		return ns.NearestTrainer(profession, training[2] + 1, true)
+		return ns.NearestTrainer(profession, training[2] + 1, byTravel)
 	end
 	local source = C.Recipe(recipeID)
 	local kind, npcID
