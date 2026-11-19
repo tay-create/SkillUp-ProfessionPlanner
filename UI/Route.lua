@@ -708,8 +708,7 @@ local function RenderReagents(list, reagents)
 		return
 	end
 	for _, item in ipairs(reagents) do
-		local fishing = ns.db.combineCookingFishing ~= false
-			and ns.FishingZones and ns.FishingZones[item.itemID]
+		local fishing = ns.db.combineCookingFishing ~= false and ns.FishingZones and ns.FishingZones[item.itemID]
 		local name = C_Item.GetItemNameByID(item.itemID)
 		if not name then
 			-- ITEM_DATA_LOAD_RESULT redraws once the name arrives.
@@ -971,7 +970,12 @@ local function RequestRecipe(recipeID)
 		local requestNumber = recipeRequestNumber
 		local attempts = 0
 		local function TryOpen()
-			if requestedRecipe ~= first or recipeRequestNumber ~= requestNumber or appliedRecipe ~= recipeID or not page:IsShown() then
+			if
+				requestedRecipe ~= first
+				or recipeRequestNumber ~= requestNumber
+				or appliedRecipe ~= recipeID
+				or not page:IsShown()
+			then
 				return
 			end
 			local current = ShownRecipe()

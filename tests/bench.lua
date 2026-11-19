@@ -136,9 +136,10 @@ end
 local apiCold = 0
 for _ = 1, 5 do
 	ns.Changed("bags")
-	apiCold = apiCold + report("API.Professions (rebuilt)", 1, function()
-		c.G.ProfessionPlanner.API.Professions()
-	end)
+	apiCold = apiCold
+		+ report("API.Professions (rebuilt)", 1, function()
+			c.G.ProfessionPlanner.API.Professions()
+		end)
 end
 
 print("== event handlers (fired through the shared Changes frame) ==")

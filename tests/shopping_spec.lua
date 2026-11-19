@@ -299,7 +299,11 @@ equal(#c.chat, 0, "and none of it says anything in chat")
 
 -- The Auctionator list of what the tracked route still buys is kept up to date on its own: written
 -- once, left alone while the need is the same, and emptied when the bags cover it.
-equal(ns.AuctionListName("First Aid"), "Profession Planner: Tester-Realm: First Aid", "the list is named for the profession")
+equal(
+	ns.AuctionListName("First Aid"),
+	"Profession Planner: Tester-Realm: First Aid",
+	"the list is named for the profession"
+)
 equal(ns.AuctionatorAutoscan(), nil, "an unread option says nothing")
 c.auctionAutoscan = false
 equal(ns.AuctionatorAutoscan(), false, "the scan-on-open option reads as off")
@@ -310,7 +314,11 @@ c.shoppingLists["SkillUp: Other-Realm: First Aid"] = personalList
 c.player.name = nil
 equal(ns.AuctionListName("First Aid"), nil, "an unknown character has no shared fallback list")
 ns.SetCollectMode("auction")
-equal(c.shoppingLists["Profession Planner: Tester-Realm: First Aid"], nil, "no list is written before identity is ready")
+equal(
+	c.shoppingLists["Profession Planner: Tester-Realm: First Aid"],
+	nil,
+	"no list is written before identity is ready"
+)
 c.player.name = "Tester"
 ns.SetCollectMode("auction")
 local list = c.shoppingLists["Profession Planner: Tester-Realm: First Aid"]
@@ -319,16 +327,28 @@ equal(c.shoppingLists["SkillUp: First Aid"], personalList, "the old generic list
 equal(c.shoppingLists["SkillUp: Other-Realm: First Aid"], personalList, "another character's list remains untouched")
 local realm = c.player.realm
 c.player.realm = "OtherRealm"
-equal(ns.AuctionListName("First Aid"), "Profession Planner: Tester-OtherRealm: First Aid", "realms have separate list names")
+equal(
+	ns.AuctionListName("First Aid"),
+	"Profession Planner: Tester-OtherRealm: First Aid",
+	"realms have separate list names"
+)
 c.player.realm = realm
 equal(#list, 1, "with the route's one auction reagent")
 equal(list[1], "Linen Clothx" .. (Needed() - ns.Have(SILK)), "and what the route still needs")
 c.Fire("BAG_UPDATE_DELAYED")
-equal(c.shoppingLists["Profession Planner: Tester-Realm: First Aid"], list, "an unchanged need does not rewrite the list")
+equal(
+	c.shoppingLists["Profession Planner: Tester-Realm: First Aid"],
+	list,
+	"an unchanged need does not rewrite the list"
+)
 c.ns.db.auctionSearch = false
 c.bags[SILK] = 1
 c.Fire("BAG_UPDATE_DELAYED")
-equal(c.shoppingLists["Profession Planner: Tester-Realm: First Aid"], list, "disabled automatic search does not rewrite the list")
+equal(
+	c.shoppingLists["Profession Planner: Tester-Realm: First Aid"],
+	list,
+	"disabled automatic search does not rewrite the list"
+)
 c.ns.db.auctionSearch = true
 c.bags[SILK] = Needed()
 c.Fire("BAG_UPDATE_DELAYED")
@@ -337,7 +357,11 @@ local originalList = c.shoppingLists["Profession Planner: Tester-Realm: First Ai
 c.bags[SILK] = 0
 c.player.name = "Alt"
 ns.SetCollectMode("auction")
-equal(type(c.shoppingLists["Profession Planner: Alt-Realm: First Aid"]), "table", "another character gets its own route list")
+equal(
+	type(c.shoppingLists["Profession Planner: Alt-Realm: First Aid"]),
+	"table",
+	"another character gets its own route list"
+)
 equal(
 	c.shoppingLists["Profession Planner: Tester-Realm: First Aid"],
 	originalList,

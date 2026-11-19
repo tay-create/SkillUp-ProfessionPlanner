@@ -1540,7 +1540,11 @@ end
 page.Catalogue.Hint = function() end
 printed = nil
 actionButton:Click()
-equal(printed, "No suitable destination found. Check trainer and vendor locations.", "a missing destination explains itself even with databases ready")
+equal(
+	printed,
+	"No suitable destination found. Check trainer and vendor locations.",
+	"a missing destination explains itself even with databases ready"
+)
 page.Catalogue.Hint = beforeHint
 
 nextStep = {}
@@ -1710,7 +1714,7 @@ end
 equal(#timers, 3, "a burst of skill updates schedules one route pass, tracker refresh and native tab sync")
 
 -- Fish reagents in profession routes show a fishing hook and use the fishing lookup when clicked.
-local savedRoutes, savedPlan, savedReagents = page.RouteProfessions, page.PlanRoute, page.RouteReagents
+local savedRoutes, fishSavedPlan, fishSavedReagents = page.RouteProfessions, page.PlanRoute, page.RouteReagents
 local savedFishingZones, savedFindFishing = page.FishingZones, page.FindFishing
 local savedGetItemInfo = pageEnv.C_Item.GetItemInfo
 pageEnv.C_Item.GetItemInfo = function()
@@ -1764,7 +1768,11 @@ end
 searchedFish = nil
 routeTab:Click()
 fishRow = lists[2].rows[#lists[2].rows - 1]
-equal(fishRow.sourceTexture, "Interface\\Icons\\Trade_Fishing", "a fish reagent in another profession route shows the fishing hook")
+equal(
+	fishRow.sourceTexture,
+	"Interface\\Icons\\Trade_Fishing",
+	"a fish reagent in another profession route shows the fishing hook"
+)
 fishRow.click()
 equal(searchedFish, 1, "clicking a fish reagent in another profession route searches for that fish")
 page.db.combineCookingFishing = false
@@ -1777,8 +1785,12 @@ equal(searchedFish, nil, "disabling Cooking and Fishing skips fishing lookup in 
 page.db.combineCookingFishing = nil
 routeTab:Click()
 fishRow = lists[2].rows[#lists[2].rows - 1]
-equal(fishRow.sourceTexture, "Interface\\Icons\\Trade_Fishing", "re-enabling Cooking and Fishing restores the hook in other profession routes")
-page.RouteProfessions, page.PlanRoute, page.RouteReagents = savedRoutes, savedPlan, savedReagents
+equal(
+	fishRow.sourceTexture,
+	"Interface\\Icons\\Trade_Fishing",
+	"re-enabling Cooking and Fishing restores the hook in other profession routes"
+)
+page.RouteProfessions, page.PlanRoute, page.RouteReagents = savedRoutes, fishSavedPlan, fishSavedReagents
 page.FishingZones, page.FindFishing = savedFishingZones, savedFindFishing
 pageEnv.C_Item.GetItemInfo = savedGetItemInfo
 

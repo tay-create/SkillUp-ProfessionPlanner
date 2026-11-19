@@ -440,9 +440,21 @@ function ns.FindFishing(itemID)
 		local location = ns.LocationText(where)
 		local mode = PlaceMapWaypoint(where)
 		if mode == "route" then
-			ns.Print(string.format(L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."], name, location))
+			ns.Print(
+				string.format(
+					L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."],
+					name,
+					location
+				)
+			)
 		elseif mode == "waypoint" then
-			ns.Print(string.format(L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."], name, location))
+			ns.Print(
+				string.format(
+					L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."],
+					name,
+					location
+				)
+			)
 		else
 			ns.Print(string.format(L["Reported fishing spot for %s: %s. Unable to set waypoint."], name, location))
 		end
@@ -466,9 +478,21 @@ function ns.FindFishing(itemID)
 			local where = { name = name, label = info.name, map = preferredZone, x = 0.5, y = 0.5 }
 			local mode = PlaceMapWaypoint(where)
 			if mode == "route" then
-				ns.Print(string.format(L["Fishing route for %s: %s (approximate zone; look for fishable water)."], name, info.name))
+				ns.Print(
+					string.format(
+						L["Fishing route for %s: %s (approximate zone; look for fishable water)."],
+						name,
+						info.name
+					)
+				)
 			elseif mode == "waypoint" then
-				ns.Print(string.format(L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."], name, info.name))
+				ns.Print(
+					string.format(
+						L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."],
+						name,
+						info.name
+					)
+				)
 			else
 				ns.Print(string.format(L["Fishing zone for %s: %s. Unable to set route or waypoint."], name, info.name))
 			end

@@ -344,7 +344,10 @@ for _, key in ipairs({ "craftValue", "sortMode", "reagentTooltip", "recipeToolti
 		assert(ns.db[key] == option[1], "slider writes the original saved string")
 		assert(row.initializer.options.formatter(index) == option[2], "slider labels every choice")
 		assert(refreshed == before + 1, "one choice is reported once")
-		assert(notified[#notified] == "ProfessionPlanner_" .. key .. "_choice", "canonical change notifies visible proxy")
+		assert(
+			notified[#notified] == "ProfessionPlanner_" .. key .. "_choice",
+			"canonical change notifies visible proxy"
+		)
 	end
 	row.initializer.setting:SetValue(0)
 	assert(ns.db[key] == options[#options][1], "invalid slider position leaves value unchanged")

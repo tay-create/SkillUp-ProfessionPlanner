@@ -338,7 +338,11 @@ local cookingClient = Client.load({
 	atlasLoot = { recipes = { [BUZZARD_SCROLL] = { 8, 175, BUZZARD_WING } } },
 })
 local cooking = { skillLine = 185, base = 175, modifier = 0 }
-equal(cookingClient.ns.RecipeTrainers[185][BUZZARD_WING][1], SLAGG, "the generated source names Slagg for Barbecued Buzzard Wing")
+equal(
+	cookingClient.ns.RecipeTrainers[185][BUZZARD_WING][1],
+	SLAGG,
+	"the generated source names Slagg for Barbecued Buzzard Wing"
+)
 cookingClient.ns.Catalogue.EnsureProfession(185)
 cookingClient.Advance(0)
 cookingClient.player.faction = "Horde"

@@ -774,7 +774,9 @@ function ns.ShoppingTrip(skillLineID)
 		table.remove(stops)
 	end
 	if #stops == 0 then
-		ns.Print(L["No vendor or trainer location found for this list. Check NPC locations in QuestieDB; auction and gathered items are separate."])
+		ns.Print(
+			L["No vendor or trainer location found for this list. Check NPC locations in QuestieDB; auction and gathered items are separate."]
+		)
 		return false
 	end
 	if api and type(api.NavigateRoute) == "function" and api.NavigateRoute("ProfessionPlanner", stops) then

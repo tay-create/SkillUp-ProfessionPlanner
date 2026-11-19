@@ -32,8 +32,7 @@ L["%s, source unknown"] = "%s，來源不明"
 L["%s: %d moved, %d confirmed at a trainer, %d wrong."] =
 	"%s：移動%d個，在訓練師處確認%d個，錯誤%d個。"
 L["+%d more"] = "另有%d個"
-L["/pp skipped lists the recipes you skipped, with their IDs."] =
-	"/pp skipped 列出你跳過的配方及其ID。"
+L["/pp skipped lists the recipes you skipped, with their IDs."] = "/pp skipped 列出你跳過的配方及其ID。"
 L["/pp unskip <recipe ID> shows one again, /pp unskip all every one."] =
 	"/pp unskip <recipe ID> 恢復顯示一個，/pp unskip all 恢復全部。"
 L["A Reagents tab on a merchant's window that lists the reagents your tracked routes still need from that merchant and their total cost. Buy them from the merchant's own window."] =
@@ -375,8 +374,7 @@ L["/pp export - show the trainer requirements this character has seen, to paste 
 	"/pp export - 顯示此角色見過的訓練師要求，以便貼到報告中"
 L["/pp issue - report a bug or request a feature with a ready-made GitHub issue link"] =
 	"/pp issue - 回報錯誤或請求功能，並附上現成的 GitHub issue 連結"
-L["/pp report - show a report to copy into a bug report"] =
-	"/pp report - 顯示報告，以便複製到錯誤回報中"
+L["/pp report - show a report to copy into a bug report"] = "/pp report - 顯示報告，以便複製到錯誤回報中"
 L[": "] = "："
 L["Copy list"] = "複製清單"
 L["Copy shopping list"] = "複製購物清單"
@@ -496,7 +494,8 @@ L["Without Auctionator, a recipe's Search button fills the game's own auction bo
 L["%s: %s is out of date. Update it to fix this."] = "%s：%s 已過期。請更新它來解決此問題。" -- mt
 L["%s: %s are out of date. Update them to fix this."] = "%s：%s 已過期。請更新它們來解決此問題。" -- mt
 L["%s could not start. Reinstall %s to fix this."] = "%s 無法啟動。請重新安裝 %s 來解決此問題。" -- mt
-L["Profession Planner no longer fills Auctionator with shopping lists."] = "Profession Planner 不再把購物清單寫入 Auctionator。" -- mt
+L["Profession Planner no longer fills Auctionator with shopping lists."] =
+	"Profession Planner 不再把購物清單寫入 Auctionator。" -- mt
 L["Region sale average"] = "地區平均成交價"
 L["Region sale average if higher"] = "較高時使用地區平均成交價"
 L["Region sale averages need TradeSkillMaster and its desktop app. They estimate value from reported regional sales and purchases, with the vendor price as a floor. They do not guarantee a sale."] =

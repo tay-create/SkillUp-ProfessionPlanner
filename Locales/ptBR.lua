@@ -10,18 +10,27 @@ L["No next step"] = "Nenhuma ação pendente"
 L["Progress: %d/%d (%d%%)"] = "Progresso: %d/%d (%d%%)"
 L["Click to open the recipe or set a waypoint."] = "Clique para abrir a receita ou marcar o destino no mapa."
 L["Click to find fishing zones."] = "Clique para localizar zonas de pesca."
-L["Click to find a fishing spot. Click again to try the next one."] = "Clique para localizar um ponto de pesca. Clique novamente para tentar o próximo."
-L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."] = "Destino de pesca para %s: %s (captura registrada). Clique novamente no anzol para tentar outro ponto."
-L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."] = "Rota de pesca para %s: %s (captura registrada). Clique novamente no anzol para tentar outro ponto."
-L["Fishing route for %s: %s (approximate zone; look for fishable water)."] = "Rota de pesca para %s: %s (região aproximada; procure água onde seja possível pescar)."
-L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."] = "Destino de pesca para %s: %s (região aproximada; procure água onde seja possível pescar)."
-L["Fishing zone for %s: %s. Unable to set route or waypoint."] = "Região de pesca para %s: %s. Não foi possível traçar rota nem marcar destino."
+L["Click to find a fishing spot. Click again to try the next one."] =
+	"Clique para localizar um ponto de pesca. Clique novamente para tentar o próximo."
+L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."] =
+	"Destino de pesca para %s: %s (captura registrada). Clique novamente no anzol para tentar outro ponto."
+L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."] =
+	"Rota de pesca para %s: %s (captura registrada). Clique novamente no anzol para tentar outro ponto."
+L["Fishing route for %s: %s (approximate zone; look for fishable water)."] =
+	"Rota de pesca para %s: %s (região aproximada; procure água onde seja possível pescar)."
+L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."] =
+	"Destino de pesca para %s: %s (região aproximada; procure água onde seja possível pescar)."
+L["Fishing zone for %s: %s. Unable to set route or waypoint."] =
+	"Região de pesca para %s: %s. Não foi possível traçar rota nem marcar destino."
 L["Combine Cooking and Fishing"] = "Combinar Culinária e Pesca"
-L["Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."] = "Exibe um anzol nos peixes usados pelas rotas de profissão. Clique para navegar até uma captura registrada ou uma região de pesca aproximada."
-L["Reported fishing spot for %s: %s. Unable to set waypoint."] = "Ponto de pesca registrado para %s: %s. Não foi possível marcar o destino."
+L["Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."] =
+	"Exibe um anzol nos peixes usados pelas rotas de profissão. Clique para navegar até uma captura registrada ou uma região de pesca aproximada."
+L["Reported fishing spot for %s: %s. Unable to set waypoint."] =
+	"Ponto de pesca registrado para %s: %s. Não foi possível marcar o destino."
 L["%s can be fished in your current zone: %s."] = "%s pode ser pescado na sua região atual: %s."
 L["Fishing zones for %s: %s."] = "Regiões de pesca de %s: %s."
-L["Closest known fishing zone for %s (approximate): %s."] = "Região de pesca conhecida mais próxima para %s (aproximada): %s."
+L["Closest known fishing zone for %s (approximate): %s."] =
+	"Região de pesca conhecida mais próxima para %s (aproximada): %s."
 L["No known fishing zone for %s."] = "Nenhuma região de pesca conhecida para %s."
 
 L["%d %s"] = "%d %s"

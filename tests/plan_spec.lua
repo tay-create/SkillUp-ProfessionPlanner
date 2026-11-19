@@ -659,8 +659,8 @@ local taught = learnNs.PlanRoute(learnNs.RouteProfessions()[171])
 equal(Crafts(taught), "101 102", "the route trains the recipe that carries it on")
 equal(taught.training[1].recipeID, 102, "training it before its first craft")
 local plannedCounts = {}
-for index, craft in ipairs(taught.crafts) do
-	plannedCounts[index] = craft.crafts
+for index, plannedCraft in ipairs(taught.crafts) do
+	plannedCounts[index] = plannedCraft.crafts
 end
 -- After the shopping list has been bought, the newly learned recipe may be cheaper to use from the start.
 -- The original route still has to use the reagents the player already bought.
@@ -672,8 +672,12 @@ learn.Fire("NEW_RECIPE_LEARNED")
 local learnedPlan = learnNs.PlanRoute(learnNs.RouteProfessions()[171])
 equal(#learnedPlan.training, 0, "learning the recipe drops the training step")
 equal(Crafts(learnedPlan), "101 102", "and preserves the shopped crafts even when a cheaper path is now known")
-for index, craft in ipairs(learnedPlan.crafts) do
-	equal(craft.crafts, plannedCounts[index], "learning a recipe keeps the planned craft quantity at step " .. index)
+for index, plannedCraft in ipairs(learnedPlan.crafts) do
+	equal(
+		plannedCraft.crafts,
+		plannedCounts[index],
+		"learning a recipe keeps the planned craft quantity at step " .. index
+	)
 end
 -- Saving and reloading the character must not replace the shopping list with a fresh cheaper route.
 local reloaded = Client.load({ saved = learnNs.db, data = learnOptions.data })
@@ -683,8 +687,8 @@ reloaded.level = 20
 local restoredPlan = reloaded.ns.PlanRoute(reloaded.ns.RouteProfessions()[171])
 equal(Crafts(restoredPlan), "101 102", "reload preserves the shopped recipes after the training step disappears")
 equal(#restoredPlan.training, 0, "reload leaves an already learned training step complete")
-for index, craft in ipairs(restoredPlan.crafts) do
-	equal(craft.crafts, plannedCounts[index], "reload preserves the purchased craft quantity at step " .. index)
+for index, plannedCraft in ipairs(restoredPlan.crafts) do
+	equal(plannedCraft.crafts, plannedCounts[index], "reload preserves the purchased craft quantity at step " .. index)
 end
 -- The saved sequence belongs to its character, not another character on the account.
 local alt = Client.load({ saved = learnNs.db, data = learnOptions.data })
@@ -699,7 +703,11 @@ learn.professions[1].rank = learnedPlan.crafts[1].from + 1
 learn.Fire("SKILL_LINES_CHANGED")
 local progressedPlan = learnNs.PlanRoute(learnNs.RouteProfessions()[171])
 equal(Crafts(progressedPlan), "101 102", "skill gain preserves the shopped recipe sequence")
-equal(progressedPlan.crafts[1].from, learnedPlan.crafts[1].from + 1, "the completed point is removed from the first step")
+equal(
+	progressedPlan.crafts[1].from,
+	learnedPlan.crafts[1].from + 1,
+	"the completed point is removed from the first step"
+)
 equal(progressedPlan.crafts[1].to, learnedPlan.crafts[1].to, "the first step still stops at its original threshold")
 equal(progressedPlan.crafts[2].crafts, plannedCounts[2], "the later bought materials remain planned")
 learn.professions[1].rank = learnedPlan.crafts[1].to
@@ -713,13 +721,21 @@ local newRoute = Client.load({ saved = learnNs.db, data = learnOptions.data })
 newRoute.professions = { { name = "Alchemy", id = 171, rank = learnedPlan.crafts[1].to, max = 75 } }
 newRoute.known[101], newRoute.known[102] = true, true
 newRoute.level = 20
-equal(Crafts(newRoute.ns.PlanRoute(newRoute.ns.RouteProfessions()[171])), "102", "the explicit replan is saved across reload")
+equal(
+	Crafts(newRoute.ns.PlanRoute(newRoute.ns.RouteProfessions()[171])),
+	"102",
+	"the explicit replan is saved across reload"
+)
 -- Old or damaged saved recipe IDs must be ignored safely instead of crashing during a new session.
 learnNs.db.committedRoutes[character][171].crafts = { { 99999, 1, 25, 5 } }
 local invalid = Client.load({ saved = learnNs.db, data = learnOptions.data })
 invalid.professions = { { name = "Alchemy", id = 171, rank = learnedPlan.crafts[1].to, max = 75 } }
 invalid.known[101], invalid.known[102] = true, true
 invalid.level = 20
-equal(Crafts(invalid.ns.PlanRoute(invalid.ns.RouteProfessions()[171])), "102", "a deleted recipe in saved data is discarded")
+equal(
+	Crafts(invalid.ns.PlanRoute(invalid.ns.RouteProfessions()[171])),
+	"102",
+	"a deleted recipe in saved data is discarded"
+)
 
 Client.report("plan_spec")

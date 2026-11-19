@@ -300,7 +300,11 @@ equal(ns.NearestNPC({ 1255, 1261 }), nil, "and is nobody's nearest vendor")
 ns.FishingZones = { [6289] = { 1429, 1434 } }
 calls = {}
 equal(ns.FindFishing(6289), true, "the fish is available in the current zone")
-equal(calls.printed, "Fishing waypoint for Raw Longjaw Mud Snapper: Elwynn Forest (approximate zone; look for fishable water).", "the zone destination is labeled approximate")
+equal(
+	calls.printed,
+	"Fishing waypoint for Raw Longjaw Mud Snapper: Elwynn Forest (approximate zone; look for fishable water).",
+	"the zone destination is labeled approximate"
+)
 equal(calls.native and calls.native.map, 1429, "the current fishing zone receives a waypoint")
 equal(calls.native and calls.native.x, 0.5, "the approximate zone destination is centered")
 currentMap = 1415

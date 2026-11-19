@@ -387,8 +387,15 @@ equal(
 	"with Buy reagents off the section says how to get the list"
 )
 c.ns.SetCollectMode("auction")
-local onNote = c.ns.AuctionListNote({ "Profession Planner: Tester-Realm: Tailoring", "Profession Planner: Tester-Realm: Blacksmithing" })
-equal(onNote:find("Auctionator list: Profession Planner: Tester-Realm: Tailoring", 1, true) ~= nil, true, "it names the list")
+local onNote = c.ns.AuctionListNote({
+	"Profession Planner: Tester-Realm: Tailoring",
+	"Profession Planner: Tester-Realm: Blacksmithing",
+})
+equal(
+	onNote:find("Auctionator list: Profession Planner: Tester-Realm: Tailoring", 1, true) ~= nil,
+	true,
+	"it names the list"
+)
 equal(onNote:find("Open the auction house, Shopping tab, pick it and Search", 1, true) ~= nil, true, "where it is")
 equal(onNote:find("buy each row with a click", 1, true) ~= nil, true, "and that buying stays one click a row")
 local noAuctionator = Client.load({ auctionator = false, boot = false })

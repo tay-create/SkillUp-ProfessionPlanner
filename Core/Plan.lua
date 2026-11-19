@@ -938,9 +938,17 @@ local function RestoreRoute(profession, context, target)
 	local character = ns.CharacterKey and ns.CharacterKey()
 	local saved = character and ns.db.committedRoutes[character]
 	saved = saved and saved[skillLine]
-	if type(saved) ~= "table" or saved.context ~= context or type(saved.crafts) ~= "table"
-		or #saved.crafts == 0 or #saved.crafts > 100 or type(saved.training) ~= "table"
-		or #saved.training > 100 or type(saved.reached) ~= "number" or saved.reached < 0 or saved.reached > target
+	if
+		type(saved) ~= "table"
+		or saved.context ~= context
+		or type(saved.crafts) ~= "table"
+		or #saved.crafts == 0
+		or #saved.crafts > 100
+		or type(saved.training) ~= "table"
+		or #saved.training > 100
+		or type(saved.reached) ~= "number"
+		or saved.reached < 0
+		or saved.reached > target
 	then
 		return nil
 	end
@@ -950,9 +958,19 @@ local function RestoreRoute(profession, context, target)
 			return nil
 		end
 		local id, from, to, count = row[1], row[2], row[3], row[4]
-		if type(id) ~= "number" or not ns.RecipeData[id] or ns.RecipeData[id].skillLine ~= skillLine
-			or type(from) ~= "number" or type(to) ~= "number" or from < 0 or from >= to or to > target
-			or type(count) ~= "number" or count < 1 or count > 100000 or count % 1 ~= 0
+		if
+			type(id) ~= "number"
+			or not ns.RecipeData[id]
+			or ns.RecipeData[id].skillLine ~= skillLine
+			or type(from) ~= "number"
+			or type(to) ~= "number"
+			or from < 0
+			or from >= to
+			or to > target
+			or type(count) ~= "number"
+			or count < 1
+			or count > 100000
+			or count % 1 ~= 0
 		then
 			return nil
 		end
@@ -963,8 +981,13 @@ local function RestoreRoute(profession, context, target)
 			return nil
 		end
 		local id, at = row[1], row[2]
-		if type(id) ~= "number" or not ns.RecipeData[id] or ns.RecipeData[id].skillLine ~= skillLine
-			or type(at) ~= "number" or at < 0 or at > target
+		if
+			type(id) ~= "number"
+			or not ns.RecipeData[id]
+			or ns.RecipeData[id].skillLine ~= skillLine
+			or type(at) ~= "number"
+			or at < 0
+			or at > target
 		then
 			return nil
 		end
@@ -1045,8 +1068,15 @@ function ns.PlanRoute(profession)
 	-- so a plan made under the other mode is a different route (#190). The level is too: a plan made at another
 	-- level may prefer a buff that level could not use (#357).
 	local level = UnitLevel("player") or 0
-	local context = table.concat({ (ns.CharacterKey and ns.CharacterKey()) or "", profession.modifier, profession.max, target,
-		ns.CollectMode(), level, (ns.PlayerSide and ns.PlayerSide()) or "" }, ":")
+	local context = table.concat({
+		(ns.CharacterKey and ns.CharacterKey()) or "",
+		profession.modifier,
+		profession.max,
+		target,
+		ns.CollectMode(),
+		level,
+		(ns.PlayerSide and ns.PlayerSide()) or "",
+	}, ":")
 	local key = profession.skill .. ":" .. context
 	local cache = plans[profession.skillLine]
 	if not cache then

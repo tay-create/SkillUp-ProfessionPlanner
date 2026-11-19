@@ -1,6 +1,7 @@
 -- Run from the repository root: luajit tests/error_journal_spec.lua
--- The shared error journal (Core/SafeCall.lua) and debug log (Core/Log.lua) live in ProfessionPlannerDB, attached once the
--- saved variables and their defaults are in, so the report lists earlier sessions' errors and the lines that led to
+-- The shared error journal (Core/SafeCall.lua) and debug log (Core/Log.lua) live in ProfessionPlannerDB.
+-- They are attached once the saved variables and their defaults are in, so the report lists earlier sessions' errors
+-- and the lines that led to
 -- them after a /reload.
 local Client = dofile("tests/client.lua")
 
