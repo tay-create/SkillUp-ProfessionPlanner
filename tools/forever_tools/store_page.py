@@ -19,7 +19,9 @@ MIN_IMAGES, MAX_IMAGES = 3, 6
 MIN_FEATURES, MAX_FEATURES = 3, 8
 MAX_WORDS = 1000
 DISCORD = "https://discord.gg/FpHugGxRJY"
-COMMUNITY = f"Free, with nothing locked behind it. For help and each day's release notes, [join me on Discord]({DISCORD})."
+COMMUNITY = (
+    f"Free, with nothing locked behind it. For help and each day's release notes, [join me on Discord]({DISCORD})."
+)
 AI_LINE = "Built with AI assistance."
 FAMILY = re.compile(r"<!-- forever-family:start -->.*?<!-- forever-family:end -->", re.DOTALL)
 FAMILY_TOKEN = "<!-- forever-family -->"
@@ -67,9 +69,7 @@ def buttons(repo: str, owner: str = "cjber") -> str:
     """The Discord button below the community information."""
     return " ".join(
         f"[![{alt}]({_raw(repo, 'docs/' + image, owner)})]({target})"
-        for alt, image, target in (
-            ("Join me on Discord", "discord-button.png", DISCORD),
-        )
+        for alt, image, target in (("Join me on Discord", "discord-button.png", DISCORD),)
     )
 
 
@@ -172,7 +172,9 @@ def check(root: Path) -> list[str]:
             )
 
     if community is not None and blocks[community + 1 : community + 2] != [buttons(repo, owner)]:
-        problems.append(f"{FILE}: the Discord button must follow the community information, exactly:\n{buttons(repo, owner)}")
+        problems.append(
+            f"{FILE}: the Discord button must follow the community information, exactly:\n{buttons(repo, owner)}"
+        )
     tail = [source_line(repo, owner), AI_LINE]
     if blocks[-2:] != tail:
         problems.append(f"{FILE}: the page must end with these two lines, exactly:\n" + "\n".join(tail))

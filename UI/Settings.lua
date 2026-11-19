@@ -1,5 +1,5 @@
 ---@type string, SkillUpNamespace
-local addonName, ns = ...
+local _, ns = ...
 
 if ns.broken then
 	return
@@ -360,22 +360,13 @@ function ns.RegisterSettings()
 			L["What's new after an update"],
 			L["One line in chat the first time a new version loads."]
 		)
+		Checkbox(
+			rows,
+			"suggestFamily",
+			L["Suggest related Forever addons"],
+			L["Show optional travel and quest-chain suggestions when a companion addon is missing."]
+		)
 	end)
-
-	-- The Forever addons page is core's (ForeverCore.Family), with the hint setting on it.
-	-- Its rows are plain frames on our own canvas, so nothing of ours goes into Blizzard's layouts or search.
-	-- With the gamepad interface on the page is the client's own rows so the Options navigation can enter it
-	-- (cjber/tweaks-forever#382).
-	local Family = ForeverCore.Family --[[@as ForeverFamilyAPI]]
-	local family = Family.Register(category, function()
-		return ns.db
-	end, addonName, ns.core.SafeCall)
-	Settings.RegisterInitializer(
-		category,
-		CreateSettingsButtonInitializer(L["Forever addons"], L["Open"], function()
-			ForeverCore.OpenSettingsPanel(family:GetID())
-		end, nil, false)
-	)
 
 	Settings.RegisterAddOnCategory(category)
 end

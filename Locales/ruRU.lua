@@ -112,7 +112,6 @@ L["Fees"] = "Сборы"
 L["Feet"] = "Ступни"
 L["Finger"] = "Палец"
 L["First used at"] = "Впервые нужен на"
-L["Forever addons"] = "Модификации Forever"
 L["Gather %d %s"] = "Добыть %d %s"
 L["Gathering skill on nodes"] = "Навык сбора на месторождениях"
 L["Hands"] = "Кисти рук"
@@ -539,3 +538,32 @@ L["Region sale average"] = "Средняя цена продажи в регио
 L["Region sale average if higher"] = "Средняя цена продажи в регионе, если выше"
 L["Region sale averages need TradeSkillMaster and its desktop app. They estimate value from reported regional sales and purchases, with the vendor price as a floor. They do not guarantee a sale."] =
 	"Для средних цен продажи в регионе нужны TradeSkillMaster и его приложение для компьютера. Они оценивают стоимость по зарегистрированным региональным продажам и покупкам, но не ниже цены продажи торговцу. Продажа не гарантируется."
+
+L["Click to find a fishing spot. Click again to try the next one."] =
+	"Нажмите, чтобы найти место рыбалки. Нажмите ещё раз для следующего места."
+L["Click to open the recipe or set a waypoint."] =
+	"Нажмите, чтобы открыть рецепт или установить путевую точку."
+L["Combine Cooking and Fishing"] = "Совместить кулинарию и рыбную ловлю"
+L["Fishing route for %s: %s (approximate zone; look for fishable water)."] =
+	"Маршрут рыбалки для %s: %s (примерная зона; ищите воду, где можно ловить рыбу)."
+L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."] =
+	"Маршрут рыбалки для %s: %s (подтверждённый улов). Нажмите на крючок ещё раз для другого места."
+L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."] =
+	"Точка рыбалки для %s: %s (примерная зона; ищите воду, где можно ловить рыбу)."
+L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."] =
+	"Точка рыбалки для %s: %s (подтверждённый улов). Нажмите на крючок ещё раз для другого места."
+L["Fishing zone for %s: %s. Unable to set route or waypoint."] =
+	"Зона рыбалки для %s: %s. Не удалось проложить маршрут или установить точку."
+L["Next: %s"] = "Далее: %s"
+L["No known fishing zone for %s."] = "Неизвестны места рыбалки для %s."
+L["No next step"] = "Следующего шага нет"
+L["No suitable destination found. Check trainer and vendor locations."] =
+	"Подходящая цель не найдена. Проверьте местоположение учителей и торговцев."
+L["Progress: %d/%d (%d%%)"] = "Прогресс: %d/%d (%d%%)"
+L["Reported fishing spot for %s: %s. Unable to set waypoint."] =
+	"Место рыбалки для %s: %s. Не удалось установить путевую точку."
+L["Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."] =
+	"Показывать крючок на рыбе, используемой в маршрутах профессий. Нажатие ведёт к зарегистрированному улову или примерной зоне рыбалки."
+L["Show optional travel and quest-chain suggestions when a companion addon is missing."] =
+	"Показывать необязательные советы по путешествиям и цепочкам заданий, если отсутствует дополнительный аддон."
+L["Suggest related Forever addons"] = "Предлагать связанные аддоны Forever"

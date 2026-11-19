@@ -110,7 +110,6 @@ L["Fees"] = "수수료"
 L["Feet"] = "발"
 L["Finger"] = "손가락"
 L["First used at"] = "처음 쓰이는 숙련도"
-L["Forever addons"] = "Forever 애드온"
 L["Gather %d %s"] = "%d개 채집: %s"
 L["Gathering skill on nodes"] = "채집물의 채집 숙련도"
 L["Hands"] = "손"
@@ -518,3 +517,31 @@ L["Region sale average"] = "지역 평균 판매가"
 L["Region sale average if higher"] = "더 높으면 지역 평균 판매가"
 L["Region sale averages need TradeSkillMaster and its desktop app. They estimate value from reported regional sales and purchases, with the vendor price as a floor. They do not guarantee a sale."] =
 	"지역 평균 판매가에는 TradeSkillMaster와 데스크톱 앱이 필요합니다. 보고된 지역 판매 및 구매 기록으로 가치를 추정하며 상점 판매가보다 낮아지지 않습니다. 판매를 보장하지는 않습니다."
+
+L["Click to find a fishing spot. Click again to try the next one."] =
+	"클릭하여 낚시 장소를 찾습니다. 다시 클릭하면 다음 장소를 시도합니다."
+L["Click to open the recipe or set a waypoint."] = "클릭하여 제조법을 열거나 경유지를 설정합니다."
+L["Combine Cooking and Fishing"] = "요리와 낚시 결합"
+L["Fishing route for %s: %s (approximate zone; look for fishable water)."] =
+	"%s 낚시 경로: %s (대략적인 지역, 낚시할 수 있는 물가를 찾으세요)."
+L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."] =
+	"%s 낚시 경로: %s (제보된 어획 장소). 다른 장소는 낚싯바늘을 다시 클릭하세요."
+L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."] =
+	"%s 낚시 경유지: %s (대략적인 지역, 낚시할 수 있는 물가를 찾으세요)."
+L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."] =
+	"%s 낚시 경유지: %s (제보된 어획 장소). 다른 장소는 낚싯바늘을 다시 클릭하세요."
+L["Fishing zone for %s: %s. Unable to set route or waypoint."] =
+	"%s 낚시 지역: %s. 경로나 경유지를 설정할 수 없습니다."
+L["Next: %s"] = "다음: %s"
+L["No known fishing zone for %s."] = "%s의 알려진 낚시 지역이 없습니다."
+L["No next step"] = "다음 단계 없음"
+L["No suitable destination found. Check trainer and vendor locations."] =
+	"적절한 목적지를 찾지 못했습니다. 전문 기술 상급자와 상인의 위치를 확인하세요."
+L["Progress: %d/%d (%d%%)"] = "진행: %d/%d (%d%%)"
+L["Reported fishing spot for %s: %s. Unable to set waypoint."] =
+	"%s의 제보된 낚시 장소: %s. 경유지를 설정할 수 없습니다."
+L["Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."] =
+	"전문 기술 경로에서 재료로 쓰는 물고기에 낚싯바늘을 표시합니다. 클릭하면 제보된 어획 장소 또는 대략적인 낚시 지역으로 안내합니다."
+L["Show optional travel and quest-chain suggestions when a companion addon is missing."] =
+	"연동 애드온이 없을 때 선택적 이동 및 연속 퀘스트 제안을 표시합니다."
+L["Suggest related Forever addons"] = "관련 Forever 애드온 추천"

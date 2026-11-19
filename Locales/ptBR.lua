@@ -9,7 +9,6 @@ L["Next: %s"] = "Próximo: %s"
 L["No next step"] = "Nenhuma ação pendente"
 L["Progress: %d/%d (%d%%)"] = "Progresso: %d/%d (%d%%)"
 L["Click to open the recipe or set a waypoint."] = "Clique para abrir a receita ou marcar o destino no mapa."
-L["Click to find fishing zones."] = "Clique para localizar zonas de pesca."
 L["Click to find a fishing spot. Click again to try the next one."] =
 	"Clique para localizar um ponto de pesca. Clique novamente para tentar o próximo."
 L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."] =
@@ -27,10 +26,6 @@ L["Show a fishing hook on fish reagents in profession routes. Clicking it naviga
 	"Exibe um anzol nos peixes usados pelas rotas de profissão. Clique para navegar até uma captura registrada ou uma região de pesca aproximada."
 L["Reported fishing spot for %s: %s. Unable to set waypoint."] =
 	"Ponto de pesca registrado para %s: %s. Não foi possível marcar o destino."
-L["%s can be fished in your current zone: %s."] = "%s pode ser pescado na sua região atual: %s."
-L["Fishing zones for %s: %s."] = "Regiões de pesca de %s: %s."
-L["Closest known fishing zone for %s (approximate): %s."] =
-	"Região de pesca conhecida mais próxima para %s (aproximada): %s."
 L["No known fishing zone for %s."] = "Nenhuma região de pesca conhecida para %s."
 
 L["%d %s"] = "%d %s"
@@ -132,7 +127,6 @@ L["Fees"] = "Taxas"
 L["Feet"] = "Pés"
 L["Finger"] = "Dedo"
 L["First used at"] = "Usado a partir de"
-L["Forever addons"] = "AddOns Forever"
 L["Gather %d %s"] = "Coletar %d %s"
 L["Gathering skill on nodes"] = "Perícia de coleta em nódulos e ervas"
 L["Hands"] = "Mãos"
@@ -538,3 +532,7 @@ L["Region sale average"] = "Média regional de vendas"
 L["Region sale average if higher"] = "Média regional de vendas se for maior"
 L["Region sale averages need TradeSkillMaster and its desktop app. They estimate value from reported regional sales and purchases, with the vendor price as a floor. They do not guarantee a sale."] =
 	"As médias regionais de vendas exigem TradeSkillMaster e seu aplicativo de desktop. Elas estimam o valor com compras e vendas regionais registradas, com o preço de venda ao comerciante como mínimo. Elas não garantem uma venda."
+
+L["Show optional travel and quest-chain suggestions when a companion addon is missing."] =
+	"Exibir sugestões opcionais de viagem e cadeias de missões quando um addon complementar estiver ausente."
+L["Suggest related Forever addons"] = "Sugerir addons Forever relacionados"

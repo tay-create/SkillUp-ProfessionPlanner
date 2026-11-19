@@ -765,9 +765,34 @@ end
 
 local SHORTEST_PATH = "ShortestPathForever"
 local ADVENTURE_GUIDE = "AdventureGuideForever"
--- Hint keys are shared by every Forever addon (ForeverCore.Family), so they start with this addon's folder.
+-- Stable keys keep existing dismissals when upgrading the core.
 local HINT_TRAVEL = "ProfessionPlanner:travel"
 local HINT_QUEST_CHAIN = "ProfessionPlanner:questChain"
+
+local function CompanionState(folder)
+	if not C_AddOns then
+		return "off"
+	end
+	local ok, loaded = pcall(C_AddOns.IsAddOnLoaded, folder)
+	if not ok then
+		return "off"
+	end
+	if loaded then
+		return "on"
+	end
+	local existsOK, exists = pcall(C_AddOns.DoesAddOnExist, folder)
+	if existsOK and exists == false then
+		return "missing"
+	end
+	return "off"
+end
+
+local function CompanionHint(db, key, folder)
+	return type(db) == "table"
+		and db.suggestFamily ~= false
+		and (not db.familyDismissed or not db.familyDismissed[key])
+		and CompanionState(folder) == "missing"
+end
 
 -- Whether Shortest Path Forever is installed but switched off in the AddOns list. A read the client won't give
 -- (a secret value, or no C_AddOns) is "don't know", so no line.
@@ -786,10 +811,9 @@ end
 ---@param tooltip GameTooltip
 ---@param single? boolean
 function ns.AddCompanionHint(tooltip, single)
-	local Family = ForeverCore.Family --[[@as ForeverFamilyAPI]]
-	local state = Family.State(SHORTEST_PATH)
+	local state = CompanionState(SHORTEST_PATH)
 	if state == "missing" then
-		if Family.Hint(ns.db, HINT_TRAVEL, SHORTEST_PATH) then
+		if CompanionHint(ns.db, HINT_TRAVEL, SHORTEST_PATH) then
 			GameTooltip_AddDisabledLine(
 				tooltip,
 				single and L["With Shortest Path Forever, a click leads you there."]
@@ -804,7 +828,7 @@ end
 -- Under an Artisan quest step, when Adventure Guide Forever isn't installed.
 ---@param tooltip GameTooltip
 function ns.AddQuestChainHint(tooltip)
-	if ForeverCore.Family.Hint(ns.db, HINT_QUEST_CHAIN, ADVENTURE_GUIDE) then
+	if CompanionHint(ns.db, HINT_QUEST_CHAIN, ADVENTURE_GUIDE) then
 		GameTooltip_AddDisabledLine(tooltip, L["Adventure Guide Forever can plan this quest chain."])
 	end
 end

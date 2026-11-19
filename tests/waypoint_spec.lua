@@ -137,7 +137,7 @@ env.ShortestPathForever = { API = { version = 1 } }
 ns.SetWaypoint(1250)
 equal(calls.native and calls.native.map, 1429, "an API without Navigate falls back to the map waypoint")
 
--- The family hints (ForeverCore.Family decides when one may show): under a waypoint click to the nearest NPC,
+-- Companion hints under a waypoint click to the nearest NPC,
 -- what Shortest Path Forever adds; under an Artisan quest step, what Adventure Guide Forever adds.
 local addons, hints = {}, {}
 env.C_AddOns = {
@@ -154,12 +154,6 @@ env.C_AddOns = {
 env.GameTooltip_AddDisabledLine = function(_, text)
 	hints[#hints + 1] = text
 end
--- ForeverCore's own Family module, as core loads it: one copy, reading its L.
-local core = {}
-setfenv(assert(loadfile(ForeverCore.directory() .. "/UI/ForeverFamily.lua")), env)("ForeverCore", core)
-core.L = ns.L
-env.ForeverCore = { API = 1, Family = core.Family }
-equal(type(env.ForeverCore.Family.Hint) == "function", true, "ForeverCore.Family is the shared hints")
 ns.db = { suggestFamily = true, familyDismissed = {} }
 local TRAVEL = "With Shortest Path Forever, this picks the nearest by travel time and leads you there."
 local ENABLE = "Enable Shortest Path Forever for walked routes and boat times."

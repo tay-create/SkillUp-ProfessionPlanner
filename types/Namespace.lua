@@ -24,6 +24,8 @@
 ---@field StepDropdownUnderGamepad fun(dropdown: DropdownButton) Makes a press on the dropdown step to its next choice under the gamepad interface instead of opening a menu.
 ---@field Changed fun(kind: SkillUpChange)
 ---@field WhenStale fun(name: SkillUpStale, handler: fun())
+---@field RefreshHeaderButton fun()
+---@field AttachHeaderButton fun()
 ---@field WhenEvent fun(event: WowEvent, watcher: fun(): SkillUpChange?)
 ---@field ProfessionSkillLine fun(name?: string, reported?: integer): integer?
 ---@field CharacterKey fun(): string?
@@ -44,6 +46,7 @@
 ---@field AddPinnedMenu fun(description: ForeverMenuDescription, skillLine: integer)
 ---@field AddSkippedMenu fun(description: ForeverMenuDescription, skillLine: integer)
 ---@field SkillContext fun(): SkillUpContext?
+---@field RecipeTrainerAvailable fun(profession: SkillUpContext, recipeID: integer): boolean?
 ---@field PlayerProfessions fun(): table<integer, SkillUpProfession>
 ---@field IsLearned fun(recipeID: integer): boolean
 ---@field Describe fun(recipeInfo: TradeSkillRecipeInfo|SkillUpRecipeInfo, ctx?: SkillUpContext): SkillUpDescription
@@ -89,7 +92,7 @@
 ---@field DominantReagent fun(plan: SkillUpPlan): { itemID: integer, need: integer, share: number }?
 ---@field RouteNotice fun(plan: SkillUpPlan): { itemID: integer, need: integer, recipes: integer }?
 ---@field PlanRoute fun(profession: SkillUpProfession): SkillUpPlan
----@field RouteFollowable fun(plan: SkillUpPlan): boolean Whether every step of a route can still be walked
+---@field RouteFollowable fun(plan: SkillUpFollowedRoute): boolean Whether every step of a route can still be walked
 ---@field TargetChanged fun(skillLine: integer, value: number): boolean Whether committing a route target would change it
 ---@field RankText fun(rank: SkillUpRank): string
 ---@field RankBookName fun(rank: SkillUpRank): string
@@ -231,8 +234,10 @@
 ---@field TrainerRanks table<integer, number[][]>
 ---@field TrainerInferred table<integer, number> classic-db's required skill, where the bundled one was moved from it.
 ---@field ProfessionTrainers table<integer, number[][]>
+---@field RecipeTrainers table<integer, table<integer, integer[]>>
 ---@field GatheredBy table<integer, integer>
 ---@field FishingZones table<integer, integer[]> Fishing loot zones by reagent item ID, using UiMapIDs.
+---@field FishingPoints table<integer, table<integer, number[]>> Historical catches by item and map, with paired x/y coordinates.
 ---@field LootedFrom table<integer, boolean> Reagents a creature drops, which any character can loot.
 ---@field LimitedStock table<integer, table<integer, number>> Per item, the vendors that limit its stock and by how much.
 ---@field NodeSkills table<string, number[]> { gathering skill line, required skill } per enUS herb or ore node name.
@@ -243,7 +248,14 @@
 ---@field Catalogue SkillUpCatalogue
 ---@field InitCatalogue fun()
 
+---@class SkillUpSavedRoute
+---@field context string
+---@field reached number
+---@field crafts number[][]
+---@field training number[][]
+
 ---@class SkillUpDefaults
+---@field committedRoutes table<string, table<integer, SkillUpSavedRoute>>
 ---@field observedRecipes table<string, {ids: table<integer, true>, eventUnix: number}>
 ---@field showRowText boolean
 ---@field showUnlearned boolean
@@ -299,7 +311,7 @@
 ---@field build? string The client build it was last seen on.
 ---@field items table<integer, true>
 
----@class SkillUpDB : SkillUpDefaults, ForeverFamilyDB
+---@class SkillUpDB : SkillUpDefaults
 ---@field trackerHost? ForeverTrackerLegacySettings the addon's old tracker table, offered to ForeverCore once
 ---@field auctionListSignatures? table<string, string> The need SkillUp last wrote for each Auctionator list name
 ---@field showReagentTooltip? boolean Legacy migration only.
@@ -313,6 +325,9 @@
 
 ---@type SkillUpDB
 ProfessionPlannerDB = nil
+
+---@type SkillUpDB?
+SkillUpForeverDB = nil
 
 ---@class SkillUpReagent
 ---@field itemID integer
@@ -441,6 +456,14 @@ ProfessionPlannerDB = nil
 ---@field Changes fun(extra: SkillUpCandidate, picked: number[]): boolean Whether `extra` changes the route.
 
 -- What Core/Plan.lua returns: the levelling plan as a player reads it.
+---@class SkillUpRestoredRoute
+---@field profession SkillUpProfession
+---@field reached number
+---@field crafts {recipeID: integer, from: number, to: number, crafts: number}[]
+---@field training {recipeID: integer, usedAt: number}[]
+---@field ranks SkillUpRank[]
+---@field stopReason? 'no_recipe'
+
 ---@class SkillUpPlan
 ---@field profession SkillUpProfession
 ---@field target number
@@ -454,6 +477,8 @@ ProfessionPlannerDB = nil
 ---@field unpriced integer Known recipes left out for an unpriced reagent.
 ---@field unpricedRecipes integer[]
 ---@field stopReason? 'no_recipe'
+
+---@alias SkillUpFollowedRoute SkillUpPlan|SkillUpRestoredRoute
 
 ---@class SkillUpShoppingItem
 ---@field itemID integer
@@ -746,6 +771,8 @@ ProfessionPlannerDB = nil
 
 -- The one side tab and the bottom tabs of the pages that are on (UI/Pages.lua).
 ---@class SkillUpPages
+---@field CanOpen fun(): boolean
+---@field OpenLast fun()
 ---@field Register fun(spec: SkillUpPageSpec)
 ---@field Unlocked fun(fn: fun()): boolean
 ---@field Close fun(id: SkillUpPageID)
@@ -876,6 +903,9 @@ ProfessionPlannerDB = nil
 ---@field MouseWheelCatcher Frame
 
 ---@class SkillUpPage : Frame
+---@field NextAction Button|{action: fun()?}
+---@field NextActionText FontString
+---@field ProgressText FontString
 ---@field Craft SkillUpCraftButton
 ---@field CraftCount SkillUpCraftCount
 ---@field Profession DropdownButton

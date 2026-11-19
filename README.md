@@ -114,7 +114,7 @@ All optional: Auctionator supplies auction prices and takes the shopping list, T
 
 ## The Forever addons
 
-These are related addons from the original Forever ecosystem. Profession Planner can work alongside them.
+Each one works on its own, and they work together when you install more than one.
 
 | Addon | What it does | Issues |
 |---|---|---|
@@ -127,7 +127,9 @@ These are related addons from the original Forever ecosystem. Profession Planner
 | [Commissions Forever](https://www.curseforge.com/wow/addons/commissions-forever) | Lists your commission turn-ins, the materials in your bags and the next NPC to visit. | [Issues](https://github.com/cjber/commissions-forever/issues) |
 | [Macro Assist Forever](https://www.curseforge.com/wow/addons/macro-assist-forever) | Adds a macro window with every macro in one list, a mono editor with live checks, and history. | [Issues](https://github.com/cjber/macro-assist-forever/issues) |
 
-For Profession Planner problems or ideas, use [our GitHub issues](https://github.com/tay-create/SkillUp-ProfessionPlanner/issues). Links above belong to their original projects.
+Bug reports, feature requests and pull requests are welcome on each addon's GitHub. Everyone whose report or idea ships is thanked by name on the Thanks page in game, in the store page and in the changelog, unless they ask not to be.
+
+For help, ideas and each day's release notes, join [cjber's Workshop on Discord](https://discord.gg/FpHugGxRJY).
 
 <!-- forever-family:end -->
 

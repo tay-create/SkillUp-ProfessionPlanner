@@ -804,7 +804,7 @@ local plans = {}
 -- player is shopping for this one, so while every step of it can still be walked its recipes and their order are
 -- kept (#621). A key the player asked for (a new target, the collect switch, a level) is another route and is
 -- committed in its place.
----@type table<integer, { key: string, context: string, plan: SkillUpPlan, bags: integer }>
+---@type table<integer, { key: string, context: string, plan: SkillUpFollowedRoute, bags: integer }>
 local committed = {}
 
 ns.WhenStale("plans", function()
@@ -829,7 +829,7 @@ ns.WhenStale("bags", function()
 end)
 
 -- Every reagent a route's crafts use is in the bags or has a price: what a bag change can take away.
----@param plan SkillUpPlan
+---@param plan SkillUpFollowedRoute
 ---@return boolean
 local function Affordable(plan)
 	local bags = {}
@@ -847,7 +847,7 @@ end
 
 -- Whether every step of a route can still be walked: each craft's recipe is known, or trained by a step of the
 -- route, still skills up from where the step starts, and every reagent it uses is in the bags or has a price.
----@param plan SkillUpPlan
+---@param plan SkillUpFollowedRoute
 ---@return boolean
 function ns.RouteFollowable(plan)
 	local profession = plan.profession
@@ -883,7 +883,7 @@ end
 
 -- Whether two plans walk the same recipes in the same order: the crafts, the training on the way and the ranks
 -- it takes. Money, counts and colours are not part of it.
----@param a SkillUpPlan
+---@param a SkillUpFollowedRoute
 ---@param b SkillUpPlan
 ---@return boolean
 local function SameSteps(a, b)
@@ -952,6 +952,7 @@ local function RestoreRoute(profession, context, target)
 	then
 		return nil
 	end
+	---@type SkillUpRestoredRoute
 	local plan = { profession = profession, crafts = {}, training = {}, ranks = {}, reached = saved.reached }
 	for index, row in ipairs(saved.crafts) do
 		if type(row) ~= "table" then
@@ -1015,7 +1016,7 @@ end
 -- recipes, in the same order, over the same skills, with today's fees, counts, colours and training skills.
 ---@param profession SkillUpProfession
 ---@param target number
----@param plan SkillUpPlan
+---@param plan SkillUpFollowedRoute
 ---@param fresh SkillUpPlan
 ---@return SkillUpPlan
 local function Rebuild(profession, target, plan, fresh)
@@ -1085,7 +1086,7 @@ function ns.PlanRoute(profession)
 	end
 	-- The route being followed is checked against the bags here, once per bag change: a route a step can no
 	-- longer afford to craft is planned afresh, any other bag change keeps it (#621).
-	---@type { key: string, context: string, plan: SkillUpPlan, bags: integer }?
+	---@type { key: string, context: string, plan: SkillUpFollowedRoute, bags: integer }?
 	local kept = committed[profession.skillLine]
 	if kept and kept.context ~= context then
 		kept = nil

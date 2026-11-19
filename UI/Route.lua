@@ -1065,7 +1065,7 @@ local function ApplyCraft(craft)
 	page.CraftCount:SetText(countText)
 end
 
----@param craft SkillUpCraft
+---@param craft SkillUpCraft?
 local function SetCraft(craft)
 	currentCraft = craft
 	if InCombatLockdown() then
@@ -1154,11 +1154,11 @@ local function RenderNextAction(plan)
 	local profession = plan.profession
 	local action, label
 	for _, step in ipairs(plan.steps or {}) do
+		local training = step.training
 		if step.rank and not ns.RankHeld(step.rank) then
 			label = ns.RankText(step.rank)
 			action = RankClick(profession, step.rank)
-		elseif step.training then
-			local training = step.training
+		elseif training then
 			label = training.scroll and string.format(L["Buy %s"], ItemName(training.scroll))
 				or string.format(L["Train %s"], RecipeName(training.recipeID))
 			action = training.scroll and ScrollClick(training.recipeID) or TrainerClick(profession, training.recipeID)

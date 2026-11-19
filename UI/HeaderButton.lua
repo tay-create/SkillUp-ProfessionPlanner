@@ -26,9 +26,8 @@ function ns.AttachHeaderButton()
 	button:SetText("")
 
 	button.Icon = button:CreateTexture(nil, "ARTWORK")
-	button.Icon:SetSize(18, 18)
+	ns.Art.Icon(button.Icon, ns.ICON, 18)
 	button.Icon:SetPoint("LEFT", button, "LEFT", 8, 0)
-	button.Icon:SetTexture(ns.ICON)
 
 	button.Label = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	button.Label:SetPoint("LEFT", button.Icon, "RIGHT", 6, 0)

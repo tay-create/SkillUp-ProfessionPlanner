@@ -661,6 +661,7 @@ function Client.load(options)
 			block.lines[#block.lines + 1] = { key = key, text = text, frame = frame }
 			return frame
 		end
+		self.blocks = self.blocks or {}
 		self.blocks[#self.blocks + 1] = block
 		return block
 	end

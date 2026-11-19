@@ -281,6 +281,12 @@ local ns = {
 		end,
 	}),
 	ICON = "Interface\\Icons\\INV_Scroll_03",
+	Art = {
+		Icon = function(texture, file, size)
+			texture:SetTexture(file)
+			texture:SetSize(size, size)
+		end,
+	},
 	db = { showRouteTab = true, showGearTab = false, showBuffsTab = true },
 	core = {
 		SafeCall = function(_, fn, ...)

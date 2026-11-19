@@ -107,7 +107,6 @@ L["Fees"] = "费用"
 L["Feet"] = "脚"
 L["Finger"] = "手指"
 L["First used at"] = "首次使用于"
-L["Forever addons"] = "Forever插件"
 L["Gather %d %s"] = "采集%d个%s"
 L["Gathering skill on nodes"] = "采集点的采集技能"
 L["Hands"] = "手部"
@@ -499,3 +498,31 @@ L["Region sale average"] = "地区平均成交价"
 L["Region sale average if higher"] = "较高时使用地区平均成交价"
 L["Region sale averages need TradeSkillMaster and its desktop app. They estimate value from reported regional sales and purchases, with the vendor price as a floor. They do not guarantee a sale."] =
 	"地区平均成交价需要 TradeSkillMaster 及其桌面应用。此价格根据已记录的地区买卖估算价值，且不低于商店售出价。此价格不保证物品能够售出。"
+
+L["Click to find a fishing spot. Click again to try the next one."] =
+	"点击查找钓鱼地点。再次点击尝试下一个地点。"
+L["Click to open the recipe or set a waypoint."] = "点击打开配方或设置路径点。"
+L["Combine Cooking and Fishing"] = "结合烹饪与钓鱼"
+L["Fishing route for %s: %s (approximate zone; look for fishable water)."] =
+	"%s 的钓鱼路线：%s（大致区域，请寻找可以钓鱼的水域）。"
+L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."] =
+	"%s 的钓鱼路线：%s（玩家报告的渔获地点）。再次点击鱼钩尝试其他地点。"
+L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."] =
+	"%s 的钓鱼路径点：%s（大致区域，请寻找可以钓鱼的水域）。"
+L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."] =
+	"%s 的钓鱼路径点：%s（玩家报告的渔获地点）。再次点击鱼钩尝试其他地点。"
+L["Fishing zone for %s: %s. Unable to set route or waypoint."] =
+	"%s 的钓鱼区域：%s。无法设置路线或路径点。"
+L["Next: %s"] = "下一步：%s"
+L["No known fishing zone for %s."] = "没有 %s 的已知钓鱼区域。"
+L["No next step"] = "没有下一步"
+L["No suitable destination found. Check trainer and vendor locations."] =
+	"未找到合适的目的地。请检查训练师和商人的位置。"
+L["Progress: %d/%d (%d%%)"] = "进度：%d/%d（%d%%）"
+L["Reported fishing spot for %s: %s. Unable to set waypoint."] =
+	"%s 的已报告钓鱼地点：%s。无法设置路径点。"
+L["Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."] =
+	"在专业升级路线中用作材料的鱼上显示鱼钩。点击可导航到玩家报告的渔获地点或大致钓鱼区域。"
+L["Show optional travel and quest-chain suggestions when a companion addon is missing."] =
+	"缺少配套插件时，显示可选的旅行和任务链建议。"
+L["Suggest related Forever addons"] = "推荐相关的 Forever 插件"

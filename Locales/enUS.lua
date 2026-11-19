@@ -31,7 +31,6 @@ L["Shortest Path Forever cannot plan the full trip; setting a waypoint to the fi
 	"Shortest Path Forever cannot plan the full trip; setting a waypoint to the first trainer."
 L["Progress: %d/%d (%d%%)"] = "Progress: %d/%d (%d%%)"
 L["Click to open the recipe or set a waypoint."] = "Click to open the recipe or set a waypoint."
-L["Click to find fishing zones."] = "Click to find fishing zones."
 L["Click to find a fishing spot. Click again to try the next one."] =
 	"Click to find a fishing spot. Click again to try the next one."
 L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."] =
@@ -49,9 +48,6 @@ L["Show a fishing hook on fish reagents in profession routes. Clicking it naviga
 	"Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."
 L["Reported fishing spot for %s: %s. Unable to set waypoint."] =
 	"Reported fishing spot for %s: %s. Unable to set waypoint."
-L["%s can be fished in your current zone: %s."] = "%s can be fished in your current zone: %s."
-L["Fishing zones for %s: %s."] = "Fishing zones for %s: %s."
-L["Closest known fishing zone for %s (approximate): %s."] = "Closest known fishing zone for %s (approximate): %s."
 L["No known fishing zone for %s."] = "No known fishing zone for %s."
 L["Buffs"] = "Buffs"
 L["spell %d"] = "spell %d"

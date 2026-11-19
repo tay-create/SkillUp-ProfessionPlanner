@@ -100,6 +100,7 @@ ITEM_MIN_SKILL = "Requires %s (%d)"
 -- to the class here. Its CraftingPage is core's ForeverProfessionPage; a file that reads SkillUp's own recipe list
 -- and schematic form casts it to SkillUpCraftingPage where it uses them.
 ---@class ForeverProfessionsWindow
+---@field TitleContainer Frame
 ---@field Bg Texture
 ---@field professionInfo? ProfessionInfo
 ---@field SetPortraitToAsset fun(self: ForeverProfessionsWindow, asset: fileID|string)
@@ -393,7 +394,7 @@ C_Trainer = {}
 ---@field steps SkillUpTrackerStep[]
 ---@field vendorMissing {name: string, itemID: integer, vendor: integer}[]
 ---@field SetHeader fun(self: SkillUpTrackerBlock, text: string)
----@field AddObjective fun(self: SkillUpTrackerBlock, id: string|number, text: string, template?: string, useFullHeight?: boolean, dashStyle?: number, colorStyle?: ForeverObjectiveTrackerColor): Frame
+---@field AddObjective fun(self: SkillUpTrackerBlock, id: string|number, text: string, template?: string, useFullHeight?: boolean, dashStyle?: number, colorStyle?: SkillUpObjectiveColor): Frame
 
 ---@class SkillUpTrackerModule : ForeverTrackerModule
 ---@field safeCall? ForeverSafeCall runs the section's header menu entries in SkillUp's journal
@@ -405,7 +406,7 @@ C_Trainer = {}
 ---@type ForeverNativeTrackerFrame
 ObjectiveTrackerFrame = nil
 
----@class SkillUpObjectiveColor : ForeverObjectiveTrackerColor
+---@class SkillUpObjectiveColor
 ---@field reverse? SkillUpObjectiveColor
 ---@type {Complete: SkillUpObjectiveColor}
 OBJECTIVE_TRACKER_COLOR = {}
