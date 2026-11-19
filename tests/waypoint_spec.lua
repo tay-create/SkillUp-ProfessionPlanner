@@ -1,6 +1,6 @@
 -- Run from the repository root: luajit tests/waypoint_spec.lua
 local Client = dofile("tests/client.lua")
-local ForeverCore = dofile("tests/forever_core.lua")
+dofile("tests/forever_core.lua")
 local equal = Client.equal
 
 -- One vendor in Elwynn Forest (uiMapID 1429) at 42.1, 65.9, as the catalogue reads it from QuestieDB.
