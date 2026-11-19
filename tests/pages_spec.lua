@@ -216,7 +216,7 @@ local function CreateFrame(frameType, _, parent, template)
 	elseif template == "PanelTabButtonTemplate" then
 		bottomTabs[#bottomTabs + 1] = region
 		region.Text = NewRegion(region, "FontString")
-	elseif template == "UIPanelButtonTemplate" then
+	elseif template == "SharedButtonSmallTemplate" then
 		headerButton = region
 	end
 	return region

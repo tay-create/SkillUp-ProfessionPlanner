@@ -20,7 +20,7 @@ function ns.AttachHeaderButton()
 	end
 
 	local frame = ProfessionsFrame
-	button = CreateFrame("Button", "ProfessionPlannerHeaderButton", frame, "UIPanelButtonTemplate")
+	button = CreateFrame("Button", "ProfessionPlannerHeaderButton", frame, "SharedButtonSmallTemplate")
 	button:SetSize(175, 24)
 	button:SetPoint("TOPRIGHT", frame.TitleContainer or frame, "TOPRIGHT", -8, -2)
 	button:SetText("")
