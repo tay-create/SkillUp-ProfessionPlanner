@@ -85,7 +85,7 @@
 ---@field LearnSkill fun(profession: SkillUpContext, recipeID: integer): number
 ---@field RangeThresholds fun(profession: SkillUpContext?, recipeID: integer, thresholds?: number[]): number[]? The thresholds with the range start at the skill the recipe can be learned at
 ---@field UnlearnedRecipes fun(profession: SkillUpContext): SkillUpUnlearnedRecipe[]
----@field RecipeNPC fun(profession: SkillUpContext, recipeID: integer): integer?
+---@field RecipeNPC fun(profession: SkillUpContext, recipeID: integer, byTravel?: boolean): integer?
 ---@field BestTraining fun(profession: SkillUpContext, known: table<integer, boolean>, offers: {recipeID: integer, fee: number}[]): integer?
 ---@field RouteBlocked fun(plan: SkillUpPlan): string?
 ---@field UnpricedReagents fun(plan: SkillUpPlan): integer[]
