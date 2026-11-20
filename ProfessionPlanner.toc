@@ -1,6 +1,6 @@
 ## Interface: 16001
 ## Dependencies: ForeverCore
-## X-Forever-Core: v1.15.4
+## X-Forever-Core: v1.15.6
 ## Title: Profession Planner
 ## Notes: Plan your professions, track levelling routes, calculate costs and prepare shopping lists.
 ## Notes-deDE: Benötigte Fertigkeit, Farbschwellen und Chance auf Fertigkeitspunkt für jedes Rezept im Berufsfenster.

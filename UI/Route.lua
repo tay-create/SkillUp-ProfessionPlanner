@@ -940,7 +940,16 @@ end
 ---@type SkillUpPendingRoute?
 local pendingRoute
 
----@param key "targetShown"|"trackEnabled"|"trackChecked"|"collectEnabled"|"collectChecked"|"vendorShown"|"cookingModeShown"
+---@alias SkillUpProtectedRouteKey
+---| "targetShown"
+---| "trackEnabled"
+---| "trackChecked"
+---| "collectEnabled"
+---| "collectChecked"
+---| "vendorShown"
+---| "cookingModeShown"
+
+---@param key SkillUpProtectedRouteKey
 ---@param value boolean
 local function SetProtected(key, value)
 	if InCombatLockdown() then
@@ -1668,10 +1677,12 @@ local function CreateButtons()
 	cookingMode:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
 		GameTooltip_SetTitle(GameTooltip, L["Cooking route mode"])
+		-- luacheck: push no max line length
 		GameTooltip_AddNormalLine(
 			GameTooltip,
 			L["Normal Cooking plans by cost. Cooking + Fishing prioritizes fish recipes and keeps fishing waypoints available in both modes."]
 		)
+		-- luacheck: pop
 		GameTooltip:Show()
 	end)
 	cookingMode:SetScript("OnLeave", GameTooltip_Hide)

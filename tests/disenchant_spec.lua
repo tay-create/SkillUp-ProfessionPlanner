@@ -101,6 +101,7 @@ c.bags[DUST] = nil
 c.auction[11082] = 5000
 raw, choices = ns.PlanDisenchant(plan, { { itemID = DUST, count = 1 }, { itemID = 11082, count = 1 } })
 equal(#choices, 2, "multiple enchanting reagents can have disenchant sources")
+equal(#raw > 0, true, "the substitutions add their tailoring materials")
 equal(choices[1].held, 1, "first material uses the held item")
 equal(choices[2].held, 0, "another material cannot reuse the same green item")
 equal(choices[2].crafts, 4, "second material requires its own crafts")
@@ -123,6 +124,7 @@ ns.Changed("prices")
 c.professions = { c.professions[2] }
 raw, choices = ns.PlanDisenchant(plan, { { itemID = DUST, count = 3 } })
 equal(#choices, 0, "a character without tailoring cannot receive a tailoring route")
+equal(raw[1].itemID, DUST, "the material stays on the shopping list without tailoring")
 c.professions[#c.professions + 1] = { name = "Tailoring", id = 197, rank = 100, max = 150 }
 
 DATA.RecipeData[720] =

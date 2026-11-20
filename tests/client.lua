@@ -1696,6 +1696,10 @@ function Client.load(options)
 	-- dependency. The tests never fake its host or its shared tables, so a spec exercises the real ones.
 	ForeverCore.load(G)
 	c.Fire("ADDON_LOADED", "ForeverCore")
+	-- Most fixtures load the consumer after login, with the real core already elected.
+	if not rawget(G, "ForeverCore") then
+		c.Fire("PLAYER_LOGIN")
+	end
 	-- Frames made so far belong to ForeverCore; the addon's own start at the next index.
 	c.coreFrames = #c.frames
 	c.host = G.ForeverCore.TrackerHost
