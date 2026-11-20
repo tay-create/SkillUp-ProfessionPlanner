@@ -196,12 +196,13 @@ local function Train(profession, text, cap, fee, recipeID)
 		cost = fee > 0 and fee or nil,
 		nav = trainer ~= nil,
 	}
-	return step, trainer and function()
-		if recipeID then
-			return ns.RecipeNPC(profession, recipeID, true)
-		end
-		return ns.NearestTrainer(profession, cap, true)
-	end or nil
+	return step,
+		trainer and function()
+			if recipeID then
+				return ns.RecipeNPC(profession, recipeID, true)
+			end
+			return ns.NearestTrainer(profession, cap, true)
+		end or nil
 end
 
 -- A recipe no trainer teaches: buy its scroll from a vendor, and go to that vendor, not a trainer (#358).
@@ -313,7 +314,8 @@ local function Steps(plan)
 			if training.scroll then
 				step, pick = Scroll(training)
 			else
-				step, pick = Train(profession, string.format(L["Train %s"], name), training.cap, training.fee, training.recipeID)
+				step, pick =
+					Train(profession, string.format(L["Train %s"], name), training.cap, training.fee, training.recipeID)
 				step.spellID, step.itemID = training.recipeID, OutputItem(training.recipeID)
 			end
 			Add(step, pick)
