@@ -1,8 +1,8 @@
 -- luacheck: read globals scenario ADDON
--- #555: Profession Planner's tab in the Professions window is ForeverCore.ProfessionTabs'. A Commissions-like second tab
--- sits beside it, and the walk the player makes (SkillUp, a client tab, a profession change, back, the other
--- addon's tab) leaves exactly one page shown each time. The crafting page and every addon page keep the window's
--- custom width chosen by ForeverCore. Recipe names and obsolete saved settings never resize the host or list.
+-- #555: ForeverCore owns the Profession Planner tab. A Commissions-like second tab sits beside it.
+-- Switching between the planner, a client tab and the other addon's tab leaves exactly one page shown.
+-- The crafting page and every addon page keep ForeverCore's custom width. Recipe names and obsolete saved
+-- settings never resize the host or list.
 local ForeverCore = dofile("tests/forever_core.lua")
 
 scenario("Profession Planner's professions tab shares the window with another addon", {
