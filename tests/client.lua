@@ -786,6 +786,9 @@ function Client.load(options)
 	G.UIParent = NewFrame("UIParent")
 	G.UIParent:SetPoint("CENTER")
 	G.ObjectiveTrackerFrame = NewFrame("ObjectiveTrackerFrame")
+	G.ObjectiveTrackerFrame.IsCollapsed = function(self)
+		return self.collapsed == true
+	end
 	G.MerchantFrame = NewFrame("MerchantFrame")
 	G.MerchantFrame.IsShown = function()
 		return c.merchant ~= nil

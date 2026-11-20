@@ -285,6 +285,7 @@ end
 ---@return boolean
 function ns.SetWaypoint(npcID)
 	if not C.NPC(npcID) then
+		ns.Print((C.Hint and C.Hint(true)) or L["No suitable destination found. Check trainer and vendor locations."])
 		return false
 	end
 	local where = ns.NPCLocation(npcID)

@@ -205,7 +205,11 @@ equal(ns.LocationText(ns.NPCLocation(1260)), "unknown location", "a map the clie
 equal(ns.NPCLocation(1261).name, "Unknown", "an NPC QuestieDB lacks has no name")
 calls = {}
 equal(ns.SetWaypoint(1261), false, "and starts no route")
-equal(calls.printed, nil, "without a word")
+equal(
+	calls.printed,
+	ns.L["No suitable destination found. Check trainer and vendor locations."],
+	"and explains why no route started"
+)
 
 -- Nearest by travel: 1251 is nearer in a straight line, 1252 across the water but a quicker trip; 1253 is of
 -- the other faction and 1254 hostile to both.

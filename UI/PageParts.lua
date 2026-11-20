@@ -135,9 +135,19 @@ function Parts.Action(item, professions)
 	if item.state == "trainable" then
 		local npcID = Parts.RecipeNPC(item, professions)
 		if npcID then
-			return L["Set waypoint"], true, function()
-				ns.SetWaypoint(npcID)
-			end
+			return L["Set waypoint"],
+				true,
+				function()
+					local currentNPC = Parts.RecipeNPC(item, professions)
+					if currentNPC then
+						ns.SetWaypoint(currentNPC)
+					else
+						ns.Print(
+							(ns.Catalogue.Hint and ns.Catalogue.Hint(true))
+								or L["The place this recipe is taught isn't known yet."]
+						)
+					end
+				end
 		end
 		return L["Set waypoint"], false, nil, L["The place this recipe is taught isn't known yet."]
 	end

@@ -314,7 +314,11 @@ local frame = CreateFrame("Frame")
 for event in pairs(EVENTS) do
 	frame:RegisterEvent(event)
 end
-frame:SetScript("OnEvent", function(_, event)
+frame:SetScript("OnEvent", function(_, event, ...)
+	-- A failed item load adds no data. Redrawing would request the same missing item again.
+	if event == "ITEM_DATA_LOAD_RESULT" and select(2, ...) == false then
+		return
+	end
 	local kinds = {}
 	if EVENTS[event] then
 		kinds[EVENTS[event]] = true

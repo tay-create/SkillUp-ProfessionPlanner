@@ -1254,6 +1254,28 @@ pane.OtherRows[1]:Click()
 equal(pane.Action.text, "Set waypoint", "a trainable pick's button names the waypoint")
 pane.Action:Click()
 equal(waypoints[1], 1234, "a trainable pick's button sets a waypoint to where it is learned")
+local previousRecipeNPC = ns.RecipeNPC
+ns.RecipeNPC = function()
+	return 5678
+end
+pane.Action:Click()
+equal(waypoints[2], 5678, "a trainable pick rechecks its trainer when clicked")
+local previousPrint = ns.Print
+local missingNPCMessage
+ns.Print = function(message)
+	missingNPCMessage = message
+end
+ns.RecipeNPC = function()
+	return nil
+end
+pane.Action:Click()
+equal(
+	missingNPCMessage,
+	"The place this recipe is taught isn't known yet.",
+	"a trainer lost before the click gets a clear explanation"
+)
+ns.RecipeNPC = previousRecipeNPC
+ns.Print = previousPrint
 pane.OtherRows[2]:Click()
 equal(pane.Action:IsEnabled(), false, "a pick out of reach disables its button")
 equal(pane.Action.reason ~= nil, true, "with the reason why")

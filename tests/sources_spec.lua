@@ -272,7 +272,7 @@ c.Advance(0)
 suggestions = ns.RecipeSuggestions(tailoring, 50)
 equal(Kinds(suggestions), "14 drop, 15 world drop", "without Questie only drops are known")
 equal(ns.SetWaypoint(ns.SuggestionNPC(suggestions[1])), false, "with nobody to route to")
-equal(#c.chat, 0, "and nothing said")
+equal(c.chat[1]:find(ns.Catalogue.Hint(true), 1, true) ~= nil, true, "and the missing location provider is explained")
 equal(ns.NearestTrainer(tailoring, 150), nil, "no trainer is named")
 equal(ns.NearestVendor(THREAD), nil, "nor a vendor")
 -- A vendor seen in an earlier session needs no database.
