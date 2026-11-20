@@ -1,23 +1,38 @@
 {
-  "input_digest": "13b32280e4576d7359962eab7f5b4084e563a87e2815799af0df0899c53420a2",
-  "runtime_sha256": "13b32280e4576d7359962eab7f5b4084e563a87e2815799af0df0899c53420a2",
-  "candidate": "b9a7a6ce9ebb58e61f22aaafc333816baf1c6ff72aac573dee18dc1b44276a81",
-  "client_build": "1.60.1.70938 (Interface 16001)",
-  "tested_artifact": "source-tree",
-  "source_commit": "cdd94b82154c2c5f66c4558d712aba2a48572d49",
+  "input_digest": "f7e071683e1fc605a9a29ba11992fd2954bd85d3f81a20cf8bdbb6e8b2068acb",
+  "runtime_sha256": "f7e071683e1fc605a9a29ba11992fd2954bd85d3f81a20cf8bdbb6e8b2068acb",
+  "candidate": "75d4db001b397e057d5519518151944c6a6d577cbc85e0b8068cb0a761ed6082",
+  "client_build": "1.60.1.70959 (Interface 16001)",
+  "tested_artifact": "release-package",
+  "source_commit": "74a4a8fb32e5cff422942137d3408d230255b4ed",
   "flows": [
     {
-      "name": "skillup",
+      "name": "Open Profession Planner settings",
       "steps": [
-        "/skillup"
+        "Load the BigWigs package together with ForeverCore v1.15.4.",
+        "Run /reload and enter /pp.",
+        "Verify that Options opens to Profession Planner and shows its configuration groups."
+      ],
+      "result": "pass"
+    },
+    {
+      "name": "Open and close the shopping list",
+      "steps": [
+        "Enter /pp shopping.",
+        "Verify the shopping list opens with its empty state when no professions are tracked.",
+        "Use the window's X and verify the list closes."
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/5e66b378cdba706271319f6f23c6a23f/raw/9fc157f0267896789b0a890345abb4b4e4095c11/1-skillup.png",
-      "sha256": "f32810c81779c4206d5466400b9824197395dd2b6f195fc4daa9c926f199783b"
+      "url": "https://github.com/tay-create/SkillUp-ProfessionPlanner/raw/89a88c0c0bc1256ef9d13efd31275b96692cf199/docs/visual-proof/pr4-settings-74a4a8f.png",
+      "sha256": "532b8150169325d5448bdc754f5b4ccde5ec1a4b2e92e38e2f034f4d8614b37d"
+    },
+    {
+      "url": "https://github.com/tay-create/SkillUp-ProfessionPlanner/raw/89a88c0c0bc1256ef9d13efd31275b96692cf199/docs/visual-proof/pr4-shopping-74a4a8f.png",
+      "sha256": "2fae2faa31c7ec7ce0b65d750de7fdeb671125ba119a2ac8044a520fd840dc00"
     }
   ]
 }
