@@ -38,6 +38,8 @@ Syndicator = nil
 -- Navigate returns false in combat, with journeys off, without a player position
 -- or on bad input; Estimate's travel seconds are nil with the reason.
 ---@class SkillUpShortestPathAPI
+---@field CurrentStop? fun(owner: string): integer?, string?
+---@field Guidance? fun(): {owner: string?}?, string?
 ---@field version integer
 ---@field Navigate? fun(owner: string, map: integer, x: number, y: number, title?: string): boolean
 ---@field NavigateRoute? fun(owner: string, stops: {map: integer, x: number, y: number, title?: string, kind?: string}[]): boolean

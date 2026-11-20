@@ -176,6 +176,7 @@ local ns = {
 	db = {},
 	DEFAULTS = {
 		craftValue = "vendor",
+		auctionPriceSource = "auto",
 		reagentTooltip = "route",
 		recipeTooltip = "window",
 		rowCost = "skillup",
@@ -196,6 +197,11 @@ local ns = {
 		{ "vendor", "Vendor" },
 		{ "auction", "Auction" },
 		{ "sale", "Region sale" },
+	},
+	AUCTION_PRICE_SOURCE_OPTIONS = {
+		{ "auto", "Auto" },
+		{ "auctionator", "Auctionator" },
+		{ "tsm", "TradeSkillMaster" },
 	},
 	Changed = function(kind)
 		assert(kind == "settings")
@@ -247,11 +253,11 @@ local groups = {
 			.. " checkbox:showSkill checkbox:showTooltip"
 			.. " checkbox:detailsBar slider:recipeTooltip checkbox:showCost slider:rowCost",
 	},
-	{ "Prices", "slider:craftValue checkbox:valueGathered checkbox:auctionOnly" },
+	{ "Prices", "slider:auctionPriceSource slider:craftValue checkbox:valueGathered checkbox:auctionOnly" },
 	{
 		"Route and trainer",
 		"checkbox:showTracker checkbox:trackerAttached slider:trackerScale checkbox:trackerLocked"
-			.. " checkbox:showRouteTab checkbox:combineCookingFishing"
+			.. " checkbox:showRouteTab"
 			.. " checkbox:showGearTab checkbox:showBuffsTab"
 			.. " checkbox:merchantButton checkbox:auctionSearch checkbox:showTrainer",
 	},

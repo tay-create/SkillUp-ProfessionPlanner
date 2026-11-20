@@ -16,17 +16,38 @@ local _, ns = ...
 --
 -- The warning itself is Core/ForeverRequire.lua, shared by every Forever addon: one line on screen, never a chat
 -- message, naming the addon to update and never ForeverCore.
-local ready = ForeverCore ~= nil
-	and type(ForeverCore.APIKit) == "table"
-	and type(ForeverCore.APIKit.Hub) == "function"
-	and type(ForeverCore.APIKit.NotReady) == "function"
-	and type(ForeverCore.TrackerSection) == "table"
-	and type(ForeverCore.TrackerSection.Create) == "function"
-	and type(ForeverCore.TrackerLine) == "table"
-	and type(ForeverCore.TrackerLine.SetInteractive) == "function"
-	and type(ForeverCore.ProfessionTabs) == "table"
-	and type(ForeverCore.ProfessionTabs.Register) == "function"
-	and type(ForeverCore.ProfessionTabs.SetMinWidth) == "function"
-	and (tonumber(ForeverCore.ProfessionTabs.minor) or 0) >= 2
+-- ForeverCore 1.15+ elects and publishes its implementation at PLAYER_LOGIN.
+-- Consumer files load earlier, so wait for its ready callback before checking capabilities.
+function ns.OnCoreReady(callback)
+	local core = rawget(_G, "ForeverCore")
+	if type(core) == "table" then
+		return callback(core)
+	end
+	local loader = rawget(_G, "ForeverCoreLoader")
+	if type(loader) == "table" and type(loader.OnReady) == "function" then
+		return loader.OnReady(callback)
+	end
+end
 
-ns.ForeverRequire(ready)
+local function CheckCore(core)
+	local ready = type(core) == "table"
+		and type(core.APIKit) == "table"
+		and type(core.APIKit.Hub) == "function"
+		and type(core.APIKit.NotReady) == "function"
+		and type(core.TrackerSection) == "table"
+		and type(core.TrackerSection.Create) == "function"
+		and type(core.TrackerLine) == "table"
+		and type(core.TrackerLine.SetInteractive) == "function"
+		and type(core.ProfessionTabs) == "table"
+		and type(core.ProfessionTabs.Register) == "function"
+		and type(core.ProfessionTabs.SetMinWidth) == "function"
+		and (tonumber(core.ProfessionTabs.minor) or 0) >= 2
+
+	ns.ForeverRequire(ready)
+end
+
+if rawget(_G, "ForeverCore") ~= nil or rawget(_G, "ForeverCoreLoader") ~= nil then
+	ns.OnCoreReady(CheckCore)
+else
+	ns.ForeverRequire(false)
+end

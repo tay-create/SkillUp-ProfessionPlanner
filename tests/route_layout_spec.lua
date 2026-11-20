@@ -564,6 +564,10 @@ local ns = {
 		return "gather"
 	end,
 	SetCollectMode = noop,
+	CookingFishingMode = function()
+		return false
+	end,
+	SetCookingFishingMode = noop,
 	ShowAllGear = function()
 		return showAll
 	end,
@@ -788,6 +792,7 @@ local env = setmetatable({
 })
 
 ns.core = {
+	Log = function() end,
 	SafeCall = function(_, fn, ...)
 		return pcall(fn, ...)
 	end,
@@ -900,6 +905,8 @@ tab.scripts.OnMouseUp(nil, "LeftButton", true)
 Flush()
 equal(page ~= nil, true, "the route page is created")
 equal(page.RouteList ~= nil and page.ReagentList ~= nil, true, "with its two lists")
+equal(page.CookingMode.shown, false, "the cooking selector is hidden for First Aid")
+equal(page.CookingMode.points[1].relative, page.Profession, "the cooking selector stays under its profession picker")
 
 local function Find(text)
 	for _, region in ipairs(created) do

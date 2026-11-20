@@ -5,6 +5,8 @@ if ns.broken then
 	return
 end
 
+ns.REFINED_DEEPROCK_SALT = 15409
+
 -- [recipeID] = live schematic, else bundled data, else false.
 ---@type table<integer, SkillUpSchematic|false>
 local recipes = {}
@@ -46,6 +48,10 @@ local function AuctionatorAPI()
 	return api and api.GetAuctionPriceByItemID and api
 end
 
+local function ValidMarketPrice(value)
+	return type(value) == "number" and value == value and value > 0 and value < math.huge
+end
+
 -- Auctionator supplies its latest recorded buyout and the age of that observation.
 ---@param itemID integer
 ---@return SkillUpPrice?
@@ -55,9 +61,10 @@ local function AuctionatorPrice(itemID)
 		return nil
 	end
 	local ok, live = pcall(api.GetAuctionPriceByItemID, addonName, itemID)
-	if not (ok and type(live) == "number") then
+	if not (ok and ValidMarketPrice(live)) then
 		return nil
 	end
+	---@cast live number
 	local okAge, age = pcall(api.GetAuctionAgeByItemID, addonName, itemID)
 	return {
 		copper = live,
@@ -84,16 +91,23 @@ local function TradeSkillMasterPrice(itemID)
 		return nil
 	end
 	local ok, value = pcall(TSM_API.GetCustomPriceValue, TSM_PRICE, "i:" .. itemID)
-	if not (ok and type(value) == "number") then
+	if not (ok and ValidMarketPrice(value)) then
 		return nil
 	end
+	---@cast value number
 	return { copper = value, source = "tsm" }
 end
 
--- Auctionator's own observation when it has one, so a player with both keeps the prices they had.
+-- Automatic keeps the old preference for Auctionator and fills missing prices from TSM.
+-- An explicit source never silently mixes in the other addon's market observations.
 ---@param itemID integer
 ---@return SkillUpPrice?
 local function AuctionPrice(itemID)
+	if ns.db.auctionPriceSource == "auctionator" then
+		return AuctionatorPrice(itemID)
+	elseif ns.db.auctionPriceSource == "tsm" then
+		return TradeSkillMasterPrice(itemID)
+	end
 	return AuctionatorPrice(itemID) or TradeSkillMasterPrice(itemID)
 end
 
@@ -112,7 +126,7 @@ local function TradeSkillMasterSale(itemID)
 		return nil
 	end
 	local ok, value = pcall(TSM_API.GetCustomPriceValue, TSM_SALE, "i:" .. itemID)
-	if not (ok and type(value) == "number" and value == value and value > 0 and value < math.huge) then
+	if not (ok and ValidMarketPrice(value)) then
 		return nil
 	end
 	return value
@@ -208,6 +222,16 @@ local function Gathered(itemID)
 	return price
 end
 
+-- A recorded merchant price or a bundled purchase price. Ignore older data for
+-- refined salt, which is made with a Salt Shaker and can be traded.
+---@param itemID integer
+---@return number?
+function ns.VendorPurchasePrice(itemID)
+	if itemID ~= ns.REFINED_DEEPROCK_SALT then
+		return ns.db.vendor[itemID] or ns.VendorPrices[itemID]
+	end
+end
+
 -- Cheapest known unit price and where it came from: "gather", "vendor", "auctionator"
 -- or "tsm". A price seen at a vendor beats the bundled list, since it includes
 -- any reputation discount. With Buy reagents on, a reagent you could gather that nothing prices is still
@@ -224,16 +248,19 @@ function ns.Price(itemID)
 		if not professions and ns.PlayerProfessions then
 			professions = ns.PlayerProfessions()
 		end
-		local vendor = ns.db.vendor[itemID] or ns.VendorPrices[itemID]
+		local vendor = ns.VendorPurchasePrice(itemID)
 		local ah = AuctionPrice(itemID)
-		if ns.CollectMode() == "gather" then
+		if itemID ~= ns.REFINED_DEEPROCK_SALT and ns.CollectMode() == "gather" then
 			cached = Gathered(itemID)
 		end
 		if not cached and vendor and (not ah or vendor <= ah.copper) then
 			cached = { copper = vendor, source = "vendor" }
 		elseif not cached and ah then
 			cached = ah
-		elseif not cached and ns.CollectMode() == "auction" and ns.CanGather(itemID) then
+		elseif
+			not cached
+			and (itemID == ns.REFINED_DEEPROCK_SALT or (ns.CollectMode() == "auction" and ns.CanGather(itemID)))
+		then
 			cached = { copper = 0, source = "auction", unknown = true }
 		elseif not cached then
 			cached = Gathered(itemID) or false

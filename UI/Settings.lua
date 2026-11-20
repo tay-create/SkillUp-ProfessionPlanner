@@ -164,6 +164,13 @@ function ns.RegisterSettings()
 	Section(L["Prices"], function(rows)
 		Choice(
 			rows,
+			"auctionPriceSource",
+			L["Auction price source"],
+			ns.AUCTION_PRICE_SOURCE_OPTIONS,
+			L["Automatic uses Auctionator prices first and fills gaps with TradeSkillMaster. Choosing one addon uses only its auction prices. Vendor prices are still compared."]
+		)
+		Choice(
+			rows,
 			"craftValue",
 			L["Count what crafts sell for"],
 			ns.CRAFT_VALUE_OPTIONS,
@@ -285,13 +292,6 @@ function ns.RegisterSettings()
 			L["Show the levelling route tab"],
 			L["A tab at the bottom of the Professions window with a route to your target skill and its reagents. It opens from the Profession Planner side tab, beside the crafted gear and buffs tabs. Tracked professions stay in the objective tracker either way."]
 		)
-		Checkbox(
-			rows,
-			"combineCookingFishing",
-			L["Combine Cooking and Fishing"],
-			L["Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."]
-		)
-
 		Checkbox(
 			rows,
 			"showGearTab",

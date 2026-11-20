@@ -5,6 +5,20 @@ if GetLocale() ~= "ptBR" then
 end
 local L = ns.L
 
+L["Auction price source"] = "Fonte dos preços de leilão"
+L["Automatic (Auctionator first)"] = "Automática (Auctionator primeiro)"
+L["Auctionator only"] = "Somente Auctionator"
+L["TradeSkillMaster only"] = "Somente TradeSkillMaster"
+L["Automatic uses Auctionator prices first and fills gaps with TradeSkillMaster. Choosing one addon uses only its auction prices. Vendor prices are still compared."] =
+	"No modo automático, o Auctionator tem prioridade e o TSM completa os preços ausentes. Ao escolher um addon, somente os preços dele serão usados. Os preços de vendedores continuam sendo comparados."
+
+L["Disenchant crafted %s"] = "Desencantar %s feito com Alfaiataria"
+L["Chance for this material"] = "Chance deste material"
+L["Expected material per craft"] = "Quantidade média por fabricação"
+L["Estimated crafting cost per material"] = "Custo médio estimado por material"
+L["Disenchant results vary; estimates use Classic odds."] =
+	"O desencantamento é aleatório; as estimativas usam probabilidades do Classic."
+
 L["Next: %s"] = "Próximo: %s"
 L["No next step"] = "Nenhuma ação pendente"
 L["Progress: %d/%d (%d%%)"] = "Progresso: %d/%d (%d%%)"
@@ -21,9 +35,11 @@ L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."] =
 	"Destino de pesca para %s: %s (região aproximada; procure água onde seja possível pescar)."
 L["Fishing zone for %s: %s. Unable to set route or waypoint."] =
 	"Região de pesca para %s: %s. Não foi possível traçar rota nem marcar destino."
-L["Combine Cooking and Fishing"] = "Combinar Culinária e Pesca"
-L["Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."] =
-	"Exibe um anzol nos peixes usados pelas rotas de profissão. Clique para navegar até uma captura registrada ou uma região de pesca aproximada."
+L["Normal Cooking"] = "Culinária normal"
+L["Cooking + Fishing"] = "Culinária + Pescaria"
+L["Cooking route mode"] = "Modo da rota de Culinária"
+L["Normal Cooking plans by cost. Cooking + Fishing prioritizes fish recipes and keeps fishing waypoints available in both modes."] =
+	"Culinária normal planeja pelo custo. Culinária + Pescaria prioriza receitas com peixe. O rastreador de pesca funciona nos dois modos."
 L["Reported fishing spot for %s: %s. Unable to set waypoint."] =
 	"Ponto de pesca registrado para %s: %s. Não foi possível marcar o destino."
 L["No known fishing zone for %s."] = "Nenhuma região de pesca conhecida para %s."
@@ -218,6 +234,10 @@ L["Recipes from vendors, quests and drops that would carry it on:"] =
 L["Required skill, skill-up chance and cost on profession trainer recipes, and which one is best to train next for your route."] =
 	"Perícia necessária, chance de ponto e custo nas receitas dos instrutores de profissão, e qual é melhor treinar em seguida para sua rota."
 L["Requires"] = "Requer"
+L["Route recalculated because a missing reagent has no known source."] =
+	"Rota recalculada porque falta um reagente sem fonte conhecida."
+L["Route recalculated because a recipe or its requirements changed."] =
+	"Rota recalculada porque uma receita ou seus requisitos mudaram."
 L["Replan"] = "Replanejar"
 L["Route"] = "Rota"
 L["Route and trainer"] = "Rota e instrutor"
@@ -536,3 +556,21 @@ L["Region sale averages need TradeSkillMaster and its desktop app. They estimate
 L["Show optional travel and quest-chain suggestions when a companion addon is missing."] =
 	"Exibir sugestões opcionais de viagem e cadeias de missões quando um addon complementar estiver ausente."
 L["Suggest related Forever addons"] = "Sugerir addons Forever relacionados"
+L["Calculating route to %s..."] = "Calculando rota para %s..."
+L["Destination sent: %s"] = "Destino enviado: %s"
+L["Route ready: %s"] = "Rota pronta: %s"
+L["Route still pending: %s"] = "Aguardando orientação para %s"
+L["Auction house or Salt Shaker"] = "Leilão ou Refinador de Sal"
+L["Auction house or vendor"] = "Leilão ou comerciante"
+
+L["Tailoring and disenchanting (estimated)"] = "Alfaiataria e desencantamento (estimativa)"
+
+L["Disenchant %d× %s"] = "Desencantar %d× %s"
+
+L["~%.1f %s for %d needed; saves %s"] = "~%.1f %s para %d necessários; economiza %s"
+
+L["Items already held"] = "Itens já guardados (bolsas e banco)"
+
+L["Estimated crafting cost"] = "Custo estimado para fabricar"
+
+L["Buying missing reagents"] = "Comprar reagentes em falta"

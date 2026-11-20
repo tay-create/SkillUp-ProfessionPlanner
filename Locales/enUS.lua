@@ -23,6 +23,10 @@ L["Profession Planner"] = "Profession Planner"
 L["Route"] = "Route"
 L["Next: %s"] = "Next: %s"
 L["No next step"] = "No next step"
+L["Route recalculated because a missing reagent has no known source."] =
+	"Route recalculated because a missing reagent has no known source."
+L["Route recalculated because a recipe or its requirements changed."] =
+	"Route recalculated because a recipe or its requirements changed."
 L["No suitable destination found. Check trainer and vendor locations."] =
 	"No suitable destination found. Check trainer and vendor locations."
 L["No vendor or trainer location found for this list. Check NPC locations in QuestieDB; auction and gathered items are separate."] =
@@ -44,6 +48,11 @@ L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."] =
 L["Fishing zone for %s: %s. Unable to set route or waypoint."] =
 	"Fishing zone for %s: %s. Unable to set route or waypoint."
 L["Combine Cooking and Fishing"] = "Combine Cooking and Fishing"
+L["Normal Cooking"] = "Normal Cooking"
+L["Cooking + Fishing"] = "Cooking + Fishing"
+L["Cooking route mode"] = "Cooking route mode"
+L["Normal Cooking plans by cost. Cooking + Fishing prioritizes fish recipes and keeps fishing waypoints available in both modes."] =
+	"Normal Cooking plans by cost. Cooking + Fishing prioritizes fish recipes and keeps fishing waypoints available in both modes."
 L["Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."] =
 	"Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."
 L["Reported fishing spot for %s: %s. Unable to set waypoint."] =
@@ -79,3 +88,21 @@ L["Region sale averages need TradeSkillMaster and its desktop app. They estimate
 
 L["Route incomplete: %d recipes left out because their costs or sale values are unknown."] =
 	"Route incomplete: %d recipes left out because their costs or sale values are unknown."
+L["Calculating route to %s..."] = "Calculating route to %s..."
+L["Destination sent: %s"] = "Destination sent: %s"
+L["Route ready: %s"] = "Route ready: %s"
+L["Route still pending: %s"] = "Route still pending: %s"
+L["Auction house or Salt Shaker"] = "Auction house or Salt Shaker"
+L["Auction house or vendor"] = "Auction house or vendor"
+
+L["Tailoring and disenchanting (estimated)"] = "Tailoring and disenchanting (estimated)"
+
+L["Disenchant %d× %s"] = "Disenchant %d× %s"
+
+L["~%.1f %s for %d needed; saves %s"] = "~%.1f %s for %d needed; saves %s"
+
+L["Items already held"] = "Items already held"
+
+L["Estimated crafting cost"] = "Estimated crafting cost"
+
+L["Buying missing reagents"] = "Buying missing reagents"

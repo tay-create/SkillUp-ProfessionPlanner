@@ -103,6 +103,72 @@ equal(calls.navigate.title, "Drake Lindgren", "Shortest Path Forever names the s
 equal(calls.native, nil, "an accepted route sets no map waypoint")
 equal(calls.printed, "route set to Drake Lindgren, Elwynn Forest  42, 66.", "an accepted route says where")
 
+do
+	-- Guidance can appear after the first click while the accepted route is still being calculated.
+	local clock, scheduled, status, submissions = 0, nil, nil, 0
+	local cancelled, ready = false, false
+	local previousTimer, previousTime, previousCombat = env.C_Timer, env.GetTime, env.InCombatLockdown
+	env.InCombatLockdown = function()
+		return false
+	end
+	env.GetTime = function()
+		return clock
+	end
+	env.C_Timer = {
+		After = function(_, callback)
+			scheduled = callback
+		end,
+	}
+	ns.core = { Log = function() end }
+	ns.ShowTrainerRouteStatus = function(message)
+		status = message
+	end
+	local api = env.ShortestPathForever.API
+	local navigate = api.Navigate
+	api.Navigate = function(...)
+		submissions = submissions + 1
+		return navigate(...)
+	end
+	api.Guidance = function()
+		if not ready then
+			return nil, "loading"
+		end
+		return { owner = "ProfessionPlannerTrainer" }
+	end
+	api.CurrentStop = function(owner)
+		return not cancelled and owner == calls.navigate.owner and 1 or nil
+	end
+	equal(ns.SetWaypoint(1250, true), true, "the first trainer click submits the route")
+	equal(status, "Calculating route to Drake Lindgren...", "pending guidance is immediately visible")
+	scheduled()
+	equal(status, "Calculating route to Drake Lindgren...", "the pending message stays while guidance loads")
+	clock = 3
+	scheduled()
+	equal(submissions, 2, "a pending first search gets the same stop a second time automatically")
+	equal(calls.navigate.owner, "ProfessionPlannerTrainer", "a trainer retry owns only trainer routes")
+	clock = 5
+	scheduled()
+	equal(submissions, 2, "a pending first search gets only one refresh")
+	ready = true
+	scheduled()
+	equal(status, "Route ready: Drake Lindgren", "guidance becoming ready updates the message")
+
+	ns.SetWaypoint(1250, true)
+	local fastSample = scheduled
+	clock = 8
+	fastSample()
+	equal(submissions, 3, "an already ready route does not get a refresh")
+
+	ready = false
+	ns.SetWaypoint(1250, true)
+	cancelled = true
+	clock = 12
+	scheduled()
+	equal(submissions, 4, "a cleared or replaced route is not submitted again")
+	equal(status, nil, "cancelling the route clears the pending message")
+	env.C_Timer, env.GetTime, env.InCombatLockdown = previousTimer, previousTime, previousCombat
+end
+
 Run(true, 2)
 equal(calls.navigate and calls.navigate.owner, "ProfessionPlanner", "API v2 keeps the navigation contract")
 equal(calls.native, nil, "API v2 navigation needs no native fallback")

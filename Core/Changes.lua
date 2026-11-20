@@ -130,11 +130,6 @@ local STALE = {
 		tracker = true,
 		shoppingList = true,
 	},
-	-- A bag change does not drop `trackedNeeds`: UI/Shopping.lua's plan and missing-tool key tells a tool
-	-- that came or went from a bag of unrelated loot. The tooltip's item lines do not read the bags at all;
-	-- only the route index does, and only when the tools a route lacks actually moved. `bags` is Plan.lua's own
-	-- check, made when something next asks for the plan: a route a step can no longer afford to craft is planned
-	-- afresh there, and any other bag change keeps it (#621).
 	bags = { bags = true, tooltipRouteTools = true, api = true, route = true, tracker = true, shoppingList = true },
 	-- Item data arrived; `names` when the public list was waiting on it. An item tooltip's lines hold no item
 	-- name, and a route's tooltip lines hold no shopping source, so `tooltipCache` and `tooltipRoute` stay.
@@ -217,8 +212,6 @@ local STALE = {
 		tooltipRoute = true,
 		prices = true,
 		plans = true,
-		-- A setting is the player's own choice: the route they were following is planned again from it.
-		replan = true,
 		trackedNeeds = true,
 		api = true,
 		route = true,
@@ -251,6 +244,12 @@ local STALE = {
 	},
 }
 
+-- Pinning or skipping a recipe explicitly changes the route for that recipe's profession.
+STALE.recipeChoice = { replan = true }
+for name in pairs(STALE.settings) do
+	STALE.recipeChoice[name] = true
+end
+
 ---@type table<string, SkillUpChange>
 local EVENTS = {
 	TRADE_SKILL_DATA_SOURCE_CHANGED = "window",
@@ -258,6 +257,8 @@ local EVENTS = {
 	TRADE_SKILL_SHOW = "window",
 	SKILL_LINES_CHANGED = "skill",
 	BAG_UPDATE_DELAYED = "bags",
+	BANKFRAME_OPENED = "bags",
+	PLAYERBANKSLOTS_CHANGED = "bags",
 	ITEM_DATA_LOAD_RESULT = "items",
 	PLAYER_LEVEL_UP = "level",
 	ZONE_CHANGED_NEW_AREA = "zone",
@@ -273,13 +274,14 @@ for _, name in ipairs(ORDER) do
 	LABELS[name] = "stale " .. name
 end
 
----@type table<SkillUpStale, fun()>
+---@type table<SkillUpStale, fun(skillLine: integer?)>
 local handlers = {}
 ---@type table<string, (fun(): SkillUpChange?)[]>
 local watchers = {}
 
 ---@param kinds table<SkillUpChange, true>
-local function Apply(kinds)
+---@param skillLine integer?
+local function Apply(kinds, skillLine)
 	local stale = {}
 	for kind in pairs(kinds) do
 		for name in pairs(STALE[kind]) do
@@ -290,22 +292,23 @@ local function Apply(kinds)
 		local handler = stale[name] and handlers[name]
 		if handler then
 			-- One failing cache or view doesn't stop the rest; the error is kept for /pp report.
-			ns.core.SafeCall(LABELS[name], handler)
+			ns.core.SafeCall(LABELS[name], handler, skillLine)
 		end
 	end
 end
 
 -- Something changed that no event below reports: a setting, a target, a price.
 ---@param kind SkillUpChange
-function ns.Changed(kind)
+---@param skillLine integer? Limits a requested replan to this profession.
+function ns.Changed(kind, skillLine)
 	assert(STALE[kind], kind)
-	Apply({ [kind] = true })
+	Apply({ [kind] = true }, skillLine)
 end
 
 -- How the owner of a cache drops it, or of a view redraws it. A view registers once its frames exist;
 -- until then it has nothing to redraw.
 ---@param name SkillUpStale
----@param handler fun()
+---@param handler fun(skillLine: integer?)
 function ns.WhenStale(name, handler)
 	handlers[name] = handler
 end

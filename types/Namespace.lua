@@ -13,17 +13,18 @@
 ---@class SkillUpNamespace
 ---@field Credits ForeverCreditsData the player credits Data/Credits.lua generates for the shared Thanks page
 ---@field Stats SkillUpStats
----@field RecipeMaterials fun(recipeID: integer, crafts: number): SkillUpSubCraft[]?, {itemID: integer, count: number}[]?
+---@field RecipeMaterials fun(recipeID: integer, crafts: number, withBags?: boolean): SkillUpSubCraft[]?, {itemID: integer, count: number}[]?
 ---@field ReportTitle string the localized title shown by the shared report window
 ---@field Art SkillUpArt
+---@field OnCoreReady fun(callback: fun(core: ForeverCoreAPI?)): boolean?
 ---@field core ForeverCoreAddon the shared services registered for SkillUp (Core/Core.lua)
 ---@field broken? boolean set when an installed ForeverCore is too old, so the addon's files stop
 ---@field ForeverRequire fun(ready: boolean): boolean? the shared out-of-date warning (Core/ForeverRequire.lua)
 ---@field Print fun(msg: string)
 ---@field GamepadUI fun(): boolean Whether the client is in its gamepad interface.
 ---@field StepDropdownUnderGamepad fun(dropdown: DropdownButton) Makes a press on the dropdown step to its next choice under the gamepad interface instead of opening a menu.
----@field Changed fun(kind: SkillUpChange)
----@field WhenStale fun(name: SkillUpStale, handler: fun())
+---@field Changed fun(kind: SkillUpChange, skillLine?: integer)
+---@field WhenStale fun(name: SkillUpStale, handler: fun(skillLine: integer?))
 ---@field RefreshHeaderButton fun()
 ---@field AttachHeaderButton fun()
 ---@field WhenEvent fun(event: WowEvent, watcher: fun(): SkillUpChange?)
@@ -54,6 +55,8 @@
 ---@field RowColor fun(d: SkillUpDescription): ColorMixin
 ---@field Price fun(itemID: integer): SkillUpPrice?
 ---@field PriceSource fun(itemID: integer): SkillUpPriceSource?
+---@field VendorPurchasePrice fun(itemID: integer): number?
+---@field REFINED_DEEPROCK_SALT integer
 ---@field CanGather fun(itemID: integer): string? The profession name, or "loot" for a reagent creatures drop.
 ---@field IsLimitedStock fun(itemID: integer): number? The nearest vendor's limit from what it showed, else the bundled data; nil when it has none.
 ---@field ObtainCost fun(itemID: integer): number? the cheaper of buying a unit and crafting it, as ReagentCost totals
@@ -85,14 +88,16 @@
 ---@field LearnSkill fun(profession: SkillUpContext, recipeID: integer): number
 ---@field RangeThresholds fun(profession: SkillUpContext?, recipeID: integer, thresholds?: number[]): number[]? The thresholds with the range start at the skill the recipe can be learned at
 ---@field UnlearnedRecipes fun(profession: SkillUpContext): SkillUpUnlearnedRecipe[]
----@field RecipeNPC fun(profession: SkillUpContext, recipeID: integer, byTravel?: boolean): integer?
+---@field RecipeNPC fun(profession: SkillUpContext, recipeID: integer, byTravel?: boolean, trace?: boolean): integer?
+---@field ShowTrainerRouteStatus fun(message: string?, duration?: number)
+---@field TraceTrainerClick fun(origin: string, profession: SkillUpContext?, recipeID: integer, fallback?: integer): boolean
 ---@field BestTraining fun(profession: SkillUpContext, known: table<integer, boolean>, offers: {recipeID: integer, fee: number}[]): integer?
 ---@field RouteBlocked fun(plan: SkillUpPlan): string?
 ---@field UnpricedReagents fun(plan: SkillUpPlan): integer[]
 ---@field DominantReagent fun(plan: SkillUpPlan): { itemID: integer, need: integer, share: number }?
 ---@field RouteNotice fun(plan: SkillUpPlan): { itemID: integer, need: integer, recipes: integer }?
 ---@field PlanRoute fun(profession: SkillUpProfession): SkillUpPlan
----@field RouteFollowable fun(plan: SkillUpFollowedRoute): boolean Whether every step of a route can still be walked
+---@field RouteFollowable fun(plan: SkillUpFollowedRoute, profession?: SkillUpProfession): boolean, ('materials'|'requirements')? Whether every step of a route can still be walked
 ---@field TargetChanged fun(skillLine: integer, value: number): boolean Whether committing a route target would change it
 ---@field RankText fun(rank: SkillUpRank): string
 ---@field RankBookName fun(rank: SkillUpRank): string
@@ -110,6 +115,8 @@
 ---@field AttachBuffs fun()
 ---@field LastSkillUpPage fun(): SkillUpPageID?
 ---@field SetLastSkillUpPage fun(pageID: SkillUpPageID)
+---@field CookingFishingMode fun(): boolean
+---@field SetCookingFishingMode fun(fishing: boolean)
 ---@field OnlyBuffsForLevel fun(): boolean
 ---@field SetOnlyBuffsForLevel fun(only: boolean)
 ---@field BuffRows fun(profession: SkillUpContext, level: number, hideLocked: boolean): SkillUpBuffRow[]
@@ -149,10 +156,14 @@
 ---@field AuctionListName fun(profession: string): string?
 ---@field AuctionListNote fun(names: string[]?): string what the Shopping list and the Search tooltip say about the list
 ---@field Have fun(itemID: integer): number
+---@field AllocateStock fun(itemID: integer, need: number, remaining: table<integer, number>): number, number
 ---@field Readable fun(value: any): any
 ---@field Usable fun(frame?: Frame): boolean
 ---@field AltCounts fun(itemID: integer): {name: string, count: number}[]
----@field RouteReagents fun(plan: SkillUpPlan): SkillUpNeededItem[]
+---@field RouteReagents fun(plan: SkillUpPlan): SkillUpNeededItem[], SkillUpDisenchantChoice[]
+---@field BagEpoch fun(): integer
+---@field BestTailoringDisenchant fun(reagentID: integer): SkillUpDisenchantEstimate?
+---@field PlanDisenchant fun(plan: SkillUpPlan, raw: {itemID: integer, count: number}[]): {itemID: integer, count: number}[], SkillUpDisenchantChoice[]
 ---@field InitLive fun()
 ---@field LiveRecipes table<integer, SkillUpLiveRecipe>
 ---@field NoteLearnedRecipe fun(recipeID: integer, learned: boolean?): boolean
@@ -180,7 +191,7 @@
 ---@field LocationText fun(where: SkillUpLocation): string
 ---@field SeeVendor fun(itemIDs: integer[]): boolean
 ---@field NearestNPC fun(npcIDs: integer[], byTravel?: boolean): integer?
----@field SetWaypoint fun(npcID: integer): boolean
+---@field SetWaypoint fun(npcID: integer, trace?: boolean): boolean
 ---@field FindFishing fun(itemID: integer): boolean
 ---@field SuggestionNPC fun(suggestion: SkillUpSuggestionNPC): integer?
 ---@field RecipeSuggestions fun(profession: SkillUpContext, base: number): SkillUpSuggestion[]
@@ -189,7 +200,7 @@
 ---@field AddSourceLines fun(tooltip: GameTooltip, source: SkillUpScrollSource, first?: integer)
 ---@field NearestTrainer fun(profession: SkillUpContext, cap: number, byTravel?: boolean): integer?
 ---@field NearestVendor fun(itemID: integer, byTravel?: boolean): integer?
----@field NearestScrollVendor fun(recipeID: integer, byTravel?: boolean): integer?
+---@field NearestScrollVendor fun(recipeID: integer, byTravel?: boolean, onClick?: boolean): integer?
 ---@field NearestForRank fun(profession: SkillUpContext, rank: SkillUpRank, byTravel?: boolean): integer?, string
 ---@field AddNearest fun(tooltip: GameTooltip, label: string, npcID?: integer, single?: boolean)
 ---@field AddCompanionHint fun(tooltip: GameTooltip, single?: boolean)
@@ -207,6 +218,7 @@
 ---@field AttachItemTooltips fun()
 ---@field AttachTrainer fun()
 ---@field SORT_OPTIONS string[][]
+---@field AUCTION_PRICE_SOURCE_OPTIONS string[][]
 ---@field CRAFT_VALUE_OPTIONS string[][]
 ---@field REAGENT_TOOLTIP_OPTIONS string[][]
 ---@field RECIPE_TOOLTIP_OPTIONS string[][]
@@ -250,6 +262,7 @@
 
 ---@class SkillUpSavedRoute
 ---@field context string
+---@field automaticTarget? number
 ---@field reached number
 ---@field crafts number[][]
 ---@field training number[][]
@@ -266,12 +279,13 @@
 ---@field rowCost 'skillup'|'craft'
 ---@field showCost boolean
 ---@field craftValue 'none'|'vendor'|'auction'|'sale'
+---@field auctionPriceSource 'auto'|'auctionator'|'tsm'
 ---@field valueGathered boolean
 ---@field auctionOnly boolean
 ---@field sortMode 'blizzard'|'skill'|'newest'|'chance'|'cost'
 ---@field showTrainer boolean
 ---@field showRouteTab boolean
----@field combineCookingFishing boolean
+---@field cookingFishingModes table<string, boolean>
 ---@field showTracker boolean
 ---@field showGearTab boolean
 ---@field showBuffsTab boolean
@@ -364,7 +378,32 @@ SkillUpForeverDB = nil
 ---@field preference? integer Most recently pinned recipe wins.
 ---@field skillUps? integer Skill points one craft grants, from the client.
 
--- A reagent a learned recipe makes for less than it costs to buy, as its own craft step.
+---@class SkillUpDisenchantEstimate
+---@field recipeID integer
+---@field itemID integer
+---@field quantity number
+---@field chance number
+---@field minimum integer
+---@field maximum integer
+---@field expected number
+---@field craftCost number
+---@field unitCost number
+
+---@class SkillUpDisenchantChoice
+---@field reagentID integer
+---@field need integer Missing enchanting material units.
+---@field recipeID integer Tailoring recipe to make green armor.
+---@field itemID integer Green armor item.
+---@field held integer Existing armor allocated to this choice.
+---@field crafts integer Tailoring crafts to perform.
+---@field items integer Armor pieces to disenchant.
+---@field expected number Estimated enchanting material units.
+---@field chance number Chance of this material per disenchant.
+---@field cost number Estimated crafting cost.
+---@field buyCost number Cost to purchase the originally missing material.
+---@field subcrafts SkillUpSubCraft[]
+---@field materials {itemID: integer, count: number}[]
+
 ---@class SkillUpSubCraft
 ---@field recipeID integer The recipe that makes the reagent.
 ---@field itemID integer The reagent it makes.
@@ -459,7 +498,7 @@ SkillUpForeverDB = nil
 ---@class SkillUpRestoredRoute
 ---@field profession SkillUpProfession
 ---@field reached number
----@field crafts {recipeID: integer, from: number, to: number, crafts: number}[]
+---@field crafts {recipeID: integer, from: number, to: number, crafts: number, subcrafts: SkillUpSubCraft[]?}[]
 ---@field training {recipeID: integer, usedAt: number}[]
 ---@field ranks SkillUpRank[]
 ---@field stopReason? 'no_recipe'
@@ -477,6 +516,7 @@ SkillUpForeverDB = nil
 ---@field unpriced integer Known recipes left out for an unpriced reagent.
 ---@field unpricedRecipes integer[]
 ---@field stopReason? 'no_recipe'
+---@field replanReason? 'materials'|'requirements'
 
 ---@alias SkillUpFollowedRoute SkillUpPlan|SkillUpRestoredRoute
 
@@ -485,7 +525,7 @@ SkillUpForeverDB = nil
 ---@field count number
 
 -- What a writer or a game event says changed, and the caches and views Core/Changes.lua keeps fresh.
----@alias SkillUpChange 'recipes'|'window'|'skill'|'talents'|'professions'|'prices'|'bags'|'items'|'trackerNames'|'names'|'level'|'zone'|'merchant'|'fees'|'sources'|'target'|'tracking'|'settings'|'replan'
+---@alias SkillUpChange 'recipes'|'window'|'skill'|'talents'|'professions'|'prices'|'bags'|'items'|'trackerNames'|'names'|'level'|'zone'|'merchant'|'fees'|'sources'|'target'|'tracking'|'settings'|'replan'|'recipeChoice'
 ---@alias SkillUpStale 'schematics'|'prices'|'plans'|'replan'|'bags'|'trackedNeeds'|'tooltipRoute'|'tooltipRouteTools'|'api'|'route'|'recipeList'|'tracker'|'trainer'|'routeTab'|'pages'|'gear'|'buffs'|'tooltipCache'|'tooltip'|'auctionSearch'|'detailsBar'|'shoppingList'
 ---@alias SkillUpPriceSource 'vendor'|'auctionator'|'tsm'|'gather'|'auction'
 ---@alias SkillUpCollectMode 'gather'|'auction'
@@ -570,6 +610,7 @@ SkillUpForeverDB = nil
 ---@field need number
 ---@field source SkillUpShoppingSource
 ---@field limited? number How many the nearest vendor sells at a time, when it limits its stock.
+---@field tool? boolean The route needs this tool once rather than as a reagent.
 
 ---@class SkillUpTracked
 ---@field plan SkillUpPlan
@@ -917,6 +958,7 @@ SkillUpForeverDB = nil
 ---@field TrackLabel FontString
 ---@field Collect CheckButton
 ---@field CollectLabel FontString
+---@field CookingMode Button
 ---@field collectChanges boolean? whether the Buy reagents switch changes the route last drawn
 ---@field Vendor Button
 ---@field ShoppingList Button

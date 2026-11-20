@@ -381,6 +381,7 @@ ClassTrainerFrame = nil
 C_Trainer = {}
 
 ---@class SkillUpTrackerStep
+---@field navigate? fun(origin: string, fallback?: integer)
 ---@field text string
 ---@field book string|false|nil A rank's book, by name: got at a vendor, not a trainer.
 ---@field quest string|false|nil A rank's quest, by name: got from its giver, not a trainer.

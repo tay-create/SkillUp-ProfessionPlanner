@@ -256,16 +256,81 @@ function ns.DropZone(itemID)
 	return zone
 end
 
+-- The planner can accept a route before it has a first point to guide the player to.
+local guidanceProbe = 0
+local TRAINER_ROUTE_OWNER = "ProfessionPlannerTrainer"
+
+---@param api SkillUpShortestPathAPI
+---@param destination string
+---@param refresh fun(): boolean
+local function WatchTrainerGuidance(api, destination, refresh)
+	local probe = guidanceProbe
+	local guidance = api.Guidance
+	if not guidance then
+		ns.ShowTrainerRouteStatus(string.format(L["Destination sent: %s"], destination), 4)
+		return
+	end
+	ns.ShowTrainerRouteStatus(string.format(L["Calculating route to %s..."], destination))
+	ns.core.Log("info", "trainer-click", "guidanceProbe=%d", probe)
+	local started = GetTime()
+	local lastState
+	local refreshed = false
+	local currentStop = api.CurrentStop
+	local function Sample()
+		if probe ~= guidanceProbe then
+			return
+		end
+		local active, reason = guidance()
+		local state = active and "ready" or reason or "none"
+		local age = GetTime() - started
+		if state ~= lastState or age >= 30 then
+			ns.core.Log(
+				"info",
+				"trainer-click",
+				"guidanceProbe=%d elapsed=%.1f state=%s owner=%s",
+				probe,
+				age,
+				state,
+				active and active.owner or "-"
+			)
+			lastState = state
+		end
+		if active and active.owner == TRAINER_ROUTE_OWNER then
+			ns.ShowTrainerRouteStatus(string.format(L["Route ready: %s"], destination), 3)
+		elseif active or (currentStop and not currentStop(TRAINER_ROUTE_OWNER)) then
+			ns.ShowTrainerRouteStatus(nil)
+		elseif age >= 30 then
+			ns.ShowTrainerRouteStatus(string.format(L["Route still pending: %s"], destination), 6)
+		else
+			-- Resubmitting the same stop asks Shortest Path to refresh its pending first search.
+			if not refreshed and state == "loading" and currentStop and age >= 3 and not InCombatLockdown() then
+				refreshed = true
+				local accepted = refresh()
+				ns.core.Log("info", "trainer-click", "guidanceProbe=%d refreshAccepted=%s", probe, tostring(accepted))
+			end
+			C_Timer.After(0.5, Sample)
+		end
+	end
+	C_Timer.After(0, Sample)
+end
+
 -- Prefer Shortest Path Forever, then TomTom, then the client map for any known map point.
 -- Returns the navigation mode so callers can describe the result in their own context.
-local function PlaceMapWaypoint(where)
+---@param trace? boolean
+local function PlaceMapWaypoint(where, trace)
 	local api = ShortestPath()
-	if
-		api
-		and type(api.Navigate) == "function"
-		and api.Navigate("ProfessionPlanner", where.map, where.x, where.y, where.name)
-	then
-		return "route"
+	local navigate = api and api.Navigate
+	if api and type(navigate) == "function" then
+		local owner = trace and TRAINER_ROUTE_OWNER or "ProfessionPlanner"
+		local function Submit()
+			return navigate(owner, where.map, where.x, where.y, where.name)
+		end
+		if Submit() then
+			if trace then
+				WatchTrainerGuidance(api, where.name, Submit)
+			end
+			return "route"
+		end
 	end
 	if TomTom and TomTom.AddWaypoint then
 		TomTom:AddWaypoint(where.map, where.x, where.y, { title = where.name, from = "Profession Planner" })
@@ -282,18 +347,40 @@ end
 -- journeys off or without a player position), else TomTom's arrow, else the map's
 -- own waypoint, super-tracked; false when there is only a chat line to give, or no NPC to name.
 ---@param npcID integer
+---@param trace? boolean
 ---@return boolean
-function ns.SetWaypoint(npcID)
+function ns.SetWaypoint(npcID, trace)
+	if trace then
+		guidanceProbe = guidanceProbe + 1
+		ns.ShowTrainerRouteStatus(nil)
+	end
 	if not C.NPC(npcID) then
+		if trace then
+			ns.core.Log("info", "trainer-click", "npc=%d catalogue=missing", npcID)
+		end
 		ns.Print((C.Hint and C.Hint(true)) or L["No suitable destination found. Check trainer and vendor locations."])
 		return false
 	end
 	local where = ns.NPCLocation(npcID)
+	if trace then
+		ns.core.Log(
+			"info",
+			"trainer-click",
+			"npc=%d map=%s x=%s y=%s",
+			npcID,
+			tostring(where.map),
+			tostring(where.x),
+			tostring(where.y)
+		)
+	end
 	if not where.map then
 		ns.Print(string.format(L["%s is in %s."], where.name, where.label))
 		return false
 	end
-	local mode = PlaceMapWaypoint(where)
+	local mode = PlaceMapWaypoint(where, trace)
+	if trace then
+		ns.core.Log("info", "trainer-click", "navigation=%s", mode or "unavailable")
+	end
 	if mode == "route" then
 		ns.Print(string.format(L["route set to %s, %s."], where.name, ns.LocationText(where)))
 		return true
@@ -545,10 +632,20 @@ end
 ---@param profession SkillUpContext
 ---@param recipeID integer
 ---@param byTravel boolean?
+---@param trace? boolean
 ---@return integer?
-function ns.RecipeNPC(profession, recipeID, byTravel)
+function ns.RecipeNPC(profession, recipeID, byTravel, trace)
 	byTravel = byTravel ~= false
 	local training = ns.TrainingFor(profession, recipeID)
+	if trace then
+		ns.core.Log(
+			"info",
+			"trainer-click",
+			"training=%s requiredSkill=%s",
+			tostring(training ~= nil),
+			training and tostring(training[2]) or "-"
+		)
+	end
 	if training then
 		local byProfession = ns.RecipeTrainers and ns.RecipeTrainers[profession.skillLine]
 		local trainerIDs = byProfession and byProfession[recipeID]
@@ -749,20 +846,20 @@ end
 ---@param byTravel boolean?
 ---@return integer?
 function ns.NearestVendor(itemID, byTravel)
-	if not C.EnsureVendors(itemID) then
+	if itemID == ns.REFINED_DEEPROCK_SALT or not C.EnsureVendors(itemID) then
 		return nil
 	end
 	local found = C.ItemSources(itemID)
 	return found and ns.NearestNPC(found.vendors, byTravel)
 end
 
--- The nearest vendor of a recipe's scroll, from the catalogue's record of who sells that recipe's scroll;
--- nil until the profession's sources are read, or for a recipe no vendor sells.
+-- The nearest vendor of a recipe's scroll. Navigation clicks can resolve it before the snapshot is ready.
 ---@param recipeID integer
 ---@param byTravel boolean?
+---@param onClick boolean?
 ---@return integer?
-function ns.NearestScrollVendor(recipeID, byTravel)
-	local source = C.Recipe(recipeID)
+function ns.NearestScrollVendor(recipeID, byTravel, onClick)
+	local source = C.Recipe(recipeID, onClick)
 	return source and #source.vendors > 0 and ns.NearestNPC(source.vendors, byTravel) or nil
 end
 

@@ -48,7 +48,6 @@ ns.VendorPrices = {
 	[10648] = 500, -- Blank Parchment
 	[11291] = 4500, -- Star Wood
 	[14341] = 5000, -- Rune Thread
-	[15409] = 4000, -- Refined Deeprock Salt
 	[17020] = 1000, -- Arcane Powder
 	[17034] = 200, -- Maple Seed
 	[17035] = 400, -- Stranglethorn Seed

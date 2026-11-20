@@ -617,7 +617,9 @@ shopNs.Changed("prices")
 equal(Crafts(ShopPlan()), "101 102", "a reagent the bags still hold keeps the route when its price goes")
 shop.bags[1000] = nil
 shop.Fire("BAG_UPDATE_DELAYED")
-equal(Crafts(ShopPlan()), "102", "a reagent gone from the bags with no price replans the route")
+local replaced = ShopPlan()
+equal(Crafts(replaced), "102", "a reagent gone from the bags with no price replans the route")
+equal(replaced.replanReason, "materials", "the route can explain why it changed")
 shop.bags[1000] = 12
 shop.Fire("BAG_UPDATE_DELAYED")
 equal(Crafts(ShopPlan()), "102", "a new route is followed, not swapped back")
@@ -627,7 +629,9 @@ shopNs.Changed("replan")
 equal(Crafts(ShopPlan()), "101 102", "the route's own reagent is priced and bought again")
 shop.known[101] = nil
 shop.Fire("NEW_RECIPE_LEARNED")
-equal(Crafts(ShopPlan()), "102", "a recipe the route uses that is no longer known replans it")
+local replacedRecipe = ShopPlan()
+equal(Crafts(replacedRecipe), "102", "a recipe the route uses that is no longer known replans it")
+equal(replacedRecipe.replanReason, "requirements", "the route can explain the recipe change")
 
 -- A route that trains a recipe for its next step: buying that recipe's scroll and learning it is the step done,
 -- so the route is planned again with the training gone and the crafts in the same order.
@@ -737,5 +741,103 @@ equal(
 	"102",
 	"a deleted recipe in saved data is discarded"
 )
+
+-- While progressing, stock only has to cover the remaining crafts. The first recipe is unpriced
+-- and already shopped, so the optimizer alone would replace it with the second.
+local progress =
+	Client.load({ saved = { craftValue = "none", vendor = { [1000] = 10, [1001] = 11 } }, data = learnOptions.data })
+local progressNs = progress.ns
+progress.professions = { { name = "Alchemy", id = 171, rank = 1, max = 75 } }
+progress.known[101], progress.known[102] = true, true
+local function ProgressPlan()
+	return progressNs.PlanRoute(progressNs.RouteProfessions()[171])
+end
+local start = ProgressPlan()
+equal(Crafts(start), "101 102", "the route starts with the first bought recipe")
+local first = start.crafts[1]
+progress.bags[1000] = first.crafts
+progressNs.db.vendor[1000] = nil
+progressNs.Changed("prices")
+equal(Crafts(ProgressPlan()), "101 102", "held stock covers the first recipe despite its missing price")
+progress.bags[1000] = first.crafts - 1
+progress.professions[1].rank = first.from + 1
+progress.Fire("BAG_UPDATE_DELAYED")
+progress.Fire("SKILL_LINES_CHANGED")
+equal(Crafts(ProgressPlan()), "101 102", "consuming reagents for a completed point keeps the remaining route")
+equal(ProgressPlan().crafts[1].from, first.from + 1, "the plan reflects the completed point")
+equal(ProgressPlan().target, start.target, "skill gain preserves an automatic target")
+local resumed = Client.load({ saved = progressNs.db, data = learnOptions.data })
+resumed.professions = { { name = "Alchemy", id = 171, rank = first.from + 1, max = 75 } }
+resumed.known[101], resumed.known[102] = true, true
+resumed.bags[1000] = progress.bags[1000]
+local resumedNs = resumed.ns
+local function ResumedPlan()
+	return resumedNs.PlanRoute(resumedNs.RouteProfessions()[171])
+end
+equal(Crafts(ResumedPlan()), "101 102", "the remaining route is restored with the automatic target")
+equal(ResumedPlan().target, start.target, "the automatic target survives reload")
+resumedNs.Changed("replan", 171)
+equal(Crafts(ResumedPlan()), "102", "replan can replace the restored sequence")
+equal(ResumedPlan().target, start.target, "explicit replan keeps the current automatic target")
+
+-- An intermediate already in the bank replaces its subcraft and raw materials across the tracked views.
+local stock = Client.load({
+	saved = { routeTargets = { [171] = 5, [164] = 5 }, craftValue = "none", vendor = { [1000] = 1, [1002] = 50 } },
+	data = {
+		Thresholds = { [101] = { 1, 15, 25, 30 }, [102] = { 1, 15, 25, 30 }, [201] = { 1, 15, 25, 30 } },
+		RecipeData = {
+			[101] = { skillLine = 171, reagents = { { itemID = 1001, quantity = 1 } } },
+			[102] = { skillLine = 171, reagents = { { itemID = 1002, quantity = 1 } } },
+			[201] = {
+				skillLine = 164,
+				output = { itemID = 1001, quantity = 1 },
+				reagents = { { itemID = 1000, quantity = 1 } },
+			},
+		},
+		VendorPrices = {},
+		TrainerFees = {},
+		TrainerRanks = {},
+		ItemSellPrices = {},
+		GatheredBy = {},
+		LootedFrom = {},
+		ProfessionTrainers = {},
+		ScrollDrops = {},
+		WorldDrops = {},
+	},
+})
+local stockNs = stock.ns
+stock.professions = {
+	{ name = "Alchemy", id = 171, rank = 1, max = 75 },
+	{ name = "Blacksmithing", id = 164, rank = 1, max = 75 },
+}
+stock.known[101], stock.known[102], stock.known[201] = true, true, true
+stockNs.SetTracked(171, true)
+stockNs.SetTracked(164, true)
+local function TrackedAlchemist()
+	return stockNs.TrackedNeeds()[1]
+end
+local beforeBank = TrackedAlchemist()
+equal(Crafts(beforeBank.plan), "101", "the route chooses the recipe with a cheap intermediate")
+equal(#beforeBank.plan.crafts[1].subcrafts, 1, "the intermediate is a craft step")
+equal(beforeBank.items[1].itemID, 1000, "the list needs the raw material")
+stock.bags[1001] = 4
+stock.Fire("BANKFRAME_OPENED")
+local withBank = TrackedAlchemist()
+equal(Crafts(withBank.plan), "101", "bank stock keeps the chosen recipe")
+equal(#withBank.plan.crafts[1].subcrafts, 0, "bank stock removes the unnecessary subcraft")
+equal(#withBank.items, 0, "the tracked list stops asking for the raw material")
+stock.bags[1001] = nil
+stock.Fire("PLAYERBANKSLOTS_CHANGED")
+equal(TrackedAlchemist().items[1].itemID, 1000, "removing bank stock restores the raw material demand")
+stockNs.db.vendor[1002] = 0
+stockNs.Changed("prices")
+equal(Crafts(TrackedAlchemist().plan), "101", "a cheaper alternative waits for an explicit replan")
+local smith = stockNs.TrackedNeeds()[2].plan
+local smithSaved = stockNs.db.committedRoutes[stockNs.CharacterKey()][164]
+stockNs.Changed("replan", 171)
+equal(Crafts(TrackedAlchemist().plan), "102", "the tracked materials use the reoptimized route")
+equal(TrackedAlchemist().items[1].itemID, 1002, "the tracked list contains the new recipe's material")
+equal(stockNs.TrackedNeeds()[2].plan, smith, "replanning Alchemy keeps the Blacksmithing plan cached")
+equal(stockNs.db.committedRoutes[stockNs.CharacterKey()][164], smithSaved, "the other profession stays saved")
 
 Client.report("plan_spec")

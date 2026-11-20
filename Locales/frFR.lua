@@ -517,7 +517,6 @@ L["Region sale averages need TradeSkillMaster and its desktop app. They estimate
 L["Click to find a fishing spot. Click again to try the next one."] =
 	"Cliquez pour trouver un lieu de pêche. Cliquez de nouveau pour essayer le suivant."
 L["Click to open the recipe or set a waypoint."] = "Cliquez pour ouvrir la recette ou placer un point de passage."
-L["Combine Cooking and Fishing"] = "Associer Cuisine et Pêche"
 L["Fishing route for %s: %s (approximate zone; look for fishable water)."] =
 	"Itinéraire de pêche pour %s : %s (zone approximative ; cherchez une eau où pêcher)."
 L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."] =
@@ -536,8 +535,40 @@ L["No suitable destination found. Check trainer and vendor locations."] =
 L["Progress: %d/%d (%d%%)"] = "Progression : %d/%d (%d%%)"
 L["Reported fishing spot for %s: %s. Unable to set waypoint."] =
 	"Lieu de pêche signalé pour %s : %s. Impossible de placer un point de passage."
-L["Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."] =
-	"Afficher un hameçon sur les poissons utilisés comme composants des itinéraires de métier. Cliquez dessus pour accéder à une prise signalée ou à une zone approximative."
 L["Show optional travel and quest-chain suggestions when a companion addon is missing."] =
 	"Afficher des suggestions facultatives de voyage et de suites de quêtes si un addon compagnon manque."
 L["Suggest related Forever addons"] = "Suggérer des addons Forever associés"
+
+L["Auction house or Salt Shaker"] = "Hôtel des ventes ou tamis à sel"
+L["Auction house or vendor"] = "Hôtel des ventes ou marchand"
+L["Auction price source"] = "Source des prix aux enchères"
+L["Auctionator only"] = "Auctionator uniquement"
+L["Automatic (Auctionator first)"] = "Automatique (Auctionator en priorité)"
+L["Automatic uses Auctionator prices first and fills gaps with TradeSkillMaster. Choosing one addon uses only its auction prices. Vendor prices are still compared."] =
+	"Le mode automatique utilise les prix d’Auctionator en priorité et complète les données manquantes avec TradeSkillMaster. Si vous choisissez un seul module, ses prix aux enchères sont les seuls utilisés. Les prix des marchands restent comparés."
+L["Buying missing reagents"] = "Acheter les composants manquants"
+L["Calculating route to %s..."] = "Calcul de l’itinéraire vers %s…"
+L["Chance for this material"] = "Chance d’obtenir ce matériau"
+L["Cooking + Fishing"] = "Cuisine + Pêche"
+L["Cooking route mode"] = "Mode d’itinéraire de cuisine"
+L["Destination sent: %s"] = "Destination envoyée : %s"
+L["Disenchant %d× %s"] = "Désenchanter %d× %s"
+L["Disenchant crafted %s"] = "Désenchanter %s fabriqué"
+L["Disenchant results vary; estimates use Classic odds."] =
+	"Les résultats du désenchantement varient. Les estimations utilisent les probabilités de Classic."
+L["Estimated crafting cost"] = "Coût de fabrication estimé"
+L["Estimated crafting cost per material"] = "Coût de fabrication estimé par matériau"
+L["Expected material per craft"] = "Quantité de matériau attendue par fabrication"
+L["Items already held"] = "Objets déjà en votre possession"
+L["Normal Cooking"] = "Cuisine normale"
+L["Normal Cooking plans by cost. Cooking + Fishing prioritizes fish recipes and keeps fishing waypoints available in both modes."] =
+	"La cuisine normale privilégie le coût. Cuisine + Pêche privilégie les recettes de poisson. Les points de pêche restent disponibles dans les deux modes."
+L["Route ready: %s"] = "Itinéraire prêt : %s"
+L["Route recalculated because a missing reagent has no known source."] =
+	"Itinéraire recalculé, car un composant manquant n’a pas de source connue."
+L["Route recalculated because a recipe or its requirements changed."] =
+	"Itinéraire recalculé, car une recette ou ses prérequis ont changé."
+L["Route still pending: %s"] = "Itinéraire toujours en attente : %s"
+L["Tailoring and disenchanting (estimated)"] = "Couture et désenchantement (estimation)"
+L["TradeSkillMaster only"] = "TradeSkillMaster uniquement"
+L["~%.1f %s for %d needed; saves %s"] = "Environ %.1f %s sur %d nécessaires. Économie : %s"

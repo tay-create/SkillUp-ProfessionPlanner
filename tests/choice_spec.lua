@@ -72,7 +72,9 @@ equal(ns.Price(ORE).source, "gather", "it is still gathered, not bought")
 equal(ns.Price(ORE).worth, "auction", "valued at the auction")
 equal(ns.PriceSourceText(ns.Price(ORE)), "you gather it (Mining), valued at its AH price", "and says so")
 equal(ns.NetCost(FROM_ORE), 190, "a craft from it costs what the ore would sell for")
-equal(Plan().crafts[1].recipeID, FROM_FLUX, "so the route picks the cheaper flux recipe instead")
+equal(Plan().crafts[1].recipeID, FROM_ORE, "a price setting keeps the recipe the player is following")
+ns.Changed("replan", 164)
+equal(Plan().crafts[1].recipeID, FROM_FLUX, "an explicit replan picks the cheaper flux recipe")
 
 -- A cheap auction never values ore below what a vendor pays for it.
 c.auction[ORE] = 4

@@ -503,7 +503,6 @@ L["Region sale averages need TradeSkillMaster and its desktop app. They estimate
 L["Click to find a fishing spot. Click again to try the next one."] =
 	"點擊尋找釣魚地點。再次點擊以嘗試下一個地點。"
 L["Click to open the recipe or set a waypoint."] = "點擊開啟配方或設定路徑點。"
-L["Combine Cooking and Fishing"] = "結合烹飪與釣魚"
 L["Fishing route for %s: %s (approximate zone; look for fishable water)."] =
 	"%s 的釣魚路線：%s（大致區域，請尋找可以釣魚的水域）。"
 L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."] =
@@ -522,8 +521,40 @@ L["No suitable destination found. Check trainer and vendor locations."] =
 L["Progress: %d/%d (%d%%)"] = "進度：%d/%d（%d%%）"
 L["Reported fishing spot for %s: %s. Unable to set waypoint."] =
 	"%s 的已回報釣魚地點：%s。無法設定路徑點。"
-L["Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."] =
-	"在專業升級路線中作為材料的魚上顯示魚鉤。點擊可導向玩家回報的漁獲地點或大致釣魚區域。"
 L["Show optional travel and quest-chain suggestions when a companion addon is missing."] =
 	"缺少搭配的插件時，顯示可選的旅行與任務鏈建議。"
 L["Suggest related Forever addons"] = "推薦相關的 Forever 插件"
+
+L["Auction house or Salt Shaker"] = "拍賣場或鹽篩"
+L["Auction house or vendor"] = "拍賣場或商人"
+L["Auction price source"] = "拍賣價格來源"
+L["Auctionator only"] = "僅使用 Auctionator"
+L["Automatic (Auctionator first)"] = "自動（優先使用 Auctionator）"
+L["Automatic uses Auctionator prices first and fills gaps with TradeSkillMaster. Choosing one addon uses only its auction prices. Vendor prices are still compared."] =
+	"自動模式優先使用 Auctionator 價格，缺少時使用 TradeSkillMaster。選擇單一插件後，只使用該插件的拍賣價格，仍會比較商人價格。"
+L["Buying missing reagents"] = "購買缺少的材料"
+L["Calculating route to %s..."] = "正在計算前往%s的路線……"
+L["Chance for this material"] = "獲得此材料的機率"
+L["Cooking + Fishing"] = "烹飪 + 釣魚"
+L["Cooking route mode"] = "烹飪路線模式"
+L["Destination sent: %s"] = "已傳送目的地：%s"
+L["Disenchant %d× %s"] = "分解 %d× %s"
+L["Disenchant crafted %s"] = "分解製作的%s"
+L["Disenchant results vary; estimates use Classic odds."] =
+	"分解結果可能不同，估算採用經典版的機率。"
+L["Estimated crafting cost"] = "預估製作成本"
+L["Estimated crafting cost per material"] = "每份材料的預估製作成本"
+L["Expected material per craft"] = "每次製作預期獲得的材料數量"
+L["Items already held"] = "已持有的物品"
+L["Normal Cooking"] = "一般烹飪"
+L["Normal Cooking plans by cost. Cooking + Fishing prioritizes fish recipes and keeps fishing waypoints available in both modes."] =
+	"一般烹飪依成本規劃路線。烹飪 + 釣魚優先選擇魚類食譜，兩種模式皆可使用釣魚路徑點。"
+L["Route ready: %s"] = "路線已就緒：%s"
+L["Route recalculated because a missing reagent has no known source."] =
+	"缺少的材料沒有已知來源，已重新計算路線。"
+L["Route recalculated because a recipe or its requirements changed."] =
+	"配方或其需求發生變更，已重新計算路線。"
+L["Route still pending: %s"] = "路線仍在等待：%s"
+L["Tailoring and disenchanting (estimated)"] = "裁縫與分解（估算）"
+L["TradeSkillMaster only"] = "僅使用 TradeSkillMaster"
+L["~%.1f %s for %d needed; saves %s"] = "預計 %.1f 份%s（需要 %d 份），節省 %s"

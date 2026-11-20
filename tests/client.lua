@@ -1167,7 +1167,19 @@ function Client.load(options)
 	G.C_Item = {
 		GetItemInfo = function(id)
 			local item = c.items[id] or {}
-			return item.name, nil, nil, nil, nil, nil, nil, nil, nil, nil, item.sell
+			return item.name,
+				nil,
+				item.quality,
+				item.itemLevel,
+				item.requiredLevel,
+				nil,
+				nil,
+				nil,
+				item.equipLoc,
+				nil,
+				item.sell,
+				item.classID,
+				item.subClassID
 		end,
 		GetItemNameByID = function(id)
 			return c.items[id] and c.items[id].name
@@ -1701,6 +1713,26 @@ function Client.load(options)
 		end
 	end
 
+	-- Simulate ForeverCore 1.15+, whose loader publishes the elected core after
+	-- the consumer's files and ADDON_LOADED event have finished.
+	local activateDeferredCore
+	if options.deferCore then
+		local core = G.ForeverCore
+		local callbacks = {}
+		G.ForeverCore = nil
+		G.ForeverCoreLoader = {
+			OnReady = function(callback)
+				callbacks[#callbacks + 1] = callback
+			end,
+		}
+		activateDeferredCore = function()
+			G.ForeverCore = core
+			for _, callback in ipairs(callbacks) do
+				callback(core)
+			end
+		end
+	end
+
 	G.ProfessionPlannerDB = options.saved
 	local data = options.data
 	for line in io.lines(ADDON .. ".toc") do
@@ -1723,6 +1755,9 @@ function Client.load(options)
 	end
 	if options.boot ~= false then
 		c.Boot()
+	end
+	if activateDeferredCore then
+		activateDeferredCore()
 	end
 	return c
 end
