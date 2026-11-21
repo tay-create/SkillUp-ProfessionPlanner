@@ -242,9 +242,9 @@ end
 -- What to do about a reagent with no price: auction prices come only from Auctionator or TradeSkillMaster.
 ---@return string
 function ns.UnpricedHint()
-	if ns.HasAuctionator() then
+	if ns.db.auctionPriceSource ~= "tsm" and ns.HasAuctionator() then
 		return L["Scan the auction house with Auctionator, or visit a vendor, to price reagents."]
-	elseif ns.HasTradeSkillMaster() then
+	elseif ns.db.auctionPriceSource ~= "auctionator" and ns.HasTradeSkillMaster() then
 		return L["Update TradeSkillMaster's AuctionDB with the TSM desktop app, or visit a vendor, to price reagents."]
 	end
 	return L["Visit a vendor to price reagents. Auction prices need Auctionator or TradeSkillMaster."]

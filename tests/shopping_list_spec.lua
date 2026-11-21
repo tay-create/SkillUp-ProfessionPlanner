@@ -90,7 +90,7 @@ equal(byID[4306].source, "auction", "auction bucket follows vendor")
 equal(lists[2].items[2].itemID < lists[2].items[3].itemID, true, "item IDs sort inside the vendor bucket")
 equal(byID[4306].priceAge, 3, "Auctionator age")
 equal(byID[4306].missing >= 0, true, "have never makes missing negative")
-equal(byID[4306].have, 2, "bags reduce the missing count")
+equal(byID[4306].have <= 2, true, "the shared stock cannot be assigned twice")
 equal(byID[2321].missing < byID[2321].need, true, "holdings reduce vendor missing count")
 equal(byID[444].alt[1].name, "Altname", "largest alt is returned first")
 equal(byID[444].alt[1].count, 12, "alt bag, bank and mail totals")
@@ -104,6 +104,23 @@ for _, row in ipairs(lists[1].items) do
 	end
 end
 equal(byID[4306].need ~= bsSilk.need, true, "a shared reagent keeps per-profession needs separate")
+equal(
+	bsSilk.have + byID[4306].have,
+	math.min(bsSilk.need + byID[4306].need, 2),
+	"the overall shopping list assigns shared stock once"
+)
+equal(
+	bsSilk.missing + byID[4306].missing,
+	math.max(bsSilk.need + byID[4306].need - 2, 0),
+	"the overall shopping list buys the full uncovered quantity"
+)
+local tailoringOnly = api.ShoppingList(197)[1]
+for _, row in ipairs(tailoringOnly.items) do
+	if row.itemID == 4306 then
+		equal(row.have, 2, "a single profession still sees all available inventory")
+		equal(row.missing, math.max(row.need - 2, 0), "the individual list keeps its usual quantities")
+	end
+end
 lists[2].items[1].missing = 0
 equal(api.ShoppingList()[2].items[1].missing > 0, true, "each call is a fresh copy")
 equal(api.ShoppingList(111)[1], nil, "an untracked skill line has no profession row")
@@ -387,8 +404,15 @@ equal(
 	"with Buy reagents off the section says how to get the list"
 )
 c.ns.SetCollectMode("auction")
-local onNote = c.ns.AuctionListNote({ "Profession Planner: Tester-Realm: Tailoring", "Profession Planner: Tester-Realm: Blacksmithing" })
-equal(onNote:find("Auctionator list: Profession Planner: Tester-Realm: Tailoring", 1, true) ~= nil, true, "it names the list")
+local onNote = c.ns.AuctionListNote({
+	"Profession Planner: Tester-Realm: Tailoring",
+	"Profession Planner: Tester-Realm: Blacksmithing",
+})
+equal(
+	onNote:find("Auctionator list: Profession Planner: Tester-Realm: Tailoring", 1, true) ~= nil,
+	true,
+	"it names the list"
+)
 equal(onNote:find("Open the auction house, Shopping tab, pick it and Search", 1, true) ~= nil, true, "where it is")
 equal(onNote:find("buy each row with a click", 1, true) ~= nil, true, "and that buying stays one click a row")
 local noAuctionator = Client.load({ auctionator = false, boot = false })

@@ -316,6 +316,12 @@ end
 page.SetCollectMode = function(mode)
 	page.collectMode = mode
 end
+page.CookingFishingMode = function()
+	return page.fishingMode == true
+end
+page.SetCookingFishingMode = function(value)
+	page.fishingMode = value
+end
 page.SetTrackedByPlayer = function(_, tracked)
 	page.tracked = tracked
 end
@@ -417,7 +423,13 @@ pageEnv.CreateFrame = function()
 	eventFrame = Stub()
 	return eventFrame
 end
+local trainerLog = {}
 page.core = {
+	Log = function(_, topic, message, ...)
+		if topic == "trainer-click" then
+			trainerLog[#trainerLog + 1] = string.format(message, ...)
+		end
+	end,
 	SafeCall = function(_, fn, ...)
 		return pcall(fn, ...)
 	end,
@@ -908,17 +920,17 @@ end
 
 -- The page's Replan button is the player asking for the route afresh: a route they are following is planned
 -- again only from here, from a page control, or when a step of it can no longer be walked (#621).
-local replanned = 0
+local replanned
 local changedBefore = page.Changed
-page.Changed = function(kind)
+page.Changed = function(kind, skillLine)
 	if kind == "replan" then
-		replanned = replanned + 1
+		replanned = skillLine
 	end
-	return changedBefore(kind)
+	return changedBefore(kind, skillLine)
 end
 equal(page.routeSpec.page.Replan.text, "Replan", "the page has a Replan button")
 page.routeSpec.page.Replan.scripts.OnClick(page.routeSpec.page.Replan)
-equal(replanned, 1, "clicking it asks for the route afresh")
+equal(replanned, 129, "clicking it replans only the selected profession")
 page.Changed = changedBefore
 
 -- A bag update and a skill change both redraw the reagent have/need while the page is open.
@@ -934,12 +946,12 @@ Drain()
 local function LastListItem()
 	return lists[2].rows[#lists[2].rows]
 end
-equal(LastListItem().detail, "AH", "the reagent row names its source, with no have/need text under the bar")
+equal(LastListItem().detail, "Auction house", "the reagent row names its source, with no have/need text under the bar")
 equal(LastListItem().bar.have, 0, "and its bar starts at what the bags hold")
 have = 8
 eventFrame:Event("BAG_UPDATE_DELAYED")
 Drain()
-equal(LastListItem().detail, "AH", "the source line stays as it is when the bags change")
+equal(LastListItem().detail, "Auction house", "the source line stays as it is when the bags change")
 local barRow = LastListItem()
 equal(barRow.bar.have, 8, "the have/need bar carries what the bags hold")
 equal(barRow.bar.need, 9, "and what the route needs")
@@ -951,6 +963,23 @@ eventFrame:Event("SKILL_LINES_CHANGED")
 Drain()
 equal(LastListItem().detail, "vendor", "a skill change redraws the plan's reagents")
 equal(LastListItem().sourceIcon, "reagents", "and the vendor row names its source with the vendor icon")
+
+local previousRouteReagents = page.RouteReagents
+page.REFINED_DEEPROCK_SALT = 15409
+page.VendorPurchasePrice = function(itemID)
+	return itemID == 2325 and 1000 or nil
+end
+page.RouteReagents = function()
+	return {
+		{ itemID = 15409, need = 25, source = "auction" },
+		{ itemID = 2325, need = 80, source = "auction" },
+	}
+end
+eventFrame:Event("SKILL_LINES_CHANGED")
+Drain()
+equal(lists[2].rows[#lists[2].rows - 1].detail, "Auction house or Salt Shaker", "refined salt names both sources")
+equal(LastListItem().detail, "Auction house or vendor", "dye keeps the merchant option with an auction price")
+page.RouteReagents = previousRouteReagents
 
 -- With Auctionator's scan-on-open option known to be off, the page says where to turn it on; with
 -- the option unread, it says nothing.
@@ -1470,8 +1499,8 @@ end
 page.RecipeNPC = function(_, recipeID)
 	return recipeID == 3275 and 556 or nil
 end
-page.NearestScrollVendor = function()
-	return 777
+page.NearestScrollVendor = function(_, byTravel, onClick)
+	return byTravel and onClick and 777 or nil
 end
 page.NearestForRank = function()
 	return 888
@@ -1507,6 +1536,8 @@ end
 equal(markedNPC, 556, "clicking the recipe training row uses its named trainer")
 actionButton:Click()
 equal(markedNPC, 556, "clicking the next trainer step uses its named trainer")
+equal(#trainerLog, 4, "only the two trainer clicks write diagnostic lines")
+equal(trainerLog[1]:match("origin=route recipe=3275") ~= nil, true, "the trace identifies the origin and recipe")
 
 nextStep = { training = { recipeID = 3275, cap = 75, scroll = 6454, fee = 100 } }
 routeTab:Click()
@@ -1540,7 +1571,11 @@ end
 page.Catalogue.Hint = function() end
 printed = nil
 actionButton:Click()
-equal(printed, "No suitable destination found. Check trainer and vendor locations.", "a missing destination explains itself even with databases ready")
+equal(
+	printed,
+	"No suitable destination found. Check trainer and vendor locations.",
+	"a missing destination explains itself even with databases ready"
+)
 page.Catalogue.Hint = beforeHint
 
 nextStep = {}
@@ -1710,7 +1745,7 @@ end
 equal(#timers, 3, "a burst of skill updates schedules one route pass, tracker refresh and native tab sync")
 
 -- Fish reagents in profession routes show a fishing hook and use the fishing lookup when clicked.
-local savedRoutes, savedPlan, savedReagents = page.RouteProfessions, page.PlanRoute, page.RouteReagents
+local savedRoutes, fishSavedPlan, fishSavedReagents = page.RouteProfessions, page.PlanRoute, page.RouteReagents
 local savedFishingZones, savedFindFishing = page.FishingZones, page.FindFishing
 local savedGetItemInfo = pageEnv.C_Item.GetItemInfo
 pageEnv.C_Item.GetItemInfo = function()
@@ -1742,43 +1777,84 @@ page.FindFishing = function(itemID)
 end
 routeTab:Click()
 local fishRow, ordinaryRow = lists[2].rows[#lists[2].rows - 1], lists[2].rows[#lists[2].rows]
+local cookingButton = page.routeSpec.page.CookingMode
+equal(cookingButton:IsShown(), true, "Cooking route offers a cooking mode selector")
+equal(cookingButton.text, "Normal Cooking", "Cooking starts in normal mode")
 equal(fishRow.sourceTexture, "Interface\\Icons\\Trade_Fishing", "a Cooking fish reagent shows the fishing hook")
 equal(ordinaryRow.sourceTexture, nil, "a non-fish reagent has no fishing hook")
 fishRow.click()
 equal(searchedFish, 1, "clicking the fish reagent searches for that fish")
-page.db.combineCookingFishing = false
+-- Changing the planned route must not disable fishing navigation on either mode.
+cookingButton:Click()
+equal(page.fishingMode, true, "Cooking mode button enables fishing priority")
+equal(cookingButton.text, "Cooking + Fishing", "Cooking mode button shows the selected route")
 searchedFish = nil
 routeTab:Click()
 fishRow = lists[2].rows[#lists[2].rows - 1]
-equal(fishRow.sourceTexture, nil, "disabling Cooking and Fishing hides the hook")
+equal(fishRow.sourceTexture, "Interface\\Icons\\Trade_Fishing", "combined Cooking retains the fishing hook")
 fishRow.click()
-equal(searchedFish, nil, "disabling Cooking and Fishing skips fishing lookup")
-page.db.combineCookingFishing = nil
+equal(searchedFish, 1, "combined Cooking retains fishing lookup")
+cookingButton:Click()
+equal(page.fishingMode, false, "Cooking mode button restores normal planning")
 routeTab:Click()
 fishRow = lists[2].rows[#lists[2].rows - 1]
-equal(fishRow.sourceTexture, "Interface\\Icons\\Trade_Fishing", "re-enabling Cooking and Fishing restores the hook")
+equal(fishRow.sourceTexture, "Interface\\Icons\\Trade_Fishing", "normal Cooking retains the hook")
 
 page.RouteProfessions = function()
 	return { [164] = { skillLine = 164, name = "Tailoring", base = 1, skill = 1, max = 75 } }
 end
 searchedFish = nil
 routeTab:Click()
+equal(cookingButton:IsShown(), false, "other professions hide the Cooking mode selector")
 fishRow = lists[2].rows[#lists[2].rows - 1]
-equal(fishRow.sourceTexture, "Interface\\Icons\\Trade_Fishing", "a fish reagent in another profession route shows the fishing hook")
+equal(
+	fishRow.sourceTexture,
+	"Interface\\Icons\\Trade_Fishing",
+	"a fish reagent in another profession route shows the fishing hook"
+)
 fishRow.click()
 equal(searchedFish, 1, "clicking a fish reagent in another profession route searches for that fish")
-page.db.combineCookingFishing = false
-searchedFish = nil
+
+-- Enchanting reagents can show an estimated Tailoring disenchant source without changing the route.
+local savedDisenchant = page.BestTailoringDisenchant
+local savedHighlight = pageEnv.GameTooltip_AddHighlightLine
+local savedDoubleLine = pageEnv.GameTooltip_AddColoredDoubleLine
+local savedAltCounts, savedSourceText = page.AltCounts, page.PriceSourceText
+local savedNearestVendor, savedAddNearest = page.NearestVendor, page.AddNearest
+local disenchantTitle, disenchantCost
+page.BestTailoringDisenchant = function(itemID)
+	return itemID == 2 and { itemID = 8000, chance = 0.75, expected = 1.125, unitCost = 80 }
+end
+pageEnv.GameTooltip_AddHighlightLine = function(_, line)
+	disenchantTitle = line
+end
+pageEnv.GameTooltip_AddColoredDoubleLine = function(_, label, value)
+	if label == "Estimated crafting cost per material" then
+		disenchantCost = value
+	end
+end
+page.AltCounts = function()
+	return {}
+end
+page.PriceSourceText = function()
+	return "auctionator"
+end
+page.NearestVendor = function()
+	return nil
+end
+page.AddNearest = function() end
 routeTab:Click()
-fishRow = lists[2].rows[#lists[2].rows - 1]
-equal(fishRow.sourceTexture, nil, "disabling Cooking and Fishing hides the hook in other profession routes")
-fishRow.click()
-equal(searchedFish, nil, "disabling Cooking and Fishing skips fishing lookup in other profession routes")
-page.db.combineCookingFishing = nil
-routeTab:Click()
-fishRow = lists[2].rows[#lists[2].rows - 1]
-equal(fishRow.sourceTexture, "Interface\\Icons\\Trade_Fishing", "re-enabling Cooking and Fishing restores the hook in other profession routes")
-page.RouteProfessions, page.PlanRoute, page.RouteReagents = savedRoutes, savedPlan, savedReagents
+ordinaryRow = lists[2].rows[#lists[2].rows]
+ordinaryRow.tooltip(Stub())
+equal(disenchantTitle, "Disenchant crafted Reagent 8000", "reagent tooltip names a Tailoring source")
+equal(type(disenchantCost), "string", "tooltip includes estimated cost per material")
+page.BestTailoringDisenchant = savedDisenchant
+pageEnv.GameTooltip_AddHighlightLine = savedHighlight
+pageEnv.GameTooltip_AddColoredDoubleLine = savedDoubleLine
+page.AltCounts, page.PriceSourceText = savedAltCounts, savedSourceText
+page.NearestVendor, page.AddNearest = savedNearestVendor, savedAddNearest
+
+page.RouteProfessions, page.PlanRoute, page.RouteReagents = savedRoutes, fishSavedPlan, fishSavedReagents
 page.FishingZones, page.FindFishing = savedFishingZones, savedFindFishing
 pageEnv.C_Item.GetItemInfo = savedGetItemInfo
 

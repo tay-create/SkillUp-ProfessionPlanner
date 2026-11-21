@@ -110,7 +110,6 @@ L["Fees"] = "수수료"
 L["Feet"] = "발"
 L["Finger"] = "손가락"
 L["First used at"] = "처음 쓰이는 숙련도"
-L["Forever addons"] = "Forever 애드온"
 L["Gather %d %s"] = "%d개 채집: %s"
 L["Gathering skill on nodes"] = "채집물의 채집 숙련도"
 L["Hands"] = "손"
@@ -518,3 +517,62 @@ L["Region sale average"] = "지역 평균 판매가"
 L["Region sale average if higher"] = "더 높으면 지역 평균 판매가"
 L["Region sale averages need TradeSkillMaster and its desktop app. They estimate value from reported regional sales and purchases, with the vendor price as a floor. They do not guarantee a sale."] =
 	"지역 평균 판매가에는 TradeSkillMaster와 데스크톱 앱이 필요합니다. 보고된 지역 판매 및 구매 기록으로 가치를 추정하며 상점 판매가보다 낮아지지 않습니다. 판매를 보장하지는 않습니다."
+
+L["Click to find a fishing spot. Click again to try the next one."] =
+	"클릭하여 낚시 장소를 찾습니다. 다시 클릭하면 다음 장소를 시도합니다."
+L["Click to open the recipe or set a waypoint."] = "클릭하여 제조법을 열거나 경유지를 설정합니다."
+L["Fishing route for %s: %s (approximate zone; look for fishable water)."] =
+	"%s 낚시 경로: %s (대략적인 지역, 낚시할 수 있는 물가를 찾으세요)."
+L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."] =
+	"%s 낚시 경로: %s (제보된 어획 장소). 다른 장소는 낚싯바늘을 다시 클릭하세요."
+L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."] =
+	"%s 낚시 경유지: %s (대략적인 지역, 낚시할 수 있는 물가를 찾으세요)."
+L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."] =
+	"%s 낚시 경유지: %s (제보된 어획 장소). 다른 장소는 낚싯바늘을 다시 클릭하세요."
+L["Fishing zone for %s: %s. Unable to set route or waypoint."] =
+	"%s 낚시 지역: %s. 경로나 경유지를 설정할 수 없습니다."
+L["Next: %s"] = "다음: %s"
+L["No known fishing zone for %s."] = "%s의 알려진 낚시 지역이 없습니다."
+L["No next step"] = "다음 단계 없음"
+L["No suitable destination found. Check trainer and vendor locations."] =
+	"적절한 목적지를 찾지 못했습니다. 전문 기술 상급자와 상인의 위치를 확인하세요."
+L["Progress: %d/%d (%d%%)"] = "진행: %d/%d (%d%%)"
+L["Reported fishing spot for %s: %s. Unable to set waypoint."] =
+	"%s의 제보된 낚시 장소: %s. 경유지를 설정할 수 없습니다."
+L["Show optional travel and quest-chain suggestions when a companion addon is missing."] =
+	"연동 애드온이 없을 때 선택적 이동 및 연속 퀘스트 제안을 표시합니다."
+L["Suggest related Forever addons"] = "관련 Forever 애드온 추천"
+
+L["Auction house or Salt Shaker"] = "경매장 또는 소금 정제기"
+L["Auction house or vendor"] = "경매장 또는 상인"
+L["Auction price source"] = "경매장 가격 출처"
+L["Auctionator only"] = "Auctionator만 사용"
+L["Automatic (Auctionator first)"] = "자동 (Auctionator 우선)"
+L["Automatic uses Auctionator prices first and fills gaps with TradeSkillMaster. Choosing one addon uses only its auction prices. Vendor prices are still compared."] =
+	"자동 모드는 Auctionator 가격을 먼저 사용하고 누락된 가격은 TradeSkillMaster로 보완합니다. 애드온을 하나 선택하면 해당 애드온의 경매장 가격만 사용합니다. 상인 가격은 계속 비교합니다."
+L["Buying missing reagents"] = "부족한 재료 구매"
+L["Calculating route to %s..."] = "%s까지 경로 계산 중…"
+L["Chance for this material"] = "이 재료를 얻을 확률"
+L["Cooking + Fishing"] = "요리 + 낚시"
+L["Cooking route mode"] = "요리 경로 모드"
+L["Destination sent: %s"] = "목적지 전송 완료: %s"
+L["Disenchant %d× %s"] = "%d× %s 마력 추출"
+L["Disenchant crafted %s"] = "제작한 %s 마력 추출"
+L["Disenchant results vary; estimates use Classic odds."] =
+	"마력 추출 결과는 달라질 수 있습니다. 추정치는 클래식 확률을 사용합니다."
+L["Estimated crafting cost"] = "예상 제작 비용"
+L["Estimated crafting cost per material"] = "재료당 예상 제작 비용"
+L["Expected material per craft"] = "제작당 예상 재료 획득량"
+L["Items already held"] = "이미 보유한 아이템"
+L["Normal Cooking"] = "일반 요리"
+L["Normal Cooking plans by cost. Cooking + Fishing prioritizes fish recipes and keeps fishing waypoints available in both modes."] =
+	"일반 요리는 비용을 기준으로 경로를 계획합니다. 요리 + 낚시는 생선 요리법을 우선합니다. 두 모드 모두 낚시 지점을 표시할 수 있습니다."
+L["Route ready: %s"] = "경로 준비 완료: %s"
+L["Route recalculated because a missing reagent has no known source."] =
+	"부족한 재료의 획득처를 확인할 수 없어 경로를 다시 계산했습니다."
+L["Route recalculated because a recipe or its requirements changed."] =
+	"제작법 또는 요구 사항이 변경되어 경로를 다시 계산했습니다."
+L["Route still pending: %s"] = "경로 생성 대기 중: %s"
+L["Tailoring and disenchanting (estimated)"] = "재봉술 및 마력 추출 (추정)"
+L["TradeSkillMaster only"] = "TradeSkillMaster만 사용"
+L["~%.1f %s for %d needed; saves %s"] = "약 %.1f %s (필요량 %d), 절약액 %s"

@@ -3,6 +3,9 @@
 line-length = 120
 target-version = "py310"
 
+# Pinned vendored file must match ForeverCore byte for byte.
+extend-exclude = ["forever_tools/store_page.py"]
+
 [lint]
 select = ["E", "F", "I", "UP", "B"]
 

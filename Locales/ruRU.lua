@@ -112,7 +112,6 @@ L["Fees"] = "Сборы"
 L["Feet"] = "Ступни"
 L["Finger"] = "Палец"
 L["First used at"] = "Впервые нужен на"
-L["Forever addons"] = "Модификации Forever"
 L["Gather %d %s"] = "Добыть %d %s"
 L["Gathering skill on nodes"] = "Навык сбора на месторождениях"
 L["Hands"] = "Кисти рук"
@@ -539,3 +538,65 @@ L["Region sale average"] = "Средняя цена продажи в регио
 L["Region sale average if higher"] = "Средняя цена продажи в регионе, если выше"
 L["Region sale averages need TradeSkillMaster and its desktop app. They estimate value from reported regional sales and purchases, with the vendor price as a floor. They do not guarantee a sale."] =
 	"Для средних цен продажи в регионе нужны TradeSkillMaster и его приложение для компьютера. Они оценивают стоимость по зарегистрированным региональным продажам и покупкам, но не ниже цены продажи торговцу. Продажа не гарантируется."
+
+L["Click to find a fishing spot. Click again to try the next one."] =
+	"Нажмите, чтобы найти место рыбалки. Нажмите ещё раз для следующего места."
+L["Click to open the recipe or set a waypoint."] =
+	"Нажмите, чтобы открыть рецепт или установить путевую точку."
+L["Fishing route for %s: %s (approximate zone; look for fishable water)."] =
+	"Маршрут рыбалки для %s: %s (примерная зона; ищите воду, где можно ловить рыбу)."
+L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."] =
+	"Маршрут рыбалки для %s: %s (подтверждённый улов). Нажмите на крючок ещё раз для другого места."
+L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."] =
+	"Точка рыбалки для %s: %s (примерная зона; ищите воду, где можно ловить рыбу)."
+L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."] =
+	"Точка рыбалки для %s: %s (подтверждённый улов). Нажмите на крючок ещё раз для другого места."
+L["Fishing zone for %s: %s. Unable to set route or waypoint."] =
+	"Зона рыбалки для %s: %s. Не удалось проложить маршрут или установить точку."
+L["Next: %s"] = "Далее: %s"
+L["No known fishing zone for %s."] = "Неизвестны места рыбалки для %s."
+L["No next step"] = "Следующего шага нет"
+L["No suitable destination found. Check trainer and vendor locations."] =
+	"Подходящая цель не найдена. Проверьте местоположение учителей и торговцев."
+L["Progress: %d/%d (%d%%)"] = "Прогресс: %d/%d (%d%%)"
+L["Reported fishing spot for %s: %s. Unable to set waypoint."] =
+	"Место рыбалки для %s: %s. Не удалось установить путевую точку."
+L["Show optional travel and quest-chain suggestions when a companion addon is missing."] =
+	"Показывать необязательные советы по путешествиям и цепочкам заданий, если отсутствует дополнительный аддон."
+L["Suggest related Forever addons"] = "Предлагать связанные аддоны Forever"
+
+L["Auction house or Salt Shaker"] = "Аукцион или солонка"
+L["Auction house or vendor"] = "Аукцион или торговец"
+L["Auction price source"] = "Источник аукционных цен"
+L["Auctionator only"] = "Только Auctionator"
+L["Automatic (Auctionator first)"] = "Автоматически (сначала Auctionator)"
+L["Automatic uses Auctionator prices first and fills gaps with TradeSkillMaster. Choosing one addon uses only its auction prices. Vendor prices are still compared."] =
+	"В автоматическом режиме сначала используются цены Auctionator, а недостающие цены берутся из TradeSkillMaster. Если выбран один модификатор, используются только его аукционные цены. Цены торговцев по-прежнему сравниваются."
+L["Buying missing reagents"] = "Покупка недостающих реагентов"
+L["Calculating route to %s..."] = "Расчёт маршрута до %s…"
+L["Chance for this material"] = "Шанс получить этот материал"
+L["Cooking + Fishing"] = "Кулинария + Рыбная ловля"
+L["Cooking route mode"] = "Режим маршрута кулинарии"
+L["Destination sent: %s"] = "Пункт назначения отправлен: %s"
+L["Disenchant %d× %s"] = "Распылить %d× %s"
+L["Disenchant crafted %s"] = "Распылить изготовленные предметы: %s"
+L["Disenchant results vary; estimates use Classic odds."] =
+	"Результаты распыления могут отличаться. Оценки основаны на вероятностях Classic."
+L["Estimated crafting cost"] = "Ориентировочная стоимость изготовления"
+L["Estimated crafting cost per material"] =
+	"Ориентировочная стоимость изготовления на единицу материала"
+L["Expected material per craft"] =
+	"Ожидаемое количество материала на изготовление"
+L["Items already held"] = "Имеющиеся предметы"
+L["Normal Cooking"] = "Обычная кулинария"
+L["Normal Cooking plans by cost. Cooking + Fishing prioritizes fish recipes and keeps fishing waypoints available in both modes."] =
+	"Обычная кулинария строит маршрут по стоимости. В режиме «Кулинария + Рыбная ловля» приоритет отдан рыбным рецептам. Точки рыбалки доступны в обоих режимах."
+L["Route ready: %s"] = "Маршрут готов: %s"
+L["Route recalculated because a missing reagent has no known source."] =
+	"Маршрут пересчитан, так как для недостающего реагента нет известного источника."
+L["Route recalculated because a recipe or its requirements changed."] =
+	"Маршрут пересчитан из-за изменения рецепта или требований к нему."
+L["Route still pending: %s"] = "Маршрут ещё не готов: %s"
+L["Tailoring and disenchanting (estimated)"] = "Портняжное дело и распыление (оценка)"
+L["TradeSkillMaster only"] = "Только TradeSkillMaster"
+L["~%.1f %s for %d needed; saves %s"] = "Около %.1f %s из %d нужных. Экономия: %s"

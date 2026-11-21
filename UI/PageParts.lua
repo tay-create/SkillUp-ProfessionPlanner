@@ -6,6 +6,73 @@ if ns.broken then
 end
 local L = ns.L
 
+local routeStatus, routeStatusText
+local statusRevision = 0
+
+---@param message string?
+---@param duration? number
+function ns.ShowTrainerRouteStatus(message, duration)
+	statusRevision = statusRevision + 1
+	if not message then
+		if routeStatus then
+			routeStatus:Hide()
+		end
+		return
+	end
+	if not (routeStatus and routeStatusText) then
+		local frame = CreateFrame("Frame", nil, UIParent)
+		frame:SetFrameStrata("DIALOG")
+		frame:SetPoint("TOP", UIParent, "TOP", 0, -145)
+		frame:SetSize(420, 44)
+		local background = frame:CreateTexture(nil, "BACKGROUND")
+		background:SetAllPoints()
+		background:SetColorTexture(0.04, 0.04, 0.04, 0.88)
+		local label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+		label:SetPoint("TOPLEFT", 12, -5)
+		label:SetPoint("BOTTOMRIGHT", -12, 5)
+		label:SetJustifyH("CENTER")
+		routeStatus, routeStatusText = frame, label
+	end
+	routeStatusText:SetText(message)
+	routeStatus:Show()
+	if duration then
+		local revision = statusRevision
+		C_Timer.After(duration, function()
+			if revision == statusRevision then
+				ns.ShowTrainerRouteStatus(nil)
+			end
+		end)
+	end
+end
+
+-- ForeverCore persists this bounded log with the addon's saved data.
+---@param origin string
+---@param profession SkillUpContext?
+---@param recipeID integer
+---@param fallback? integer
+---@return boolean foundDestination
+function ns.TraceTrainerClick(origin, profession, recipeID, fallback)
+	ns.core.Log(
+		"info",
+		"trainer-click",
+		"origin=%s recipe=%d profession=%s",
+		origin,
+		recipeID,
+		profession and tostring(profession.skillLine) or "-"
+	)
+	local npcID = profession and ns.RecipeNPC(profession, recipeID, true, true)
+	if not npcID then
+		ns.core.Log("info", "trainer-click", "resolvedNPC=none fallback=%s", tostring(fallback))
+	end
+	npcID = npcID or fallback
+	if not npcID then
+		return false
+	end
+	local placed = ns.SetWaypoint(npcID, true)
+	ns.core.Log("info", "trainer-click", "waypointAccepted=%s", tostring(placed))
+	return true
+end
+
 -- What the crafted gear and buffs pages say about a recipe and do with it. Each page owns its own frames;
 -- these are the words and the one action they share.
 
@@ -135,9 +202,16 @@ function Parts.Action(item, professions)
 	if item.state == "trainable" then
 		local npcID = Parts.RecipeNPC(item, professions)
 		if npcID then
-			return L["Set waypoint"], true, function()
-				ns.SetWaypoint(npcID)
-			end
+			return L["Set waypoint"],
+				true,
+				function()
+					if not ns.TraceTrainerClick("recipe-page", professions[item.skillLine], item.recipeID) then
+						ns.Print(
+							(ns.Catalogue.Hint and ns.Catalogue.Hint(true))
+								or L["The place this recipe is taught isn't known yet."]
+						)
+					end
+				end
 		end
 		return L["Set waypoint"], false, nil, L["The place this recipe is taught isn't known yet."]
 	end

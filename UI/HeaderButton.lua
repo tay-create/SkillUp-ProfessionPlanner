@@ -20,15 +20,14 @@ function ns.AttachHeaderButton()
 	end
 
 	local frame = ProfessionsFrame
-	button = CreateFrame("Button", "ProfessionPlannerHeaderButton", frame, "UIPanelButtonTemplate")
+	button = CreateFrame("Button", "ProfessionPlannerHeaderButton", frame, "SharedButtonSmallTemplate")
 	button:SetSize(175, 24)
 	button:SetPoint("TOPRIGHT", frame.TitleContainer or frame, "TOPRIGHT", -8, -2)
 	button:SetText("")
 
 	button.Icon = button:CreateTexture(nil, "ARTWORK")
-	button.Icon:SetSize(18, 18)
+	ns.Art.Icon(button.Icon, ns.ICON, 18)
 	button.Icon:SetPoint("LEFT", button, "LEFT", 8, 0)
-	button.Icon:SetTexture(ns.ICON)
 
 	button.Label = button:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
 	button.Label:SetPoint("LEFT", button.Icon, "RIGHT", 6, 0)

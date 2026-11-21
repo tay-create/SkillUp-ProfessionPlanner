@@ -31,9 +31,21 @@ local function Name(itemID)
 	return name
 end
 
+-- These are standalone addon windows. Close them without broadcasting a
+-- client panel-manager event from an addon click (which taints gamepad focus).
+local function SetCloseButton(window)
+	local close = window.CloseButton
+	if close then
+		close:SetScript("OnClick", function()
+			window:Hide()
+		end)
+	end
+end
+
 local function Copy(text)
 	if not copyWindow then
 		copyWindow = CreateFrame("Frame", addonName .. "ShoppingCopy", UIParent, "PortraitFrameTemplate")
+		SetCloseButton(copyWindow)
 		table.insert(UISpecialFrames, addonName .. "ShoppingCopy")
 		copyWindow:SetSize(460, 380)
 		copyWindow:SetFrameStrata("DIALOG")
@@ -268,6 +280,7 @@ local function Create()
 		return frame
 	end
 	frame = CreateFrame("Frame", addonName .. "ShoppingList", UIParent, "PortraitFrameTemplate")
+	SetCloseButton(frame)
 	table.insert(UISpecialFrames, addonName .. "ShoppingList")
 	frame:SetSize(620, 500)
 	frame:SetPoint("CENTER")

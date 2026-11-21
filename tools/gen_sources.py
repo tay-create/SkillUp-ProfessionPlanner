@@ -369,7 +369,9 @@ def render(data):
     ]
     for skill, recipes in sorted(data["recipe_trainers"].items()):
         lines.append(f"\t[{skill}] = {{")
-        lines += [f"\t\t[{recipe}] = {{ " + ", ".join(map(str, npcs)) + " }," for recipe, npcs in sorted(recipes.items())]
+        lines += [
+            f"\t\t[{recipe}] = {{ " + ", ".join(map(str, npcs)) + " }," for recipe, npcs in sorted(recipes.items())
+        ]
         lines.append("\t},")
     lines += [
         "}",

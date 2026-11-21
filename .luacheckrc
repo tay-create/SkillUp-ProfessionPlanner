@@ -7,6 +7,10 @@ globals = { "SkillUpForeverDB",
 	"SkillUpForever",
 	"SkillUpForever_OnAddonCompartmentClick",
 	"SLASH_SKILLUPFOREVER1",
+	"ProfessionPlannerDB",
+	"ProfessionPlanner",
+	"ProfessionPlanner_OnAddonCompartmentClick",
+	"SLASH_PROFESSIONPLANNER1",
 	"SlashCmdList",
 }
 
@@ -39,6 +43,8 @@ read_globals = { "ForeverCore", "C_DateAndTime",
 
 files["Data/Thresholds.lua"] = { max_line_length = false }
 files["Data/Sources.lua"] = { max_line_length = false }
+files["Data/FishingPoints.lua"] = { max_line_length = false } -- generated fishing locations
+files["Core/API.lua"] = { max_line_length = 160 } -- preserve full localization keys
 files["Locales/"] = { max_line_length = false } -- one phrase per line, however long
 files["tests/"] = { std = "+luajit" }
 read_globals[#read_globals + 1] = "EditModeManagerFrame"

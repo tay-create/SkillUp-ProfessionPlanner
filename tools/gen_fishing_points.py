@@ -41,8 +41,7 @@ def generate(data):
         for map_id in sorted(maps, key=int):
             coords = maps[map_id]
             if len(coords) % 2 or any(
-                not isinstance(value, int) or value < 0 or value > 1_000_000 or value % 1000
-                for value in coords
+                not isinstance(value, int) or value < 0 or value > 1_000_000 or value % 1000 for value in coords
             ):
                 raise ValueError(f"Invalid coordinates for fish {item} on map {map_id}")
             if coords:

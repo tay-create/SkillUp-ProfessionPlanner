@@ -234,7 +234,7 @@ local function TrainTooltip(tooltip, profession, step)
 	ns.AddNearest(
 		tooltip,
 		step.scroll and L["Nearest vendor"] or L["Nearest trainer"],
-		step.scroll and ns.NearestScrollVendor(step.recipeID, true) or ns.NearestTrainer(profession, step.cap, true)
+		step.scroll and ns.NearestScrollVendor(step.recipeID, true) or ns.RecipeNPC(profession, step.recipeID)
 	)
 	AddSkipHint(tooltip)
 end
@@ -282,10 +282,7 @@ end
 ---@return fun()
 local function TrainerClick(profession, recipeID)
 	return function()
-		local npcID = ns.RecipeNPC(profession, recipeID)
-		if npcID then
-			ns.SetWaypoint(npcID)
-		else
+		if not ns.TraceTrainerClick("route", profession, recipeID) then
 			MissingDestination()
 		end
 	end
@@ -296,7 +293,7 @@ end
 ---@return fun()
 local function ScrollClick(recipeID)
 	return function()
-		local npcID = ns.NearestScrollVendor(recipeID, true)
+		local npcID = ns.NearestScrollVendor(recipeID, true, true)
 		if npcID then
 			ns.SetWaypoint(npcID)
 		else
@@ -524,13 +521,60 @@ end
 
 ---@param list SkillUpList
 ---@param plan SkillUpPlan
-local function RenderRoute(list, plan)
+local function RenderRoute(list, plan, disenchant)
 	local profession = plan.profession
 	local blocked = ns.RouteBlocked(plan)
 	if blocked and profession.capped and #plan.ranks == 0 then
 		list:Message(blocked)
 		RenderPinned(list, plan)
 		return
+	end
+	-- These acquisitions supply Enchanting reagents before the normal skill-up steps.
+	if disenchant and #disenchant > 0 then
+		list:Message(L["Tailoring and disenchanting (estimated)"], ns.COLORS.orange)
+		for _, choice in ipairs(disenchant) do
+			for _, sub in ipairs(choice.subcrafts) do
+				list:Add({
+					icon = RecipeIcon(sub.recipeID),
+					text = string.format(L["Craft %d× %s"], sub.crafts, RecipeName(sub.recipeID)),
+					detail = string.format(L["makes %d %s"], sub.made, ItemName(sub.itemID)),
+					click = RecipeClick(sub.recipeID),
+					menu = RecipeMenu(sub.recipeID),
+				})
+			end
+			if choice.crafts > 0 then
+				list:Add({
+					icon = RecipeIcon(choice.recipeID),
+					text = string.format(L["Craft %d× %s"], choice.crafts, RecipeName(choice.recipeID)),
+					detail = string.format(
+						L["makes %d %s"],
+						choice.crafts * ns.RecipeData[choice.recipeID].output.quantity,
+						ItemName(choice.itemID)
+					),
+					click = RecipeClick(choice.recipeID),
+					menu = RecipeMenu(choice.recipeID),
+				})
+			end
+			list:Add({
+				icon = C_Item.GetItemIconByID(choice.itemID),
+				text = string.format(L["Disenchant %d× %s"], choice.items, ItemName(choice.itemID)),
+				detail = string.format(
+					L["~%.1f %s for %d needed; saves %s"],
+					choice.expected,
+					ItemName(choice.reagentID),
+					choice.need,
+					Money(choice.buyCost - choice.cost)
+				),
+				tooltip = function(tooltip)
+					tooltip:SetItemByID(choice.itemID)
+					GameTooltip_AddBlankLineToTooltip(tooltip)
+					AddLine(tooltip, L["Items already held"], tostring(choice.held))
+					AddLine(tooltip, L["Estimated crafting cost"], Money(choice.cost))
+					AddLine(tooltip, L["Buying missing reagents"], Money(choice.buyCost))
+					GameTooltip_AddDisabledLine(tooltip, L["Disenchant results vary; estimates use Classic odds."])
+				end,
+			})
+		end
 	end
 	local currentCraft = plan.crafts[1]
 	local band
@@ -600,6 +644,11 @@ local function RenderRoute(list, plan)
 			})
 		end
 	end
+	if plan.replanReason == "materials" then
+		list:Message(L["Route recalculated because a missing reagent has no known source."])
+	elseif plan.replanReason == "requirements" then
+		list:Message(L["Route recalculated because a recipe or its requirements changed."])
+	end
 	if blocked and plan.unpriced > 0 then
 		list:Message(blocked)
 	elseif plan.stopReason == "no_recipe" then
@@ -636,8 +685,24 @@ local function RenderRoute(list, plan)
 	RenderSkipped(list, profession)
 end
 
-local SOURCE_TEXT = { gather = L["gather"], vendor = L["vendor"], auction = L["AH"], unknown = L["no price"] }
+local SOURCE_TEXT = { gather = L["gather"], vendor = L["vendor"], auction = L["Auction house"], unknown = L["Unknown"] }
 local LIMITED_VENDOR = L["vendor, limited stock"]
+
+---@param item SkillUpNeededItem
+local function HasVendorOption(item)
+	return item.source == "vendor"
+		or (item.source == "auction" and ns.VendorPurchasePrice and ns.VendorPurchasePrice(item.itemID) ~= nil)
+end
+
+---@param item SkillUpNeededItem
+local function ReagentSourceText(item)
+	if item.itemID == ns.REFINED_DEEPROCK_SALT then
+		return L["Auction house or Salt Shaker"]
+	elseif item.source == "auction" and HasVendorOption(item) then
+		return L["Auction house or vendor"]
+	end
+	return item.limited and LIMITED_VENDOR or SOURCE_TEXT[item.source]
+end
 
 ---@param tooltip GameTooltip
 ---@param item SkillUpNeededItem
@@ -650,16 +715,28 @@ local function ReagentTooltip(tooltip, item, fishing)
 	for _, alt in ipairs(ns.AltCounts(item.itemID)) do
 		AddLine(tooltip, string.format(L["On %s"], alt.name), tostring(alt.count), GRAY_FONT_COLOR)
 	end
+	if have < item.need and ns.BestTailoringDisenchant then
+		local option = ns.BestTailoringDisenchant(item.itemID)
+		if option then
+			GameTooltip_AddBlankLineToTooltip(tooltip)
+			GameTooltip_AddHighlightLine(tooltip, string.format(L["Disenchant crafted %s"], ItemName(option.itemID)))
+			AddLine(tooltip, L["Chance for this material"], string.format("%d%%", option.chance * 100))
+			AddLine(tooltip, L["Expected material per craft"], string.format("%.2f", option.expected))
+			AddLine(tooltip, L["Estimated crafting cost per material"], Money(option.unitCost))
+			GameTooltip_AddDisabledLine(tooltip, L["Disenchant results vary; estimates use Classic odds."])
+		end
+	end
 	if fishing then
 		GameTooltip_AddNormalLine(tooltip, L["Click to find a fishing spot. Click again to try the next one."])
 	end
 	local price = ns.Price(item.itemID)
+	local source = price and price.source == "gather" and ns.PriceSourceText(price) or ReagentSourceText(item)
+	AddLine(tooltip, L["Source"], source)
 	if not price or price.unknown then
 		GameTooltip_AddDisabledLine(tooltip, ns.UnpricedHint())
 		return
 	end
 	if price.source == "gather" then
-		AddLine(tooltip, L["Source"], ns.PriceSourceText(price))
 		-- Valued at what it would sell for: the cost of crafting with it instead, never a price to buy at.
 		if price.worth then
 			AddLine(tooltip, L["Each"], Money(price.copper))
@@ -670,7 +747,7 @@ local function ReagentTooltip(tooltip, item, fishing)
 	if have < item.need then
 		AddLine(tooltip, L["To buy"], Money(price.copper * (item.need - have)))
 	end
-	if item.source == "vendor" then
+	if HasVendorOption(item) then
 		if item.limited then
 			GameTooltip_AddNormalLine(tooltip, string.format(L["Sells %d at a time"], item.limited))
 		end
@@ -692,7 +769,7 @@ local function RenderUnpriced(list, items)
 			icon = C_Item.GetItemIconByID(itemID) or 134400,
 			iconColor = QualityColor(itemID),
 			text = name,
-			detail = SOURCE_TEXT.unknown,
+			detail = L["no price"],
 			tooltip = function(tooltip)
 				tooltip:SetItemByID(itemID)
 			end,
@@ -708,8 +785,7 @@ local function RenderReagents(list, reagents)
 		return
 	end
 	for _, item in ipairs(reagents) do
-		local fishing = ns.db.combineCookingFishing ~= false
-			and ns.FishingZones and ns.FishingZones[item.itemID]
+		local fishing = ns.FishingZones and ns.FishingZones[item.itemID]
 		local name = C_Item.GetItemNameByID(item.itemID)
 		if not name then
 			-- ITEM_DATA_LOAD_RESULT redraws once the name arrives.
@@ -717,7 +793,7 @@ local function RenderReagents(list, reagents)
 			name = string.format(L["item %d"], item.itemID)
 		end
 		local have = ns.Have(item.itemID)
-		local sourceText = item.limited and LIMITED_VENDOR or SOURCE_TEXT[item.source]
+		local sourceText = ReagentSourceText(item)
 		list:Add({
 			icon = C_Item.GetItemIconByID(item.itemID) or 134400,
 			iconColor = QualityColor(item.itemID),
@@ -743,7 +819,7 @@ local function RenderReagents(list, reagents)
 					ns.FindFishing(item.itemID)
 					return
 				end
-				local vendor = item.source == "vendor" and ns.NearestVendor(item.itemID, true)
+				local vendor = HasVendorOption(item) and ns.NearestVendor(item.itemID, true)
 				if vendor then
 					ns.SetWaypoint(vendor)
 				end
@@ -859,11 +935,21 @@ end
 ---@field collectEnabled? boolean
 ---@field collectChecked? boolean
 ---@field vendorShown? boolean
+---@field cookingModeShown? boolean
 
 ---@type SkillUpPendingRoute?
 local pendingRoute
 
----@param key "targetShown"|"trackEnabled"|"trackChecked"|"collectEnabled"|"collectChecked"|"vendorShown"
+---@alias SkillUpProtectedRouteKey
+---| "targetShown"
+---| "trackEnabled"
+---| "trackChecked"
+---| "collectEnabled"
+---| "collectChecked"
+---| "vendorShown"
+---| "cookingModeShown"
+
+---@param key SkillUpProtectedRouteKey
 ---@param value boolean
 local function SetProtected(key, value)
 	if InCombatLockdown() then
@@ -881,6 +967,8 @@ local function SetProtected(key, value)
 		page.Collect:Enable()
 	elseif key == "collectChecked" then
 		page.Collect:SetChecked(value)
+	elseif key == "cookingModeShown" then
+		page.CookingMode:SetShown(value)
 	else
 		page.Vendor:SetShown(value)
 	end
@@ -971,7 +1059,12 @@ local function RequestRecipe(recipeID)
 		local requestNumber = recipeRequestNumber
 		local attempts = 0
 		local function TryOpen()
-			if requestedRecipe ~= first or recipeRequestNumber ~= requestNumber or appliedRecipe ~= recipeID or not page:IsShown() then
+			if
+				requestedRecipe ~= first
+				or recipeRequestNumber ~= requestNumber
+				or appliedRecipe ~= recipeID
+				or not page:IsShown()
+			then
 				return
 			end
 			local current = ShownRecipe()
@@ -1061,7 +1154,7 @@ local function ApplyCraft(craft)
 	page.CraftCount:SetText(countText)
 end
 
----@param craft SkillUpCraft
+---@param craft SkillUpCraft?
 local function SetCraft(craft)
 	currentCraft = craft
 	if InCombatLockdown() then
@@ -1122,6 +1215,9 @@ local function ApplyPendingRoute()
 	if queued.vendorShown ~= nil then
 		page.Vendor:SetShown(queued.vendorShown)
 	end
+	if queued.cookingModeShown ~= nil then
+		page.CookingMode:SetShown(queued.cookingModeShown)
+	end
 	if queued.craftShown ~= nil then
 		page.Craft:SetShown(queued.craftShown)
 		page.CraftCount:SetShown(queued.craftShown)
@@ -1150,11 +1246,11 @@ local function RenderNextAction(plan)
 	local profession = plan.profession
 	local action, label
 	for _, step in ipairs(plan.steps or {}) do
+		local training = step.training
 		if step.rank and not ns.RankHeld(step.rank) then
 			label = ns.RankText(step.rank)
 			action = RankClick(profession, step.rank)
-		elseif step.training then
-			local training = step.training
+		elseif training then
 			label = training.scroll and string.format(L["Buy %s"], ItemName(training.scroll))
 				or string.format(L["Train %s"], RecipeName(training.recipeID))
 			action = training.scroll and ScrollClick(training.recipeID) or TrainerClick(profession, training.recipeID)
@@ -1184,6 +1280,8 @@ local function Render()
 	SetProtected("trackEnabled", profession ~= nil)
 	ShowCraft(profession ~= nil)
 	SetProtected("collectChecked", ns.CollectMode() == "auction")
+	SetProtected("cookingModeShown", profession ~= nil and profession.skillLine == 185)
+	page.CookingMode:SetText(ns.CookingFishingMode() and L["Cooking + Fishing"] or L["Normal Cooking"])
 	page.RouteList:Begin()
 	page.ReagentList:Begin()
 	if not profession then
@@ -1212,9 +1310,9 @@ local function Render()
 	if not page.Target:HasFocus() then
 		page.Target:SetText(tostring(plan.target))
 	end
-	local reagents = ns.RouteReagents(plan)
+	local reagents, disenchant = ns.RouteReagents(plan)
 	SetCollectEnabled(CollectChanges(reagents))
-	RenderRoute(page.RouteList, plan)
+	RenderRoute(page.RouteList, plan, disenchant)
 	local priceStatus, priceColor = AuctionPriceStatus(reagents)
 	if priceStatus ~= "" then
 		page.ReagentList:Message(priceStatus, priceColor)
@@ -1555,7 +1653,9 @@ local function CreateButtons()
 	replan:SetSize(80, 22)
 	replan:SetText(L["Replan"])
 	replan:SetScript("OnClick", function()
-		ns.Changed("replan")
+		if selected then
+			ns.Changed("replan", selected)
+		end
 	end)
 	replan:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -1565,6 +1665,28 @@ local function CreateButtons()
 	end)
 	replan:SetScript("OnLeave", GameTooltip_Hide)
 	page.Replan = replan
+
+	-- The route selection is a character preference. It re-plans the route, keeping fishing
+	-- navigation available on fish reagents in either mode.
+	local cookingMode = CreateFrame("Button", nil, page, "SharedButtonSmallTemplate") --[[@as Button]]
+	cookingMode:SetSize(180, 22)
+	cookingMode:SetScript("OnClick", function()
+		ns.SetCookingFishingMode(not ns.CookingFishingMode())
+		Render()
+	end)
+	cookingMode:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip_SetTitle(GameTooltip, L["Cooking route mode"])
+		-- luacheck: push no max line length
+		GameTooltip_AddNormalLine(
+			GameTooltip,
+			L["Normal Cooking plans by cost. Cooking + Fishing prioritizes fish recipes and keeps fishing waypoints available in both modes."]
+		)
+		-- luacheck: pop
+		GameTooltip:Show()
+	end)
+	cookingMode:SetScript("OnLeave", GameTooltip_Hide)
+	page.CookingMode = cookingMode
 end
 
 -- Occupies the crafting page's place, as the overview page does.
@@ -1595,6 +1717,7 @@ local function CreatePage()
 
 	-- The switch sits in the header row, right of the target it changes, clear of the Route heading.
 	page.Collect:SetPoint("LEFT", page.Target, "RIGHT", 16, 0)
+	page.CookingMode:SetPoint("TOPLEFT", page.Profession, "BOTTOMLEFT", 0, -6)
 	-- One bottom row: Track at the route's bottom left with its label on the right, as the game's own
 	-- checkboxes and the Buy reagents switch read, and the actions right-aligned from the reagents' edge.
 	-- The footer sits below the inset seam with the checkbox centred on the action row, rather than hanging from the

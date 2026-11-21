@@ -661,6 +661,7 @@ function Client.load(options)
 			block.lines[#block.lines + 1] = { key = key, text = text, frame = frame }
 			return frame
 		end
+		self.blocks = self.blocks or {}
 		self.blocks[#self.blocks + 1] = block
 		return block
 	end
@@ -785,6 +786,9 @@ function Client.load(options)
 	G.UIParent = NewFrame("UIParent")
 	G.UIParent:SetPoint("CENTER")
 	G.ObjectiveTrackerFrame = NewFrame("ObjectiveTrackerFrame")
+	G.ObjectiveTrackerFrame.IsCollapsed = function(self)
+		return self.collapsed == true
+	end
 	G.MerchantFrame = NewFrame("MerchantFrame")
 	G.MerchantFrame.IsShown = function()
 		return c.merchant ~= nil
@@ -1163,7 +1167,19 @@ function Client.load(options)
 	G.C_Item = {
 		GetItemInfo = function(id)
 			local item = c.items[id] or {}
-			return item.name, nil, nil, nil, nil, nil, nil, nil, nil, nil, item.sell
+			return item.name,
+				nil,
+				item.quality,
+				item.itemLevel,
+				item.requiredLevel,
+				nil,
+				nil,
+				nil,
+				item.equipLoc,
+				nil,
+				item.sell,
+				item.classID,
+				item.subClassID
 		end,
 		GetItemNameByID = function(id)
 			return c.items[id] and c.items[id].name
@@ -1680,6 +1696,10 @@ function Client.load(options)
 	-- dependency. The tests never fake its host or its shared tables, so a spec exercises the real ones.
 	ForeverCore.load(G)
 	c.Fire("ADDON_LOADED", "ForeverCore")
+	-- Most fixtures load the consumer after login, with the real core already elected.
+	if not rawget(G, "ForeverCore") then
+		c.Fire("PLAYER_LOGIN")
+	end
 	-- Frames made so far belong to ForeverCore; the addon's own start at the next index.
 	c.coreFrames = #c.frames
 	c.host = G.ForeverCore.TrackerHost
@@ -1693,6 +1713,26 @@ function Client.load(options)
 			local own = type(name) ~= "string" or not name:find("^ForeverCore")
 			if own and not G.tContains(c.tracker, module) and c.host.IsAttached(module) then
 				c.tracker[#c.tracker + 1] = module
+			end
+		end
+	end
+
+	-- Simulate ForeverCore 1.15+, whose loader publishes the elected core after
+	-- the consumer's files and ADDON_LOADED event have finished.
+	local activateDeferredCore
+	if options.deferCore then
+		local core = G.ForeverCore
+		local callbacks = {}
+		G.ForeverCore = nil
+		G.ForeverCoreLoader = {
+			OnReady = function(callback)
+				callbacks[#callbacks + 1] = callback
+			end,
+		}
+		activateDeferredCore = function()
+			G.ForeverCore = core
+			for _, callback in ipairs(callbacks) do
+				callback(core)
 			end
 		end
 	end
@@ -1719,6 +1759,9 @@ function Client.load(options)
 	end
 	if options.boot ~= false then
 		c.Boot()
+	end
+	if activateDeferredCore then
+		activateDeferredCore()
 	end
 	return c
 end

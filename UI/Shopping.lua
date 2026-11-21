@@ -37,6 +37,22 @@ function ns.Have(itemID)
 	return lastCounts[itemID] or 0
 end
 
+-- Assign shared inventory once across the tracked routes, keeping a remaining balance per reagent.
+---@param itemID integer
+---@param need number
+---@param remaining table<integer, number>
+---@return number assigned
+---@return number missing
+function ns.AllocateStock(itemID, need, remaining)
+	local available = remaining[itemID]
+	if available == nil then
+		available = ns.Have(itemID)
+	end
+	local assigned = math.min(need, available)
+	remaining[itemID] = available - assigned
+	return assigned, need - assigned
+end
+
 -- What your other characters on this realm and faction hold (bags, bank, mail),
 -- most first, when Syndicator is installed: they can mail it over.
 ---@param itemID integer
@@ -119,11 +135,12 @@ end
 -- The auction house reagents a route still needs: what no vendor sells and this character buys. Written only
 -- with Buy reagents on, where a material you gather shows as gathered only while nothing prices it.
 ---@param items SkillUpNeededItem[]
+---@param remaining table<integer, number>
 ---@return SkillUpShoppingItem[]
-local function MissingFromAuction(items)
+local function MissingFromAuction(items, remaining)
 	local missing = {}
 	for _, item in ipairs(items) do
-		local count = item.need - ns.Have(item.itemID)
+		local _, count = ns.AllocateStock(item.itemID, item.need, remaining)
 		if (item.source == "auction" or item.source == "unknown" or item.source == "gather") and count > 0 then
 			missing[#missing + 1] = { itemID = item.itemID, count = count }
 		end
@@ -200,6 +217,18 @@ end
 ---@type table<string, string>
 local auctionLists = {}
 
+-- An item name may finish loading after the bag count or buying mode has changed.
+local function CurrentAuctionList(name, signature)
+	if auctionLists[name] ~= signature then
+		return false
+	end
+	if ns.CollectMode() ~= "auction" or ns.db.auctionSearch == false then
+		auctionLists[name] = nil
+		return false
+	end
+	return true
+end
+
 ---@param missing SkillUpShoppingItem[]
 ---@return string
 local function AuctionSignature(missing)
@@ -242,15 +271,21 @@ local function SyncList(name, missing, signature)
 	if not readable then
 		-- An Auctionator with no reader: only the saved signature says whether the route's need moved.
 		if saved[name] ~= signature then
-			saved[name] = signature
 			WithNames(missing, function()
+				if not CurrentAuctionList(name, signature) then
+					return
+				end
 				WriteAuctionList(name, AuctionSearches(missing))
+				saved[name] = signature
 			end)
 		end
 		return
 	end
 	-- Item names may still be loading, so the compare waits for them.
 	WithNames(missing, function()
+		if not CurrentAuctionList(name, signature) then
+			return
+		end
 		local searches = AuctionSearches(missing)
 		if held and SameSearches(held, searches) then
 			saved[name] = signature
@@ -260,8 +295,8 @@ local function SyncList(name, missing, signature)
 			-- The player deleted the list and the route's need has not moved since SkillUp wrote it.
 			return
 		end
-		saved[name] = signature
 		WriteAuctionList(name, searches)
+		saved[name] = signature
 	end)
 end
 
@@ -271,9 +306,10 @@ local function SyncAuctionator()
 	if not ns.HasAuctionator() or ns.CollectMode() ~= "auction" or ns.db.auctionSearch == false then
 		return
 	end
+	local remaining = {}
 	for _, entry in ipairs(ns.TrackedNeeds()) do
 		local name = ns.AuctionListName(entry.plan.profession.name)
-		local missing = MissingFromAuction(entry.items)
+		local missing = MissingFromAuction(entry.items, remaining)
 		local signature = AuctionSignature(missing)
 		if name and auctionLists[name] ~= signature then
 			auctionLists[name] = signature
@@ -339,6 +375,9 @@ function ns.TrackedNeeds()
 		tracked[index] = { plan = plan }
 		key[#key + 1] = tostring(plan)
 		key[#key + 1] = table.concat(ns.MissingToolItems(plan), ",")
+		if profession.skillLine == 333 and professions[197] then
+			key[#key + 1] = tostring(ns.BagEpoch())
+		end
 	end
 	local signature = table.concat(key, ";")
 	if trackedNeeds and trackedNeeds.key == signature then
@@ -867,7 +906,11 @@ function ModuleMixin:OnBlockHeaderClick(block)
 				or first.quest and string.format(L["Waypoint to the quest giver: %s"], first.quest)
 				or L["Waypoint to a trainer"]
 			root:CreateButton(label, function()
-				ns.SetWaypoint((first.nearest(true)) or npc)
+				if first.navigate then
+					first.navigate("tracker-menu", npc)
+				else
+					ns.SetWaypoint((first.nearest(true)) or npc)
+				end
 			end)
 		end
 		for _, item in ipairs(block.vendorMissing) do
@@ -906,6 +949,11 @@ local LINE_TEMPLATE = "ForeverTrackerInteractiveLineTemplate"
 local function Waypointed(line, title, label, nearest, quest, steps)
 	ForeverCore.TrackerLine.SetInteractive(line, {
 		onClick = function()
+			local first = steps and steps[1]
+			if first and first.navigate then
+				first.navigate("tracker")
+				return
+			end
 			local npcID = nearest()
 			if npcID then
 				ns.SetWaypoint(npcID)
@@ -998,7 +1046,10 @@ local function TrainingSteps(plan)
 				steps[#steps + 1] = {
 					text = string.format(L["Train %s at %d"], name, training.usedAt),
 					nearest = function(byTravel)
-						return ns.NearestTrainer(profession, training.cap, byTravel), L["Nearest trainer"]
+						return ns.RecipeNPC(profession, training.recipeID, byTravel), L["Nearest trainer"]
+					end,
+					navigate = function(origin, fallback)
+						ns.TraceTrainerClick(origin, profession, training.recipeID, fallback)
 					end,
 				}
 			end
@@ -1027,8 +1078,10 @@ local function LayoutEntry(self, entry)
 			or ""
 		local first = steps[1]
 		local npc, label = first.nearest()
-		local line = block:AddObjective("Train", first.text .. more, npc and LINE_TEMPLATE or nil)
-		if npc then
+		local interactive = npc or first.navigate
+		local line = block:AddObjective("Train", first.text .. more, interactive and LINE_TEMPLATE or nil)
+		if interactive then
+			label = label or L["Nearest trainer"]
 			Waypointed(line, first.text, label, function()
 				return (first.nearest(true))
 			end, first.quest and true, steps)

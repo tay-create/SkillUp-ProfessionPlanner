@@ -257,27 +257,28 @@ function C.Quest(questID)
 	return Cached(quests, questID, Q.Quest)
 end
 
--- Every scroll that teaches a recipe, lowest item first. QuestieDB's items name them all; AtlasLoot keeps
--- one a recipe, so it only answers when QuestieDB names none.
+-- QuestieDB can name several scrolls; AtlasLoot supplies one when QuestieDB names none.
+-- The bundled item also matters when QuestieDB lists its sellers but omits the recipe it teaches.
 ---@param spellID integer
 ---@return integer[]
 function C.Scrolls(spellID)
 	local found = taught and taught[spellID]
-	if found then
-		return found
+	if not found then
+		local itemID = A.ScrollFor(spellID)
+		found = itemID and { itemID } or {}
 	end
-	local itemID = A.ScrollFor(spellID)
-	return itemID and { itemID } or {}
-end
-
--- Where a recipe's scroll comes from, once its profession has been read; nil before then, for a recipe
--- no scroll teaches, and for one neither provider knows.
----@param spellID integer
----@return SkillUpScrollSource?
-function C.Recipe(spellID)
-	local recipe = ns.RecipeData[spellID]
-	local snapshot = recipe and professions[recipe.skillLine]
-	return snapshot and snapshot[spellID] or nil
+	local bundled = ns.RecipeScrolls and ns.RecipeScrolls[spellID]
+	if bundled then
+		for _, itemID in ipairs(found) do
+			if itemID == bundled[1] then
+				return found
+			end
+		end
+		local candidates = { unpack(found) }
+		candidates[#candidates + 1] = bundled[1]
+		return candidates
+	end
+	return found
 end
 
 -- The trainers of a profession who teach up to `cap`. Which NPC trains what, and how far, is bundled; who
@@ -325,12 +326,29 @@ local function ReadRecipe(spellID)
 			drops = drops,
 			world = ns.WorldDrops[itemID] or false,
 		}
-		-- Several scrolls can teach one recipe: the first a vendor sells, else the lowest item.
+		-- Prefer the first scroll a vendor sells, preserving the provider's order when possible.
 		if not best or (#source.vendors > 0 and #best.vendors == 0) then
 			best = source
 		end
 	end
 	return best
+end
+
+-- Ordinary lookups use the snapshot. An explicit navigation click can read just this recipe
+-- while the profession-wide scan is queued.
+---@param spellID integer
+---@param onClick boolean?
+---@return SkillUpScrollSource?
+function C.Recipe(spellID, onClick)
+	local recipe = ns.RecipeData[spellID]
+	if not recipe then
+		return nil
+	end
+	local snapshot = professions[recipe.skillLine]
+	if snapshot then
+		return snapshot[spellID]
+	end
+	return onClick and ReadRecipe(spellID) or nil
 end
 
 -- Goes through QuestieDB's items for the scrolls that teach a recipe, one record a turn.

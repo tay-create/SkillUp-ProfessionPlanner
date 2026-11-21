@@ -138,6 +138,8 @@ def repo_from_git():
         name = name[:-4]
     owner, separator, repo = name.partition("/")
     repo = repo.lower()
+    if separator and owner.lower() == "tay-create" and repo == "skillup-professionplanner":
+        return "skillup-forever"
     return repo if separator and owner.lower() == "cjber" and repo in KNOWN_CONSUMERS else None
 
 
@@ -195,6 +197,9 @@ def main(argv=None, fetch=core_main):
     if repo is None:
         raise SystemExit("Cannot identify a known cjber consumer from git remote; pass --repo explicitly.")
     paths = paths_for(repo)
+    # This fork customizes its own checker to recognize the renamed GitHub repository.
+    if repo == "skillup-forever" and repo_from_git() == "skillup-forever":
+        paths = [path for path in paths if path != "tools/check_core_shared.py"]
     if arguments.base:
         touched = changed_since(arguments.base)
         paths = [path for path in paths if consumer_path(repo, path) in touched]

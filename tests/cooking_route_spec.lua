@@ -66,6 +66,25 @@ local function Crafts(plan)
 	return crafts
 end
 
+-- The default remains the cheaper normal Cooking route. The combined mode favours
+-- fish with known fishing locations and is saved separately for each character.
+equal(ns.CookingFishingMode(), false, "Cooking starts in normal mode")
+local normalCooking = Plan(45)
+equal(normalCooking.crafts[1].recipeID ~= MACKEREL, true, "normal Cooking favours the cheaper meat")
+ns.SetCookingFishingMode(true)
+equal(ns.CookingFishingMode(), true, "the combined Cooking mode is enabled")
+equal(ns.db.cookingFishingModes[ns.CharacterKey()], true, "the combined mode is saved for this character")
+local fishingCooking = Plan(45)
+equal(fishingCooking.crafts[1].recipeID, MACKEREL, "the combined route prioritizes fish with a fishing location")
+c.player.name = "AnotherTester"
+equal(ns.CookingFishingMode(), false, "another character keeps the normal default")
+c.player.name = "Tester"
+equal(ns.CookingFishingMode(), true, "returning to the character restores the fishing choice")
+ns.SetCookingFishingMode(false)
+equal(ns.CookingFishingMode(), false, "the player can switch back to normal Cooking")
+local normalAgain = Plan(45)
+equal(normalAgain.crafts[1].recipeID, normalCooking.crafts[1].recipeID, "switching back restores the cheaper route")
+
 -- A reagent only creatures drop is gathered for nothing, not left out: every known recipe is planned,
 -- through a free Stringy Wolf Meat, Chunk of Boar Meat or Small Egg (#358, part 2).
 equal(ns.CanGather(WOLF_MEAT), "loot", "a reagent only creatures drop is lootable")

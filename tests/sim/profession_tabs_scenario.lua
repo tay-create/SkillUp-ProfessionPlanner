@@ -1,11 +1,11 @@
 -- luacheck: read globals scenario ADDON
--- #555: SkillUp's tab in the Professions window is ForeverCore.ProfessionTabs'. A Commissions-like second tab
--- sits beside it, and the walk the player makes (SkillUp, a client tab, a profession change, back, the other
--- addon's tab) leaves exactly one page shown each time. The crafting page and every addon page keep the window's
--- custom width chosen by ForeverCore. Recipe names and obsolete saved settings never resize the host or list.
+-- #555: ForeverCore owns the Profession Planner tab. A Commissions-like second tab sits beside it.
+-- Switching between the planner, a client tab and the other addon's tab leaves exactly one page shown.
+-- The crafting page and every addon page keep ForeverCore's custom width. Recipe names and obsolete saved
+-- settings never resize the host or list.
 local ForeverCore = dofile("tests/forever_core.lua")
 
-scenario("SkillUp's professions tab shares the window with another addon", {
+scenario("Profession Planner's professions tab shares the window with another addon", {
 	addons = ForeverCore.addons(),
 }, function(sim)
 	local G = sim.G
@@ -70,9 +70,9 @@ scenario("SkillUp's professions tab shares the window with another addon", {
 
 	local skillupTab = assert(
 		find(pf, function(frame)
-			return frame.tooltipText == "SkillUp"
+			return frame.tooltipText == "Profession Planner"
 		end),
-		"SkillUp's side tab is in the client's column"
+		"Profession Planner's side tab is in the client's column"
 	)
 	local routePage = assert(
 		find(pf, function(frame)
@@ -173,11 +173,11 @@ scenario("SkillUp's professions tab shares the window with another addon", {
 	press(otherTab)
 	assert(core.Selected() == "commissions-like", "the other addon's tab takes the window")
 	assert(otherPage:IsShown(), "and shows its page")
-	assert(not routePage:IsShown(), "while SkillUp's page hides")
+	assert(not routePage:IsShown(), "while Profession Planner's page hides")
 	stable("after the other addon's tab")
 
 	press(skillupTab)
-	assert(core.Selected() == "skillup", "SkillUp's tab comes back")
+	assert(core.Selected() == "skillup", "Profession Planner's tab comes back")
 	onePage("back on SkillUp again", routePage)
 
 	-- Obsolete saved values must not revive the removed width feature.

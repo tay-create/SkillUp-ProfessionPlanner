@@ -59,6 +59,9 @@ local ns = {
 	CollectMode = function()
 		return "gather"
 	end,
+	CookingFishingMode = function()
+		return false
+	end,
 }
 local frame = {
 	IsShown = function()

@@ -16,13 +16,16 @@ PT_URL = (
 )
 PT_SET = re.compile(r'\["Tradeskill\.Mat\.BySource\.Vendor"\]="([^"]*)"')
 OUTPUT = ROOT / "Data" / "Vendor.lua"
+# Forever players refine this with a Salt Shaker. ItemSparse's BuyPrice
+# and the imported vendor set do not establish a merchant for it.
+NON_VENDOR_ITEMS = {15409}
 
 
 def vendor_items(content):
     match = PT_SET.search(content)
     if not match:
         raise ValueError("LibPeriodicTable: Tradeskill.Mat.BySource.Vendor set not found")
-    return sorted({int(entry.split(":")[0]) for entry in match[1].split(",") if entry})
+    return sorted({int(entry.split(":")[0]) for entry in match[1].split(",") if entry} - NON_VENDOR_ITEMS)
 
 
 def render(prices):

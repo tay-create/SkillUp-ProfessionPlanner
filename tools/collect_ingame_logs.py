@@ -11,7 +11,6 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_GAME_ROOT = Path(r"D:\World of Warcraft\_forever_")
 DEFAULT_OUTPUT = PROJECT_ROOT / ".release" / "ingame-diagnostics"
@@ -45,7 +44,9 @@ def parse_buggrabber(source):
     session = int(session_match.group(1)) if session_match else None
     errors = []
     for record in RECORD.finditer(content):
-        data = {match.group("key"): unescape_lua(match.group("value")) for match in FIELD.finditer(record.group("body"))}
+        data = {
+            match.group("key"): unescape_lua(match.group("value")) for match in FIELD.finditer(record.group("body"))
+        }
         if "message" not in data:
             continue
         signature = "\x00".join((data.get("session", ""), data["message"], data.get("stack", "")))
@@ -83,7 +84,7 @@ def snapshot(game_root):
         if not toc.exists():
             versions[addon] = "ausente"
             continue
-        match = re.search(r'^## Version:\s*(.+)$', toc.read_text(encoding="utf-8", errors="replace"), re.MULTILINE)
+        match = re.search(r"^## Version:\s*(.+)$", toc.read_text(encoding="utf-8", errors="replace"), re.MULTILINE)
         versions[addon] = match.group(1) if match else "instalado (versão não informada)"
 
     frame_xml = game_root / "Logs" / "FrameXML.log"
@@ -123,8 +124,18 @@ def as_markdown(baseline, current, new_errors, frame_lines):
         lines.extend(frame_lines[-150:])
         lines.extend(["```", ""])
     if current["last_buggrabber_write"] <= baseline["last_buggrabber_write"]:
-        lines.extend(["", "**Atenção:** o arquivo do BugGrabber não mudou. Use `/reload` no jogo e execute `finish` novamente."])
-    lines.extend(["", "## Resultado manual", "", "Preencha os testes em `docs/TESTES_ETAPA1_WOW.md` e informe quais passaram ou falharam.", ""])
+        lines.extend(
+            ["", "**Atenção:** o arquivo do BugGrabber não mudou. Use `/reload` no jogo e execute `finish` novamente."]
+        )
+    lines.extend(
+        [
+            "",
+            "## Resultado manual",
+            "",
+            "Preencha os testes em `docs/TESTES_ETAPA1_WOW.md` e informe quais passaram ou falharam.",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 

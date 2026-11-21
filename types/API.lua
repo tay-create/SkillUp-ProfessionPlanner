@@ -5,7 +5,7 @@
 
 ---@alias SkillUpAPIStepKind 'buy'|'craft'|'train'|'gather'
 ---@alias SkillUpAPIReagentSource 'vendor'|'craft'|'gather'|'auction'
----@alias SkillUpAPIReason 'loading'|'disabled'|'none'|'invalid'
+---@alias SkillUpAPIReason ForeverCoreAPIReason|'invalid'
 ---@alias SkillUpAPIChangeName 'professions'|'shopping'
 ---@alias SkillUpAPIChanges table<SkillUpAPIChangeName, true>
 

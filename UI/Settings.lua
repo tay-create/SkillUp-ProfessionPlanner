@@ -1,5 +1,5 @@
 ---@type string, SkillUpNamespace
-local addonName, ns = ...
+local _, ns = ...
 
 if ns.broken then
 	return
@@ -164,6 +164,13 @@ function ns.RegisterSettings()
 	Section(L["Prices"], function(rows)
 		Choice(
 			rows,
+			"auctionPriceSource",
+			L["Auction price source"],
+			ns.AUCTION_PRICE_SOURCE_OPTIONS,
+			L["Automatic uses Auctionator prices first and fills gaps with TradeSkillMaster. Choosing one addon uses only its auction prices. Vendor prices are still compared."]
+		)
+		Choice(
+			rows,
 			"craftValue",
 			L["Count what crafts sell for"],
 			ns.CRAFT_VALUE_OPTIONS,
@@ -287,13 +294,6 @@ function ns.RegisterSettings()
 		)
 		Checkbox(
 			rows,
-			"combineCookingFishing",
-			L["Combine Cooking and Fishing"],
-			L["Show a fishing hook on fish reagents in profession routes. Clicking it navigates to a reported catch or an approximate fishing zone."]
-		)
-
-		Checkbox(
-			rows,
 			"showGearTab",
 			L["Show the crafted gear tab"],
 			L["A tab at the bottom of the Professions window listing the newest crafted item this character can equip in each slot. It opens from the Profession Planner side tab, beside the route and buffs tabs."]
@@ -360,22 +360,13 @@ function ns.RegisterSettings()
 			L["What's new after an update"],
 			L["One line in chat the first time a new version loads."]
 		)
+		Checkbox(
+			rows,
+			"suggestFamily",
+			L["Suggest related Forever addons"],
+			L["Show optional travel and quest-chain suggestions when a companion addon is missing."]
+		)
 	end)
-
-	-- The Forever addons page is core's (ForeverCore.Family), with the hint setting on it.
-	-- Its rows are plain frames on our own canvas, so nothing of ours goes into Blizzard's layouts or search.
-	-- With the gamepad interface on the page is the client's own rows so the Options navigation can enter it
-	-- (cjber/tweaks-forever#382).
-	local Family = ForeverCore.Family --[[@as ForeverFamilyAPI]]
-	local family = Family.Register(category, function()
-		return ns.db
-	end, addonName, ns.core.SafeCall)
-	Settings.RegisterInitializer(
-		category,
-		CreateSettingsButtonInitializer(L["Forever addons"], L["Open"], function()
-			ForeverCore.OpenSettingsPanel(family:GetID())
-		end, nil, false)
-	)
 
 	Settings.RegisterAddOnCategory(category)
 end

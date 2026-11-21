@@ -272,7 +272,7 @@ c.Advance(0)
 suggestions = ns.RecipeSuggestions(tailoring, 50)
 equal(Kinds(suggestions), "14 drop, 15 world drop", "without Questie only drops are known")
 equal(ns.SetWaypoint(ns.SuggestionNPC(suggestions[1])), false, "with nobody to route to")
-equal(#c.chat, 0, "and nothing said")
+equal(c.chat[1]:find(ns.Catalogue.Hint(true), 1, true) ~= nil, true, "and the missing location provider is explained")
 equal(ns.NearestTrainer(tailoring, 150), nil, "no trainer is named")
 equal(ns.NearestVendor(THREAD), nil, "nor a vendor")
 -- A vendor seen in an earlier session needs no database.
@@ -338,7 +338,11 @@ local cookingClient = Client.load({
 	atlasLoot = { recipes = { [BUZZARD_SCROLL] = { 8, 175, BUZZARD_WING } } },
 })
 local cooking = { skillLine = 185, base = 175, modifier = 0 }
-equal(cookingClient.ns.RecipeTrainers[185][BUZZARD_WING][1], SLAGG, "the generated source names Slagg for Barbecued Buzzard Wing")
+equal(
+	cookingClient.ns.RecipeTrainers[185][BUZZARD_WING][1],
+	SLAGG,
+	"the generated source names Slagg for Barbecued Buzzard Wing"
+)
 cookingClient.ns.Catalogue.EnsureProfession(185)
 cookingClient.Advance(0)
 cookingClient.player.faction = "Horde"

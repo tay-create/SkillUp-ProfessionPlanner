@@ -299,7 +299,11 @@ equal(#c.chat, 0, "and none of it says anything in chat")
 
 -- The Auctionator list of what the tracked route still buys is kept up to date on its own: written
 -- once, left alone while the need is the same, and emptied when the bags cover it.
-equal(ns.AuctionListName("First Aid"), "Profession Planner: Tester-Realm: First Aid", "the list is named for the profession")
+equal(
+	ns.AuctionListName("First Aid"),
+	"Profession Planner: Tester-Realm: First Aid",
+	"the list is named for the profession"
+)
 equal(ns.AuctionatorAutoscan(), nil, "an unread option says nothing")
 c.auctionAutoscan = false
 equal(ns.AuctionatorAutoscan(), false, "the scan-on-open option reads as off")
@@ -310,7 +314,11 @@ c.shoppingLists["SkillUp: Other-Realm: First Aid"] = personalList
 c.player.name = nil
 equal(ns.AuctionListName("First Aid"), nil, "an unknown character has no shared fallback list")
 ns.SetCollectMode("auction")
-equal(c.shoppingLists["Profession Planner: Tester-Realm: First Aid"], nil, "no list is written before identity is ready")
+equal(
+	c.shoppingLists["Profession Planner: Tester-Realm: First Aid"],
+	nil,
+	"no list is written before identity is ready"
+)
 c.player.name = "Tester"
 ns.SetCollectMode("auction")
 local list = c.shoppingLists["Profession Planner: Tester-Realm: First Aid"]
@@ -319,16 +327,28 @@ equal(c.shoppingLists["SkillUp: First Aid"], personalList, "the old generic list
 equal(c.shoppingLists["SkillUp: Other-Realm: First Aid"], personalList, "another character's list remains untouched")
 local realm = c.player.realm
 c.player.realm = "OtherRealm"
-equal(ns.AuctionListName("First Aid"), "Profession Planner: Tester-OtherRealm: First Aid", "realms have separate list names")
+equal(
+	ns.AuctionListName("First Aid"),
+	"Profession Planner: Tester-OtherRealm: First Aid",
+	"realms have separate list names"
+)
 c.player.realm = realm
 equal(#list, 1, "with the route's one auction reagent")
 equal(list[1], "Linen Clothx" .. (Needed() - ns.Have(SILK)), "and what the route still needs")
 c.Fire("BAG_UPDATE_DELAYED")
-equal(c.shoppingLists["Profession Planner: Tester-Realm: First Aid"], list, "an unchanged need does not rewrite the list")
+equal(
+	c.shoppingLists["Profession Planner: Tester-Realm: First Aid"],
+	list,
+	"an unchanged need does not rewrite the list"
+)
 c.ns.db.auctionSearch = false
 c.bags[SILK] = 1
 c.Fire("BAG_UPDATE_DELAYED")
-equal(c.shoppingLists["Profession Planner: Tester-Realm: First Aid"], list, "disabled automatic search does not rewrite the list")
+equal(
+	c.shoppingLists["Profession Planner: Tester-Realm: First Aid"],
+	list,
+	"disabled automatic search does not rewrite the list"
+)
 c.ns.db.auctionSearch = true
 c.bags[SILK] = Needed()
 c.Fire("BAG_UPDATE_DELAYED")
@@ -337,7 +357,11 @@ local originalList = c.shoppingLists["Profession Planner: Tester-Realm: First Ai
 c.bags[SILK] = 0
 c.player.name = "Alt"
 ns.SetCollectMode("auction")
-equal(type(c.shoppingLists["Profession Planner: Alt-Realm: First Aid"]), "table", "another character gets its own route list")
+equal(
+	type(c.shoppingLists["Profession Planner: Alt-Realm: First Aid"]),
+	"table",
+	"another character gets its own route list"
+)
 equal(
 	c.shoppingLists["Profession Planner: Tester-Realm: First Aid"],
 	originalList,
@@ -428,6 +452,127 @@ equal(
 	"with the new need"
 )
 
+-- When item names finish loading out of order, an older bag snapshot cannot replace the latest list.
+local delayed = AuctionClient()
+local callbacks = {}
+delayed.G.ContinuableContainer.Create = function()
+	return {
+		AddContinuable = noop,
+		ContinueOnLoad = function(_, callback)
+			callbacks[#callbacks + 1] = callback
+		end,
+	}
+end
+delayed.EnterWorld()
+delayed.Advance(0)
+equal(#callbacks, 1, "the first Auctionator list waits for item names")
+delayed.bags[SILK] = 1
+delayed.Fire("BAG_UPDATE_DELAYED")
+delayed.Advance(0)
+equal(#callbacks, 2, "a bag update queues the current shopping list")
+callbacks[2]()
+callbacks[1]()
+local delayedName = delayed.ns.AuctionListName("First Aid")
+equal(delayed.shoppingLists[delayedName][1], RouteSearches(delayed)[1], "only the newest list is written")
+equal(delayed.listWrites, 1, "the stale asynchronous callback makes no extra write")
+
+-- Switching to gathering while names load must suppress the queued auction write.
+local cancelled = AuctionClient()
+local cancelledCallbacks = {}
+cancelled.G.ContinuableContainer.Create = function()
+	return {
+		AddContinuable = noop,
+		ContinueOnLoad = function(_, callback)
+			cancelledCallbacks[#cancelledCallbacks + 1] = callback
+		end,
+	}
+end
+cancelled.EnterWorld()
+cancelled.Advance(0)
+cancelled.ns.SetCollectMode("gather")
+cancelledCallbacks[1]()
+local cancelledName = cancelled.ns.AuctionListName("First Aid")
+equal(cancelled.shoppingLists[cancelledName], nil, "a pending list is cancelled in gather mode")
+cancelled.ns.SetCollectMode("auction")
+cancelled.Advance(0)
+equal(#cancelledCallbacks, 2, "re-enabling buying schedules the list again")
+cancelledCallbacks[2]()
+equal(cancelled.shoppingLists[cancelledName][1], RouteSearches(cancelled)[1], "the current list resumes")
+
+-- Older Auctionator versions without a list reader must not save a cancelled update as completed.
+local unreadable = AuctionClient()
+unreadable.G.Auctionator.API.v1.GetShoppingListItems = nil
+local unreadableCallbacks = {}
+unreadable.G.ContinuableContainer.Create = function()
+	return {
+		AddContinuable = noop,
+		ContinueOnLoad = function(_, callback)
+			unreadableCallbacks[#unreadableCallbacks + 1] = callback
+		end,
+	}
+end
+unreadable.EnterWorld()
+unreadable.Advance(0)
+unreadable.ns.SetCollectMode("gather")
+unreadableCallbacks[1]()
+local unreadableName = unreadable.ns.AuctionListName("First Aid")
+equal(unreadable.ns.db.auctionListSignatures[unreadableName], nil, "cancelled list was never saved")
+unreadable.ns.SetCollectMode("auction")
+unreadable.Advance(0)
+equal(#unreadableCallbacks, 2, "an unreadable list can be retried")
+unreadableCallbacks[2]()
+equal(unreadable.shoppingLists[unreadableName][1], RouteSearches(unreadable)[1], "retried list is written")
+equal(type(unreadable.ns.db.auctionListSignatures[unreadableName]), "string", "successful write is saved")
+
+-- Shared cloth is deducted only once when two tracked professions write their own Auctionator lists.
+local sharedData = Fixture()
+sharedData.Thresholds[5] = { 1, 30, 45, 60 }
+sharedData.RecipeData[5] = { skillLine = 197, reagents = { { itemID = SILK, quantity = 1 } } }
+local shared = Client.load({
+	saved = {
+		routeTargets = { [FIRST_AID] = 55, [197] = 55 },
+		trackedProfessions = { [FIRST_AID] = true, [197] = true },
+	},
+	data = sharedData,
+})
+shared.level = 20
+shared.spells[BANDAGE], shared.spells[5] = "Linen Bandage", "Tailored Linen"
+shared.items[SILK] = { name = "Linen Cloth" }
+shared.known[BANDAGE], shared.known[5] = true, true
+shared.auction[SILK] = 10
+shared.bags[SILK] = 2
+shared.professions = {
+	{ name = "First Aid", rank = 40, max = 75, id = FIRST_AID },
+	{ name = "Tailoring", rank = 40, max = 75, id = 197 },
+}
+AuctionatorLists(shared)
+shared.ns.SetCollectMode("auction")
+shared.EnterWorld()
+shared.Advance(0)
+local totalNeeded, totalSearched = 0, 0
+local sharedRoutes = shared.ns.TrackedNeeds()
+equal(#sharedRoutes, 2, "both routes are tracked for shared stock")
+for _, entry in ipairs(sharedRoutes) do
+	for _, item in ipairs(entry.items) do
+		if item.itemID == SILK then
+			totalNeeded = totalNeeded + item.need
+		end
+	end
+	local searches = shared.shoppingLists[shared.ns.AuctionListName(entry.plan.profession.name)] or {}
+	for _, search in ipairs(searches) do
+		totalSearched = totalSearched + (tonumber(search:match("x(%d+)$")) or 0)
+	end
+end
+equal(totalNeeded > 2, true, "the routes need more cloth than the bags hold")
+equal(totalSearched, totalNeeded - 2, "Auctionator allocates the same two cloth only once")
+shared.bags[SILK] = totalNeeded
+shared.Fire("BAG_UPDATE_DELAYED")
+shared.Advance(0)
+for _, entry in ipairs(sharedRoutes) do
+	local searches = shared.shoppingLists[shared.ns.AuctionListName(entry.plan.profession.name)] or {}
+	equal(#searches, 0, "enough shared inventory clears each Auctionator list")
+end
+
 -- Disabling automatic list maintenance does not disable an explicit Search button query.
 c.ns.db.auctionSearch = false
 c.bags[SILK] = 0
@@ -456,23 +601,32 @@ local trainingPlan = {
 	ranks = {},
 	unpriced = 0,
 }
-local realTrackedNeeds, realNearestTrainer, realNearestForRank, realAddNearest =
-	ns.TrackedNeeds, ns.NearestTrainer, ns.NearestForRank, ns.AddNearest
+local realTrackedNeeds, realRecipeNPC, realNearestTrainer, realNearestForRank, realAddNearest, realSetWaypoint =
+	ns.TrackedNeeds, ns.RecipeNPC, ns.NearestTrainer, ns.NearestForRank, ns.AddNearest, ns.SetWaypoint
 ns.TrackedNeeds = function()
 	return { { plan = trainingPlan, items = {} } }
 end
 ns.NearestTrainer = function()
 	return 77
 end
+ns.RecipeNPC = function(_, recipeID)
+	return recipeID == BANDAGE and 88 or 89
+end
 ns.NearestForRank = function()
 	return 77, "Nearest trainer"
 end
 ns.AddNearest = noop
+local waypointID
+ns.SetWaypoint = function(npcID)
+	waypointID = npcID
+end
 local trainingLines = c.Tracker()[1].lines
 local firstText = "Train Linen Bandage at 20"
 local secondText = "Train Heavy Linen Bandage at 60"
 local thirdText = "Train Journeyman at 50"
 equal(trainingLines[1].key, "Train", "the training line leads")
+trainingLines[1].frame.scripts.OnMouseUp(trainingLines[1].frame, "LeftButton")
+equal(waypointID, 88, "tracker routes to the recipe trainer instead of a general profession trainer")
 equal(
 	trainingLines[1].text,
 	firstText .. string.format(" |cff808080(%s)|r", string.format(ns.L["+%d more to train"], 2)),
@@ -494,7 +648,7 @@ equal(joined:find(firstText, 1, true) ~= nil, true, "the tooltip titles the firs
 equal(joined:find(ns.L["Also train"], 1, true) ~= nil, true, "under the training heading")
 equal(joined:find(secondText, 1, true) ~= nil, true, "and lists the second training stop")
 equal(joined:find(thirdText, 1, true) ~= nil, true, "and the third")
-ns.TrackedNeeds, ns.NearestTrainer, ns.NearestForRank, ns.AddNearest =
-	realTrackedNeeds, realNearestTrainer, realNearestForRank, realAddNearest
+ns.TrackedNeeds, ns.RecipeNPC, ns.NearestTrainer, ns.NearestForRank, ns.AddNearest, ns.SetWaypoint =
+	realTrackedNeeds, realRecipeNPC, realNearestTrainer, realNearestForRank, realAddNearest, realSetWaypoint
 
 Client.report("shopping_spec")

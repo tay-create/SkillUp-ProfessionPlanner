@@ -32,8 +32,7 @@ L["%s, source unknown"] = "%s，来源未知"
 L["%s: %d moved, %d confirmed at a trainer, %d wrong."] =
 	"%s：移动%d个，在训练师处确认%d个，错误%d个。"
 L["+%d more"] = "另有%d个"
-L["/pp skipped lists the recipes you skipped, with their IDs."] =
-	"/pp skipped 列出你跳过的配方及其ID。"
+L["/pp skipped lists the recipes you skipped, with their IDs."] = "/pp skipped 列出你跳过的配方及其ID。"
 L["/pp unskip <recipe ID> shows one again, /pp unskip all every one."] =
 	"/pp unskip <recipe ID> 恢复显示一个，/pp unskip all 恢复全部。"
 L["A Reagents tab on a merchant's window that lists the reagents your tracked routes still need from that merchant and their total cost. Buy them from the merchant's own window."] =
@@ -108,7 +107,6 @@ L["Fees"] = "费用"
 L["Feet"] = "脚"
 L["Finger"] = "手指"
 L["First used at"] = "首次使用于"
-L["Forever addons"] = "Forever插件"
 L["Gather %d %s"] = "采集%d个%s"
 L["Gathering skill on nodes"] = "采集点的采集技能"
 L["Hands"] = "手部"
@@ -374,8 +372,7 @@ L["/pp export - show the trainer requirements this character has seen, to paste 
 	"/pp export - 显示此角色见过的训练师要求，以便粘贴到报告中"
 L["/pp issue - report a bug or request a feature with a ready-made GitHub issue link"] =
 	"/pp issue - 报告错误或请求功能，并附上现成的 GitHub issue 链接"
-L["/pp report - show a report to copy into a bug report"] =
-	"/pp report - 显示报告，以便复制到错误报告中"
+L["/pp report - show a report to copy into a bug report"] = "/pp report - 显示报告，以便复制到错误报告中"
 L[": "] = "："
 L["Copy list"] = "复制列表"
 L["Copy shopping list"] = "复制购物清单"
@@ -495,8 +492,68 @@ L["Without Auctionator, a recipe's Search button fills the game's own auction bo
 L["%s: %s is out of date. Update it to fix this."] = "%s：%s 已过期。请更新它来解决此问题。" -- mt
 L["%s: %s are out of date. Update them to fix this."] = "%s：%s 已过期。请更新它们来解决此问题。" -- mt
 L["%s could not start. Reinstall %s to fix this."] = "%s 无法启动。请重新安装 %s 来解决此问题。" -- mt
-L["Profession Planner no longer fills Auctionator with shopping lists."] = "Profession Planner 不再把购物清单写入 Auctionator。" -- mt
+L["Profession Planner no longer fills Auctionator with shopping lists."] =
+	"Profession Planner 不再把购物清单写入 Auctionator。" -- mt
 L["Region sale average"] = "地区平均成交价"
 L["Region sale average if higher"] = "较高时使用地区平均成交价"
 L["Region sale averages need TradeSkillMaster and its desktop app. They estimate value from reported regional sales and purchases, with the vendor price as a floor. They do not guarantee a sale."] =
 	"地区平均成交价需要 TradeSkillMaster 及其桌面应用。此价格根据已记录的地区买卖估算价值，且不低于商店售出价。此价格不保证物品能够售出。"
+
+L["Click to find a fishing spot. Click again to try the next one."] =
+	"点击查找钓鱼地点。再次点击尝试下一个地点。"
+L["Click to open the recipe or set a waypoint."] = "点击打开配方或设置路径点。"
+L["Fishing route for %s: %s (approximate zone; look for fishable water)."] =
+	"%s 的钓鱼路线：%s（大致区域，请寻找可以钓鱼的水域）。"
+L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."] =
+	"%s 的钓鱼路线：%s（玩家报告的渔获地点）。再次点击鱼钩尝试其他地点。"
+L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."] =
+	"%s 的钓鱼路径点：%s（大致区域，请寻找可以钓鱼的水域）。"
+L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."] =
+	"%s 的钓鱼路径点：%s（玩家报告的渔获地点）。再次点击鱼钩尝试其他地点。"
+L["Fishing zone for %s: %s. Unable to set route or waypoint."] =
+	"%s 的钓鱼区域：%s。无法设置路线或路径点。"
+L["Next: %s"] = "下一步：%s"
+L["No known fishing zone for %s."] = "没有 %s 的已知钓鱼区域。"
+L["No next step"] = "没有下一步"
+L["No suitable destination found. Check trainer and vendor locations."] =
+	"未找到合适的目的地。请检查训练师和商人的位置。"
+L["Progress: %d/%d (%d%%)"] = "进度：%d/%d（%d%%）"
+L["Reported fishing spot for %s: %s. Unable to set waypoint."] =
+	"%s 的已报告钓鱼地点：%s。无法设置路径点。"
+L["Show optional travel and quest-chain suggestions when a companion addon is missing."] =
+	"缺少配套插件时，显示可选的旅行和任务链建议。"
+L["Suggest related Forever addons"] = "推荐相关的 Forever 插件"
+
+L["Auction house or Salt Shaker"] = "拍卖行或盐筛"
+L["Auction house or vendor"] = "拍卖行或商人"
+L["Auction price source"] = "拍卖价格来源"
+L["Auctionator only"] = "仅使用 Auctionator"
+L["Automatic (Auctionator first)"] = "自动（优先使用 Auctionator）"
+L["Automatic uses Auctionator prices first and fills gaps with TradeSkillMaster. Choosing one addon uses only its auction prices. Vendor prices are still compared."] =
+	"自动模式优先使用 Auctionator 价格，缺失时使用 TradeSkillMaster。选择单个插件后，只使用该插件的拍卖价格，仍会比较商人价格。"
+L["Buying missing reagents"] = "购买缺少的材料"
+L["Calculating route to %s..."] = "正在计算前往%s的路线……"
+L["Chance for this material"] = "获得此材料的概率"
+L["Cooking + Fishing"] = "烹饪 + 钓鱼"
+L["Cooking route mode"] = "烹饪路线模式"
+L["Destination sent: %s"] = "已发送目的地：%s"
+L["Disenchant %d× %s"] = "分解 %d× %s"
+L["Disenchant crafted %s"] = "分解制作的%s"
+L["Disenchant results vary; estimates use Classic odds."] =
+	"分解结果可能不同，估算采用经典旧世的概率。"
+L["Estimated crafting cost"] = "预计制作成本"
+L["Estimated crafting cost per material"] = "每份材料的预计制作成本"
+L["Expected material per craft"] = "每次制作预计获得的材料数量"
+L["Items already held"] = "已持有的物品"
+L["Normal Cooking"] = "普通烹饪"
+L["Normal Cooking plans by cost. Cooking + Fishing prioritizes fish recipes and keeps fishing waypoints available in both modes."] =
+	"普通烹饪按成本规划路线。烹饪 + 钓鱼优先选择鱼类食谱，两种模式均可使用钓鱼路径点。"
+L["Route ready: %s"] = "路线已就绪：%s"
+L["Route recalculated because a missing reagent has no known source."] =
+	"缺少的材料没有已知来源，已重新计算路线。"
+L["Route recalculated because a recipe or its requirements changed."] =
+	"配方或其要求发生变化，已重新计算路线。"
+L["Route still pending: %s"] = "路线仍在等待：%s"
+L["Tailoring and disenchanting (estimated)"] = "裁缝与分解（估算）"
+L["TradeSkillMaster only"] = "仅使用 TradeSkillMaster"
+L["~%.1f %s for %d needed; saves %s"] = "预计 %.1f 份%s（需要 %d 份），节省 %s"

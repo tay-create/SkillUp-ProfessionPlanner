@@ -22,6 +22,18 @@ equal(ns.Price(2).source, "auctionator", "a cheaper Auctionator price beats the 
 equal(ns.Price(3).copper, 90, "another item's price comes from Auctionator too")
 equal(ns.Price(99), nil, "an item nobody priced has no price")
 
+local refinedSalt = 15409
+ns.VendorPrices[refinedSalt] = 4000
+ns.db.vendor[refinedSalt] = 3500
+equal(ns.VendorPurchasePrice(refinedSalt), nil, "refined salt ignores bundled and old merchant prices")
+equal(ns.Price(refinedSalt).source, "auction", "unpriced refined salt still belongs in the auction list")
+equal(ns.Price(refinedSalt).unknown, true, "refined salt never gets a fabricated price")
+c.auction[refinedSalt] = 6000
+ns.Changed("prices")
+equal(ns.Price(refinedSalt).source, "auctionator", "a real auction price wins over the obsolete merchant price")
+equal(ns.Price(refinedSalt).copper, 6000, "the auction amount is used")
+equal(ns.VendorPurchasePrice(2), 40, "an item sold by vendors keeps that option when the auction is cheaper")
+
 -- The age API's sentinel and its absence, on an item no scan has filed.
 c.auctionAge = nil
 ns.Changed("prices")

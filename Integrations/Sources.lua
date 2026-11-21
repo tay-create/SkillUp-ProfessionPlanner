@@ -256,16 +256,81 @@ function ns.DropZone(itemID)
 	return zone
 end
 
+-- The planner can accept a route before it has a first point to guide the player to.
+local guidanceProbe = 0
+local TRAINER_ROUTE_OWNER = "ProfessionPlannerTrainer"
+
+---@param api SkillUpShortestPathAPI
+---@param destination string
+---@param refresh fun(): boolean
+local function WatchTrainerGuidance(api, destination, refresh)
+	local probe = guidanceProbe
+	local guidance = api.Guidance
+	if not guidance then
+		ns.ShowTrainerRouteStatus(string.format(L["Destination sent: %s"], destination), 4)
+		return
+	end
+	ns.ShowTrainerRouteStatus(string.format(L["Calculating route to %s..."], destination))
+	ns.core.Log("info", "trainer-click", "guidanceProbe=%d", probe)
+	local started = GetTime()
+	local lastState
+	local refreshed = false
+	local currentStop = api.CurrentStop
+	local function Sample()
+		if probe ~= guidanceProbe then
+			return
+		end
+		local active, reason = guidance()
+		local state = active and "ready" or reason or "none"
+		local age = GetTime() - started
+		if state ~= lastState or age >= 30 then
+			ns.core.Log(
+				"info",
+				"trainer-click",
+				"guidanceProbe=%d elapsed=%.1f state=%s owner=%s",
+				probe,
+				age,
+				state,
+				active and active.owner or "-"
+			)
+			lastState = state
+		end
+		if active and active.owner == TRAINER_ROUTE_OWNER then
+			ns.ShowTrainerRouteStatus(string.format(L["Route ready: %s"], destination), 3)
+		elseif active or (currentStop and not currentStop(TRAINER_ROUTE_OWNER)) then
+			ns.ShowTrainerRouteStatus(nil)
+		elseif age >= 30 then
+			ns.ShowTrainerRouteStatus(string.format(L["Route still pending: %s"], destination), 6)
+		else
+			-- Resubmitting the same stop asks Shortest Path to refresh its pending first search.
+			if not refreshed and state == "loading" and currentStop and age >= 3 and not InCombatLockdown() then
+				refreshed = true
+				local accepted = refresh()
+				ns.core.Log("info", "trainer-click", "guidanceProbe=%d refreshAccepted=%s", probe, tostring(accepted))
+			end
+			C_Timer.After(0.5, Sample)
+		end
+	end
+	C_Timer.After(0, Sample)
+end
+
 -- Prefer Shortest Path Forever, then TomTom, then the client map for any known map point.
 -- Returns the navigation mode so callers can describe the result in their own context.
-local function PlaceMapWaypoint(where)
+---@param trace? boolean
+local function PlaceMapWaypoint(where, trace)
 	local api = ShortestPath()
-	if
-		api
-		and type(api.Navigate) == "function"
-		and api.Navigate("ProfessionPlanner", where.map, where.x, where.y, where.name)
-	then
-		return "route"
+	local navigate = api and api.Navigate
+	if api and type(navigate) == "function" then
+		local owner = trace and TRAINER_ROUTE_OWNER or "ProfessionPlanner"
+		local function Submit()
+			return navigate(owner, where.map, where.x, where.y, where.name)
+		end
+		if Submit() then
+			if trace then
+				WatchTrainerGuidance(api, where.name, Submit)
+			end
+			return "route"
+		end
 	end
 	if TomTom and TomTom.AddWaypoint then
 		TomTom:AddWaypoint(where.map, where.x, where.y, { title = where.name, from = "Profession Planner" })
@@ -282,17 +347,40 @@ end
 -- journeys off or without a player position), else TomTom's arrow, else the map's
 -- own waypoint, super-tracked; false when there is only a chat line to give, or no NPC to name.
 ---@param npcID integer
+---@param trace? boolean
 ---@return boolean
-function ns.SetWaypoint(npcID)
+function ns.SetWaypoint(npcID, trace)
+	if trace then
+		guidanceProbe = guidanceProbe + 1
+		ns.ShowTrainerRouteStatus(nil)
+	end
 	if not C.NPC(npcID) then
+		if trace then
+			ns.core.Log("info", "trainer-click", "npc=%d catalogue=missing", npcID)
+		end
+		ns.Print((C.Hint and C.Hint(true)) or L["No suitable destination found. Check trainer and vendor locations."])
 		return false
 	end
 	local where = ns.NPCLocation(npcID)
+	if trace then
+		ns.core.Log(
+			"info",
+			"trainer-click",
+			"npc=%d map=%s x=%s y=%s",
+			npcID,
+			tostring(where.map),
+			tostring(where.x),
+			tostring(where.y)
+		)
+	end
 	if not where.map then
 		ns.Print(string.format(L["%s is in %s."], where.name, where.label))
 		return false
 	end
-	local mode = PlaceMapWaypoint(where)
+	local mode = PlaceMapWaypoint(where, trace)
+	if trace then
+		ns.core.Log("info", "trainer-click", "navigation=%s", mode or "unavailable")
+	end
 	if mode == "route" then
 		ns.Print(string.format(L["route set to %s, %s."], where.name, ns.LocationText(where)))
 		return true
@@ -440,9 +528,21 @@ function ns.FindFishing(itemID)
 		local location = ns.LocationText(where)
 		local mode = PlaceMapWaypoint(where)
 		if mode == "route" then
-			ns.Print(string.format(L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."], name, location))
+			ns.Print(
+				string.format(
+					L["Fishing route for %s: %s (reported catch). Click the hook again for another spot."],
+					name,
+					location
+				)
+			)
 		elseif mode == "waypoint" then
-			ns.Print(string.format(L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."], name, location))
+			ns.Print(
+				string.format(
+					L["Fishing waypoint for %s: %s (reported catch). Click the hook again for another spot."],
+					name,
+					location
+				)
+			)
 		else
 			ns.Print(string.format(L["Reported fishing spot for %s: %s. Unable to set waypoint."], name, location))
 		end
@@ -466,9 +566,21 @@ function ns.FindFishing(itemID)
 			local where = { name = name, label = info.name, map = preferredZone, x = 0.5, y = 0.5 }
 			local mode = PlaceMapWaypoint(where)
 			if mode == "route" then
-				ns.Print(string.format(L["Fishing route for %s: %s (approximate zone; look for fishable water)."], name, info.name))
+				ns.Print(
+					string.format(
+						L["Fishing route for %s: %s (approximate zone; look for fishable water)."],
+						name,
+						info.name
+					)
+				)
 			elseif mode == "waypoint" then
-				ns.Print(string.format(L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."], name, info.name))
+				ns.Print(
+					string.format(
+						L["Fishing waypoint for %s: %s (approximate zone; look for fishable water)."],
+						name,
+						info.name
+					)
+				)
 			else
 				ns.Print(string.format(L["Fishing zone for %s: %s. Unable to set route or waypoint."], name, info.name))
 			end
@@ -519,16 +631,28 @@ end
 -- past the skill it asks), else the nearest NPC its scroll comes from. Nil until that is read.
 ---@param profession SkillUpContext
 ---@param recipeID integer
+---@param byTravel boolean?
+---@param trace? boolean
 ---@return integer?
-function ns.RecipeNPC(profession, recipeID)
+function ns.RecipeNPC(profession, recipeID, byTravel, trace)
+	byTravel = byTravel ~= false
 	local training = ns.TrainingFor(profession, recipeID)
+	if trace then
+		ns.core.Log(
+			"info",
+			"trainer-click",
+			"training=%s requiredSkill=%s",
+			tostring(training ~= nil),
+			training and tostring(training[2]) or "-"
+		)
+	end
 	if training then
 		local byProfession = ns.RecipeTrainers and ns.RecipeTrainers[profession.skillLine]
 		local trainerIDs = byProfession and byProfession[recipeID]
 		if trainerIDs then
-			return ns.NearestNPC(trainerIDs, true)
+			return ns.NearestNPC(trainerIDs, byTravel)
 		end
-		return ns.NearestTrainer(profession, training[2] + 1, true)
+		return ns.NearestTrainer(profession, training[2] + 1, byTravel)
 	end
 	local source = C.Recipe(recipeID)
 	local kind, npcID
@@ -722,28 +846,53 @@ end
 ---@param byTravel boolean?
 ---@return integer?
 function ns.NearestVendor(itemID, byTravel)
-	if not C.EnsureVendors(itemID) then
+	if itemID == ns.REFINED_DEEPROCK_SALT or not C.EnsureVendors(itemID) then
 		return nil
 	end
 	local found = C.ItemSources(itemID)
 	return found and ns.NearestNPC(found.vendors, byTravel)
 end
 
--- The nearest vendor of a recipe's scroll, from the catalogue's record of who sells that recipe's scroll;
--- nil until the profession's sources are read, or for a recipe no vendor sells.
+-- The nearest vendor of a recipe's scroll. Navigation clicks can resolve it before the snapshot is ready.
 ---@param recipeID integer
 ---@param byTravel boolean?
+---@param onClick boolean?
 ---@return integer?
-function ns.NearestScrollVendor(recipeID, byTravel)
-	local source = C.Recipe(recipeID)
+function ns.NearestScrollVendor(recipeID, byTravel, onClick)
+	local source = C.Recipe(recipeID, onClick)
 	return source and #source.vendors > 0 and ns.NearestNPC(source.vendors, byTravel) or nil
 end
 
 local SHORTEST_PATH = "ShortestPathForever"
 local ADVENTURE_GUIDE = "AdventureGuideForever"
--- Hint keys are shared by every Forever addon (ForeverCore.Family), so they start with this addon's folder.
+-- Stable keys keep existing dismissals when upgrading the core.
 local HINT_TRAVEL = "ProfessionPlanner:travel"
 local HINT_QUEST_CHAIN = "ProfessionPlanner:questChain"
+
+local function CompanionState(folder)
+	if not C_AddOns then
+		return "off"
+	end
+	local ok, loaded = pcall(C_AddOns.IsAddOnLoaded, folder)
+	if not ok then
+		return "off"
+	end
+	if loaded then
+		return "on"
+	end
+	local existsOK, exists = pcall(C_AddOns.DoesAddOnExist, folder)
+	if existsOK and exists == false then
+		return "missing"
+	end
+	return "off"
+end
+
+local function CompanionHint(db, key, folder)
+	return type(db) == "table"
+		and db.suggestFamily ~= false
+		and (not db.familyDismissed or not db.familyDismissed[key])
+		and CompanionState(folder) == "missing"
+end
 
 -- Whether Shortest Path Forever is installed but switched off in the AddOns list. A read the client won't give
 -- (a secret value, or no C_AddOns) is "don't know", so no line.
@@ -762,10 +911,9 @@ end
 ---@param tooltip GameTooltip
 ---@param single? boolean
 function ns.AddCompanionHint(tooltip, single)
-	local Family = ForeverCore.Family --[[@as ForeverFamilyAPI]]
-	local state = Family.State(SHORTEST_PATH)
+	local state = CompanionState(SHORTEST_PATH)
 	if state == "missing" then
-		if Family.Hint(ns.db, HINT_TRAVEL, SHORTEST_PATH) then
+		if CompanionHint(ns.db, HINT_TRAVEL, SHORTEST_PATH) then
 			GameTooltip_AddDisabledLine(
 				tooltip,
 				single and L["With Shortest Path Forever, a click leads you there."]
@@ -780,7 +928,7 @@ end
 -- Under an Artisan quest step, when Adventure Guide Forever isn't installed.
 ---@param tooltip GameTooltip
 function ns.AddQuestChainHint(tooltip)
-	if ForeverCore.Family.Hint(ns.db, HINT_QUEST_CHAIN, ADVENTURE_GUIDE) then
+	if CompanionHint(ns.db, HINT_QUEST_CHAIN, ADVENTURE_GUIDE) then
 		GameTooltip_AddDisabledLine(tooltip, L["Adventure Guide Forever can plan this quest chain."])
 	end
 end

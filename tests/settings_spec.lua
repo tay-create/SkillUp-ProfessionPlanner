@@ -29,7 +29,7 @@ local function Initializer(kind, setting, tooltip)
 	return { kind = kind, setting = setting, tooltip = tooltip }
 end
 
-local opened, addOnCategory, canvas, family
+local opened, addOnCategory
 -- Calls to ForeverCore's shared settings opener.
 local opens = 0
 
@@ -43,9 +43,6 @@ local env = setmetatable({
 		RegisterVerticalLayoutSubcategory = function(parent, name)
 			assert(parent == category, "a subpage belongs to the addon's category")
 			return Category(name, parent), { AddInitializer = Tainted }
-		end,
-		RegisterCanvasLayoutSubcategory = function()
-			error("the Forever addons page is registered through ForeverCore.Family.Register")
 		end,
 		RegisterAddOnSetting = function(_target, variable, key, db, varType, _name, default)
 			if db[key] == nil then
@@ -169,14 +166,6 @@ env.ForeverCore.TrackerHost = {
 		attachmentChanged = callback
 	end,
 }
--- ForeverCore.Family builds the page; Core's own specs cover what is on it.
-env.ForeverCore.Family = {
-	Register = function(parent, db, current, safeCall)
-		family = { parent = parent, db = db, current = current, safeCall = safeCall }
-		canvas = Category("Forever addons", parent)
-		return canvas
-	end,
-}
 local ns = {
 	core = {
 		SafeCall = function(_, fn, ...)
@@ -187,6 +176,7 @@ local ns = {
 	db = {},
 	DEFAULTS = {
 		craftValue = "vendor",
+		auctionPriceSource = "auto",
 		reagentTooltip = "route",
 		recipeTooltip = "window",
 		rowCost = "skillup",
@@ -207,6 +197,11 @@ local ns = {
 		{ "vendor", "Vendor" },
 		{ "auction", "Auction" },
 		{ "sale", "Region sale" },
+	},
+	AUCTION_PRICE_SOURCE_OPTIONS = {
+		{ "auto", "Auto" },
+		{ "auctionator", "Auctionator" },
+		{ "tsm", "TradeSkillMaster" },
 	},
 	Changed = function(kind)
 		assert(kind == "settings")
@@ -258,16 +253,16 @@ local groups = {
 			.. " checkbox:showSkill checkbox:showTooltip"
 			.. " checkbox:detailsBar slider:recipeTooltip checkbox:showCost slider:rowCost",
 	},
-	{ "Prices", "slider:craftValue checkbox:valueGathered checkbox:auctionOnly" },
+	{ "Prices", "slider:auctionPriceSource slider:craftValue checkbox:valueGathered checkbox:auctionOnly" },
 	{
 		"Route and trainer",
 		"checkbox:showTracker checkbox:trackerAttached slider:trackerScale checkbox:trackerLocked"
-			.. " checkbox:showRouteTab checkbox:combineCookingFishing"
+			.. " checkbox:showRouteTab"
 			.. " checkbox:showGearTab checkbox:showBuffsTab"
 			.. " checkbox:merchantButton checkbox:auctionSearch checkbox:showTrainer",
 	},
 	{ "Tooltips and sorting", "slider:reagentTooltip checkbox:gatherTooltip slider:sortMode" },
-	{ "Addon", "checkbox:whatsNew" },
+	{ "Addon", "checkbox:whatsNew checkbox:suggestFamily" },
 }
 local kinds, expected = {}, {}
 for _, group in ipairs(groups) do
@@ -283,17 +278,6 @@ for _, group in ipairs(groups) do
 	assert(opens == before + 1, name .. "'s button opens through the client's own opener")
 	assert(opened == Subpage(name):GetID(), name .. "'s button opens its subpage")
 end
--- Then the Forever addons page: the shared module registers it with this addon's saved variables, its button last.
-expected[#expected + 1] = "button@" .. addOnCategory.name
-assert(canvas and canvas.name == "Forever addons", "the Forever addons page is registered")
-assert(family.parent == category, "the page belongs to the addon's category")
-assert(family.db() == ns.db, "the page reads and writes SkillUp's saved variables")
-assert(family.current == "ProfessionPlanner", "the page marks this addon's row")
-assert(family.safeCall == ns.core.SafeCall, "the page reports its failures in SkillUp's journal")
-local familyOpens = opens
-Button("Forever addons").initializer.onClick()
-assert(opens == familyOpens + 1, "the Forever addons button opens through the client's own opener")
-assert(opened == canvas:GetID(), "the Forever addons button opens its page")
 for _, entry in ipairs(registered) do
 	local kind = entry.initializer.kind
 	if entry.initializer.setting then
@@ -344,7 +328,10 @@ for _, key in ipairs({ "craftValue", "sortMode", "reagentTooltip", "recipeToolti
 		assert(ns.db[key] == option[1], "slider writes the original saved string")
 		assert(row.initializer.options.formatter(index) == option[2], "slider labels every choice")
 		assert(refreshed == before + 1, "one choice is reported once")
-		assert(notified[#notified] == "ProfessionPlanner_" .. key .. "_choice", "canonical change notifies visible proxy")
+		assert(
+			notified[#notified] == "ProfessionPlanner_" .. key .. "_choice",
+			"canonical change notifies visible proxy"
+		)
 	end
 	row.initializer.setting:SetValue(0)
 	assert(ns.db[key] == options[#options][1], "invalid slider position leaves value unchanged")

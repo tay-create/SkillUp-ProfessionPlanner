@@ -1,23 +1,39 @@
 {
-  "input_digest": "13b32280e4576d7359962eab7f5b4084e563a87e2815799af0df0899c53420a2",
-  "runtime_sha256": "13b32280e4576d7359962eab7f5b4084e563a87e2815799af0df0899c53420a2",
-  "candidate": "b9a7a6ce9ebb58e61f22aaafc333816baf1c6ff72aac573dee18dc1b44276a81",
-  "client_build": "1.60.1.70938 (Interface 16001)",
-  "tested_artifact": "source-tree",
-  "source_commit": "cdd94b82154c2c5f66c4558d712aba2a48572d49",
+  "input_digest": "c48805a3522bc007f58676242726bb20eea2ba436fc71e5a710046f7a8b537c4",
+  "candidate": "fd65b14f1016d7bbd63bc307249a4d1e4f25794746d8f416e9b1370136969645",
+  "runtime_sha256": "c48805a3522bc007f58676242726bb20eea2ba436fc71e5a710046f7a8b537c4",
+  "client_build": "1.60.1.70959 (Interface 16001)",
+  "tested_artifact": "release-package",
+  "source_commit": "45d8b1067f574487f6cac758aff447f1c86520f3",
   "flows": [
     {
-      "name": "skillup",
+      "name": "Replan Cooking with shopping quantities",
       "steps": [
-        "/skillup"
+        "Load the Profession Planner release package with ForeverCore 1.15.6 and reload the WoW client.",
+        "Open the Cooking route at skill 272 and goal 300. Click Replan and open the shopping list.",
+        "Verify that the route still plans 38 crafts and both views ask for 76 Hot Spices and 38 Raw Summer Bass."
+      ],
+      "result": "pass"
+    },
+    {
+      "name": "Keep the route and open shopping list in sync when the goal changes",
+      "steps": [
+        "Set the Cooking goal to 280 while the shopping list is open.",
+        "Verify that the route changes to 8 crafts and both views ask for 16 Hot Spices and 8 Raw Summer Bass.",
+        "Restore the original goal of 300. Verify that both views immediately restore the original quantities."
       ],
       "result": "pass"
     }
   ],
   "images": [
     {
-      "url": "https://gist.githubusercontent.com/cjber/5e66b378cdba706271319f6f23c6a23f/raw/9fc157f0267896789b0a890345abb4b4e4095c11/1-skillup.png",
-      "sha256": "f32810c81779c4206d5466400b9824197395dd2b6f195fc4daa9c926f199783b"
+      "url": "https://github.com/tay-create/SkillUp-ProfessionPlanner/raw/167853a4b41feef36f69811ae3a5ca25f2a933f0/docs/visual-proof/pr5-cooking-shopping-280.png",
+      "sha256": "823cc2fe5e7dca247cf79b1c433c36fc78de60164f12b5c86bfb938c15941c00"
+    },
+    {
+      "url": "https://github.com/tay-create/SkillUp-ProfessionPlanner/raw/167853a4b41feef36f69811ae3a5ca25f2a933f0/docs/visual-proof/pr5-cooking-shopping-300.png",
+      "sha256": "727df50b428c32dab68709658241ac170d21997a60859732962046a0c9ac660d"
     }
-  ]
+  ],
+  "image_processing": "Native WoW screenshots cropped to the addon panels. Character-specific Auctionator labels were redacted."
 }

@@ -11,18 +11,6 @@ ns.ReportTitle = L["Profession Planner report"]
 -- tab. The TOC declares it once and the drawn media/Icon stays the addon's store and TOC identity.
 ns.ICON = C_AddOns.GetAddOnMetadata(addonName, "X-Forever-Icon") --[[@as string]]
 -- The shared services, registered once: the report window's title and SkillUp's own report lines.
-ns.core = ForeverCore.Register(addonName, {
-	title = ns.ReportTitle,
-	lines = function()
-		return ns.ReportLines()
-	end,
-})
-
--- Hands the generated player credits to the shared Thanks page (WFA-31). An older core has no Credits module, and the
--- addon loads as before.
-if type(ForeverCore.Credits) == "table" then
-	ns.core.SafeCall("credits", ForeverCore.Credits.Register, "Profession Planner", ns.Credits)
-end
 
 ---@type SkillUpDefaults
 local DEFAULTS = {
@@ -36,12 +24,13 @@ local DEFAULTS = {
 	showCost = true,
 	rowCost = "skillup", -- what a recipe row's money is: "skillup" (cost per skill-up) or "craft" (net per craft)
 	craftValue = "vendor",
+	auctionPriceSource = "auto", -- choose which installed addon supplies auction prices; preserves old order by default
 	valueGathered = false, -- a reagent you gather costs what it would sell for, not nothing
 	auctionOnly = false, -- a self-supplied reagent costs a market price, and is unpriced when none is known
 	sortMode = "blizzard",
 	showTrainer = true,
 	showRouteTab = true,
-	combineCookingFishing = true, -- show fishing locations for fish used in profession routes
+	cookingFishingModes = {}, -- ["Name-Realm"] = true: prefer fish recipes on Cooking routes; normal by default
 	showTracker = true,
 	showGearTab = false,
 	showBuffsTab = true,
@@ -90,6 +79,11 @@ ns.CRAFT_VALUE_OPTIONS = {
 	{ "vendor", L["Vendor sell price"] },
 	{ "auction", L["Auction price if higher"] },
 	{ "sale", L["Region sale average if higher"] },
+}
+ns.AUCTION_PRICE_SOURCE_OPTIONS = {
+	{ "auto", L["Automatic (Auctionator first)"] },
+	{ "auctionator", L["Auctionator only"] },
+	{ "tsm", L["TradeSkillMaster only"] },
 }
 -- Beside the window by default: next to the recipe row, the tooltip covered the reagents (#163).
 ns.RECIPE_TOOLTIP_OPTIONS = {
@@ -250,6 +244,7 @@ local function LoadDB()
 	-- A choice the menu no longer offers (or a typo) goes back to its default.
 	for key, options in pairs({
 		craftValue = ns.CRAFT_VALUE_OPTIONS,
+		auctionPriceSource = ns.AUCTION_PRICE_SOURCE_OPTIONS,
 		sortMode = ns.SORT_OPTIONS,
 		reagentTooltip = ns.REAGENT_TOOLTIP_OPTIONS,
 		recipeTooltip = ns.RECIPE_TOOLTIP_OPTIONS,
@@ -553,6 +548,28 @@ function ns.SetCollectMode(mode)
 	ns.Changed("settings")
 end
 
+-- A character chooses whether Cooking should prefer recipes using fish with known fishing locations.
+-- Both routes retain fishing waypoints for any fish reagent they happen to use.
+---@return boolean
+function ns.CookingFishingMode()
+	local key = ns.CharacterKey()
+	return key ~= nil and ns.db.cookingFishingModes[key] == true
+end
+
+---@param fishing boolean
+function ns.SetCookingFishingMode(fishing)
+	local key = ns.CharacterKey()
+	if not key then
+		return
+	end
+	local value = fishing and true or nil
+	if ns.db.cookingFishingModes[key] == value then
+		return
+	end
+	ns.db.cookingFishingModes[key] = value
+	ns.Changed("settings")
+end
+
 -- Whether the crafted gear view lists gear this character cannot make yet. Off by default and kept
 -- per character, like the collect mode.
 ---@return boolean
@@ -645,7 +662,8 @@ function ns.SetSkipped(recipeID, skip)
 	if skip and ns.db.pinnedRecipes[key] then
 		ns.db.pinnedRecipes[key][recipeID] = nil
 	end
-	ns.Changed("settings")
+	local recipe = ns.RecipeData[recipeID]
+	ns.Changed("recipeChoice", recipe and recipe.skillLine)
 end
 
 ---@param recipeID integer
@@ -703,7 +721,8 @@ function ns.SetPinned(recipeID, pin)
 		end
 	end
 	ns.db.pinnedRecipes[key] = next(pins) and pins or nil
-	ns.Changed("settings")
+	local recipe = ns.RecipeData[recipeID]
+	ns.Changed("recipeChoice", recipe and recipe.skillLine)
 end
 
 -- This character's skipped recipes, of one profession when `skillLine` is given, by name.
@@ -1064,7 +1083,7 @@ end
 -- Blizzard_Professions may already be loaded (another addon opened it), in which
 -- case the continuation runs at once, so register it only after our own files
 -- and SavedVariables are in place.
-EventUtil.ContinueOnAddOnLoaded(addonName, function()
+local function InitializeAddon()
 	-- /reload doesn't re-read the .toc, so files added by an update stay unloaded.
 	if
 		not (
@@ -1109,4 +1128,29 @@ EventUtil.ContinueOnAddOnLoaded(addonName, function()
 	EventUtil.ContinueOnAddOnLoaded("Blizzard_Professions", ns.AttachHeaderButton)
 	EventUtil.ContinueOnAddOnLoaded("Blizzard_Professions", ns.AttachRecipeList)
 	EventUtil.ContinueOnAddOnLoaded("Blizzard_TrainerUI", ns.AttachTrainer)
-end)
+end
+
+local function StartWhenCoreReady(core)
+	if ns.broken then
+		return
+	end
+	ns.core = core.Register(addonName, {
+		title = ns.ReportTitle,
+		lines = function()
+			return ns.ReportLines()
+		end,
+	})
+
+	-- Hands the generated player credits to the shared Thanks page (WFA-31). An older core has no Credits module, and the
+	-- addon loads as before.
+	if type(core.Credits) == "table" then
+		ns.core.SafeCall("credits", core.Credits.Register, "Profession Planner", ns.Credits)
+	end
+	EventUtil.ContinueOnAddOnLoaded(addonName, InitializeAddon)
+end
+
+if ns.OnCoreReady then
+	ns.OnCoreReady(StartWhenCoreReady)
+else
+	StartWhenCoreReady(ForeverCore)
+end

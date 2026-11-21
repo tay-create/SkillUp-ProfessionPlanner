@@ -565,7 +565,7 @@ do
 	equal(costing(10).value.copper, 90, "vendor beats a cheap auction")
 	equal(costing(10).value.source, "vendor", "and is the source")
 	sell, auction[2] = 0, 0
-	equal(costing(10).value.copper, 0, "an auction price of zero still counts")
+	equal(costing(10).value, nil, "a zero auction price is an unknown resale value")
 	auction[2] = nil
 	equal(costing(10).value, nil, "live zero sell price overrides bundle")
 	equal(costing(10).net, 10, "a worthless item nets to the reagent cost")

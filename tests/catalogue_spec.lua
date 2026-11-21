@@ -67,6 +67,7 @@ local function Load(questieDB, atlasLootDB, options)
 			[CLOAK] = { skillLine = TAILORING },
 			[900] = { skillLine = 165 },
 		},
+		RecipeScrolls = options.recipeScrolls or {},
 		ScrollDrops = { [PATTERN_ROBE] = { { BOSS, 4 } } },
 		WorldDrops = { [PATTERN_BOOTS] = true },
 		ProfessionTrainers = { [TAILORING] = { { TRAINER, 150 } } },
@@ -228,6 +229,22 @@ C.EnsureProfession(TAILORING)
 c.Settle()
 equal(C.Recipe(SHIRT), nil, "QuestieDB names no recipe on its scrolls here, so none is found")
 equal(C.NPC(SELLER).name, "Seller", "NPCs are still read")
+
+-- A bundled recipe item can have vendor data even when QuestieDB doesn't say what it teaches.
+-- AtlasLoot may be absent or reverse-map the same spell to an alternate item with no seller.
+local bundled = { [SHIRT] = { PATTERN_SHIRT_HORDE, 40 } }
+for _, atlas in ipairs({ false, Recipes() }) do
+	local vendorDB = Database()
+	vendorDB.items[PATTERN_SHIRT].vendors = nil
+	c = Load(vendorDB, atlas, { recipeScrolls = bundled })
+	C = c.ns.Catalogue
+	C.EnsureProfession(TAILORING)
+	equal(C.Recipe(SHIRT), nil, "the ordinary lookup waits for the snapshot")
+	equal(C.Recipe(SHIRT, true).vendors[1], HORDE_SELLER, "the click can find the vendor before the snapshot")
+	c.Settle()
+	equal(C.Recipe(SHIRT).item, PATTERN_SHIRT_HORDE, "the catalogue keeps the bundled item with a vendor")
+	equal(C.Recipe(SHIRT).vendors[1], HORDE_SELLER, "the snapshot also names the bundled item's vendor")
+end
 
 -- Duplicate scrolls: QuestieDB names two scrolls for the shirt; the one a vendor sells is kept, and with
 -- both sold the lower item.
